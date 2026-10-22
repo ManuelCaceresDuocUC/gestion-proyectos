@@ -1,0 +1,20 @@
+# Cada carpeta tiene un dueño; los PR que la tocan lo solicitan como revisor.
+/backend/src/main/java/cl/proyecto/gestion/proyecto/        @Manuel-dev-a
+/backend/src/main/java/cl/proyecto/gestion/planificacion/   @Manuel-dev-a
+/frontend/src/features/proyectos/                           @Manuel-dev-a
+/frontend/src/features/gantt/                               @Manuel-dev-a
+/backend/src/main/java/cl/proyecto/gestion/recurso/         @Hector-dev-b
+/backend/src/main/java/cl/proyecto/gestion/kpi/             @Hector-dev-b
+/backend/src/main/java/cl/proyecto/gestion/hito/            @Hector-dev-b
+/frontend/src/features/hitos/                               @Hector-dev-b
+/frontend/src/features/recursos/                            @Hector-dev-b
+/frontend/src/features/kpi/                                 @Hector-dev-b
+/backend/src/main/java/cl/proyecto/gestion/auth/            @Cristian-dev-c
+/backend/src/main/java/cl/proyecto/gestion/cambio/          @Cristian-dev-c
+/backend/src/main/java/cl/proyecto/gestion/tablero/         @Cristian-dev-c
+/backend/src/main/java/cl/proyecto/gestion/seed/            @Cristian-dev-c
+/frontend/src/features/cambios/                             @Cristian-dev-c
+/frontend/src/features/tableros/                            @Cristian-dev-c
+/frontend/src/features/auth/                                @Cristian-dev-c
+/db/seed/                                                   @Cristian-dev-c
+/docs/                                                      @Cristian-dev-c

@@ -1,0 +1,31 @@
+name: backend-ci
+on:
+  pull_request:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+  push:
+    branches: [main]
+    paths: ["backend/**"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: gestion
+          POSTGRES_USER: gestion
+          POSTGRES_PASSWORD: gestion
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U gestion" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/gestion
+      DB_USER: gestion
+      DB_PASSWORD: gestion
+      JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+      APP_SEED_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21", cache: maven }
+      - run: mvn -B -f backend/pom.xml verify

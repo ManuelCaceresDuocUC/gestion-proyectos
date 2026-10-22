@@ -1,0 +1,19 @@
+name: frontend-ci
+on:
+  pull_request:
+    paths: ["frontend/**", ".github/workflows/frontend-ci.yml"]
+  push:
+    branches: [main]
+    paths: ["frontend/**"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm install
+      - run: npm run build

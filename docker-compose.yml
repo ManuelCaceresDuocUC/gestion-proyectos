@@ -1,0 +1,31 @@
+# Levanta la base de datos y el backend:   docker compose up --build
+# El frontend se levanta aparte:           cd frontend && npm install && npm run dev
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gestion}
+      POSTGRES_USER: ${POSTGRES_USER:-gestion}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gestion}
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gestion}"]
+      interval: 5s
+      retries: 10
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-gestion}
+      DB_USER: ${POSTGRES_USER:-gestion}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-gestion}
+      JWT_SECRET: ${JWT_SECRET:-cambia-esto-por-un-secreto-largo-de-al-menos-32-caracteres}
+      APP_SEED_ENABLED: ${APP_SEED_ENABLED:-true}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    ports: ["8080:8080"]
+volumes:
+  pgdata:

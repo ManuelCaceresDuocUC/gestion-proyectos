@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: gestion
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gestion}
+    username: ${DB_USER:gestion}
+    password: ${DB_PASSWORD:gestion}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate        # el esquema lo manda Flyway; Hibernate solo valida
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: America/Santiago
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+server:
+  port: ${PORT:8080}
+app:
+  jwt:
+    secret: ${JWT_SECRET:cambia-esto-por-un-secreto-largo-de-al-menos-32-caracteres}
+    expira-minutos: 480
+  seed:
+    enabled: ${APP_SEED_ENABLED:true}
+  cors:
+    origins: ${CORS_ORIGINS:http://localhost:5173}

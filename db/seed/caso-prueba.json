@@ -1,0 +1,1032 @@
+{
+  "_nota": "Caso de prueba base, derivado de Actividad_Gantt_Hitos.xlsx (espacio de estudio colaborativo) y adaptado a la estructura mínima de la rúbrica: 4 etapas, 12 actividades, 20 subactividades, 4 tipos de dependencia, 5 profesionales, 4 tipos de recurso, 6 hitos, 5 solicitudes de cambio. Datos ficticios. 'referencia_semana' es solo referencia; las fechas reales las calcula el motor de planificación a partir de las dependencias.",
+  "proyecto": {
+    "codigo": "EEC-2026",
+    "nombre": "Habilitar un espacio de estudio colaborativo",
+    "descripcion": "Poner en funcionamiento, en 12 semanas, un espacio de estudio con equipos, reservas y responsables definidos.",
+    "estado": "EN_EJECUCION",
+    "fecha_inicio": "2026-09-07",
+    "duracion_semanas": 12,
+    "dias_laborales": "LMXJV",
+    "presupuesto": 21800000,
+    "moneda": "CLP",
+    "responsable": "P1"
+  },
+  "usuarios": [
+    {
+      "nombre": "Administrador Demo",
+      "email": "admin@demo.cl",
+      "password": "demo1234",
+      "rol": "ADMIN"
+    },
+    {
+      "nombre": "Visualizador Demo",
+      "email": "visualizador@demo.cl",
+      "password": "demo1234",
+      "rol": "VISUALIZADOR"
+    }
+  ],
+  "tipos_recurso": [
+    {
+      "nombre": "Profesional",
+      "unidad": "hora"
+    },
+    {
+      "nombre": "Equipamiento",
+      "unidad": "unidad"
+    },
+    {
+      "nombre": "Material",
+      "unidad": "unidad"
+    },
+    {
+      "nombre": "Servicio externo",
+      "unidad": "global"
+    }
+  ],
+  "profesionales": [
+    {
+      "clave": "P1",
+      "nombre": "Coordinadora de proyecto",
+      "tarifa_hora": 28000,
+      "capacidad_horas_dia": 8
+    },
+    {
+      "clave": "P2",
+      "nombre": "Ingeniero de infraestructura",
+      "tarifa_hora": 32000,
+      "capacidad_horas_dia": 8
+    },
+    {
+      "clave": "P3",
+      "nombre": "Diseñadora de espacios",
+      "tarifa_hora": 30000,
+      "capacidad_horas_dia": 8
+    },
+    {
+      "clave": "P4",
+      "nombre": "Analista de operaciones",
+      "tarifa_hora": 26000,
+      "capacidad_horas_dia": 8
+    },
+    {
+      "clave": "P5",
+      "nombre": "Administrador de compras",
+      "tarifa_hora": 24000,
+      "capacidad_horas_dia": 8
+    }
+  ],
+  "recursos": [
+    {
+      "clave": "E1",
+      "nombre": "Mesas colaborativas",
+      "tipo": "Equipamiento",
+      "unidad": "unidad",
+      "costo_unitario": 85000
+    },
+    {
+      "clave": "E2",
+      "nombre": "Sillas ergonómicas",
+      "tipo": "Equipamiento",
+      "unidad": "unidad",
+      "costo_unitario": 60000
+    },
+    {
+      "clave": "E3",
+      "nombre": "Equipos de red (switch y puntos de acceso)",
+      "tipo": "Equipamiento",
+      "unidad": "unidad",
+      "costo_unitario": 180000
+    },
+    {
+      "clave": "M1",
+      "nombre": "Paneles de iluminación LED",
+      "tipo": "Material",
+      "unidad": "unidad",
+      "costo_unitario": 45000
+    },
+    {
+      "clave": "M2",
+      "nombre": "Pizarras y señalética",
+      "tipo": "Material",
+      "unidad": "unidad",
+      "costo_unitario": 35000
+    },
+    {
+      "clave": "S1",
+      "nombre": "Instalador eléctrico externo",
+      "tipo": "Servicio externo",
+      "unidad": "global",
+      "costo_unitario": 400000
+    },
+    {
+      "clave": "S2",
+      "nombre": "Licencia del sistema de reservas",
+      "tipo": "Servicio externo",
+      "unidad": "global",
+      "costo_unitario": 250000
+    }
+  ],
+  "estructura": [
+    {
+      "codigo": "1",
+      "nombre": "Diagnóstico y diseño",
+      "objetivo": "Comprender la necesidad, acordar alcance y obtener autorización",
+      "actividades": [
+        {
+          "codigo": "1.1",
+          "nombre": "Diagnosticar necesidades",
+          "subactividades": [
+            {
+              "codigo": "1.1.1",
+              "nombre": "Encuestar a usuarios",
+              "referencia_semana": 1,
+              "duracion_semanas": 2,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 24
+                },
+                {
+                  "recurso": "P4",
+                  "cantidad": 8
+                }
+              ]
+            },
+            {
+              "codigo": "1.1.2",
+              "nombre": "Revisar el espacio disponible",
+              "referencia_semana": 1,
+              "duracion_semanas": 1,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P2",
+                  "cantidad": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "1.2",
+          "nombre": "Acordar el alcance",
+          "subactividades": [
+            {
+              "codigo": "1.2.1",
+              "nombre": "Priorizar requisitos y acordar alcance",
+              "referencia_semana": 3,
+              "duracion_semanas": 1,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 12
+                },
+                {
+                  "recurso": "P4",
+                  "cantidad": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "1.3",
+          "nombre": "Diseñar la solución",
+          "subactividades": [
+            {
+              "codigo": "1.3.1",
+              "nombre": "Diseñar distribución y servicios",
+              "referencia_semana": 4,
+              "duracion_semanas": 1,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P3",
+                  "cantidad": 28
+                }
+              ]
+            },
+            {
+              "codigo": "1.3.2",
+              "nombre": "Estimar costos y recursos",
+              "referencia_semana": 4,
+              "duracion_semanas": 1,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P5",
+                  "cantidad": 16
+                },
+                {
+                  "recurso": "P1",
+                  "cantidad": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "1.4",
+          "nombre": "Obtener autorización de dirección",
+          "subactividades": [],
+          "hoja": true,
+          "referencia_semana": 5,
+          "duracion_semanas": 1,
+          "avance": 100,
+          "asignaciones": [
+            {
+              "recurso": "P1",
+              "cantidad": 8
+            },
+            {
+              "recurso": "P3",
+              "cantidad": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "2",
+      "nombre": "Preparación",
+      "objetivo": "Disponer de recursos, espacio y reglas de uso",
+      "actividades": [
+        {
+          "codigo": "2.1",
+          "nombre": "Adquirir mobiliario y materiales",
+          "subactividades": [
+            {
+              "codigo": "2.1.1",
+              "nombre": "Comprar mobiliario",
+              "referencia_semana": 6,
+              "duracion_semanas": 2,
+              "avance": 60,
+              "asignaciones": [
+                {
+                  "recurso": "P5",
+                  "cantidad": 20
+                },
+                {
+                  "recurso": "E1",
+                  "cantidad": 20
+                },
+                {
+                  "recurso": "E2",
+                  "cantidad": 40
+                }
+              ]
+            },
+            {
+              "codigo": "2.1.2",
+              "nombre": "Comprar materiales",
+              "referencia_semana": 6,
+              "duracion_semanas": 2,
+              "avance": 60,
+              "asignaciones": [
+                {
+                  "recurso": "P5",
+                  "cantidad": 12
+                },
+                {
+                  "recurso": "M2",
+                  "cantidad": 10
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "2.2",
+          "nombre": "Acondicionar el espacio",
+          "subactividades": [
+            {
+              "codigo": "2.2.1",
+              "nombre": "Acondicionar iluminación",
+              "referencia_semana": 6,
+              "duracion_semanas": 2,
+              "avance": 50,
+              "asignaciones": [
+                {
+                  "recurso": "P2",
+                  "cantidad": 24
+                },
+                {
+                  "recurso": "M1",
+                  "cantidad": 16
+                },
+                {
+                  "recurso": "S1",
+                  "cantidad": 1
+                }
+              ]
+            },
+            {
+              "codigo": "2.2.2",
+              "nombre": "Acondicionar conectividad",
+              "referencia_semana": 6,
+              "duracion_semanas": 2,
+              "avance": 50,
+              "asignaciones": [
+                {
+                  "recurso": "P2",
+                  "cantidad": 24
+                },
+                {
+                  "recurso": "E3",
+                  "cantidad": 4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "2.3",
+          "nombre": "Preparar el uso del servicio",
+          "subactividades": [
+            {
+              "codigo": "2.3.1",
+              "nombre": "Elaborar normas de uso",
+              "referencia_semana": 6,
+              "duracion_semanas": 1,
+              "avance": 100,
+              "asignaciones": [
+                {
+                  "recurso": "P4",
+                  "cantidad": 16
+                }
+              ]
+            },
+            {
+              "codigo": "2.3.2",
+              "nombre": "Implementar sistema de reserva",
+              "referencia_semana": 6,
+              "duracion_semanas": 2,
+              "avance": 50,
+              "asignaciones": [
+                {
+                  "recurso": "P4",
+                  "cantidad": 30
+                },
+                {
+                  "recurso": "S2",
+                  "cantidad": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "3",
+      "nombre": "Instalación y piloto",
+      "objetivo": "Integrar recursos, preparar al equipo y evaluar con usuarios",
+      "actividades": [
+        {
+          "codigo": "3.1",
+          "nombre": "Instalar y probar",
+          "subactividades": [
+            {
+              "codigo": "3.1.1",
+              "nombre": "Instalar mobiliario y equipos",
+              "referencia_semana": 8,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P2",
+                  "cantidad": 32
+                },
+                {
+                  "recurso": "P5",
+                  "cantidad": 8
+                }
+              ]
+            },
+            {
+              "codigo": "3.1.2",
+              "nombre": "Probar equipos y reservas",
+              "referencia_semana": 9,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P4",
+                  "cantidad": 16
+                },
+                {
+                  "recurso": "P2",
+                  "cantidad": 8
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "3.2",
+          "nombre": "Preparar al equipo",
+          "subactividades": [
+            {
+              "codigo": "3.2.1",
+              "nombre": "Capacitar a responsables del espacio",
+              "referencia_semana": 9,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 12
+                },
+                {
+                  "recurso": "P4",
+                  "cantidad": 12
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "3.3",
+          "nombre": "Ejecutar el piloto",
+          "subactividades": [
+            {
+              "codigo": "3.3.1",
+              "nombre": "Realizar jornadas de uso piloto",
+              "referencia_semana": 10,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P4",
+                  "cantidad": 24
+                },
+                {
+                  "recurso": "P1",
+                  "cantidad": 8
+                }
+              ]
+            },
+            {
+              "codigo": "3.3.2",
+              "nombre": "Recoger opiniones del piloto",
+              "referencia_semana": 10,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 12
+                }
+              ]
+            },
+            {
+              "codigo": "3.3.3",
+              "nombre": "Aplicar ajustes y repetir pruebas",
+              "referencia_semana": 11,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P2",
+                  "cantidad": 16
+                },
+                {
+                  "recurso": "P4",
+                  "cantidad": 12
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "4",
+      "nombre": "Apertura",
+      "objetivo": "Informar a la comunidad, abrir y transferir la operación",
+      "actividades": [
+        {
+          "codigo": "4.1",
+          "nombre": "Difundir y abrir",
+          "subactividades": [
+            {
+              "codigo": "4.1.1",
+              "nombre": "Difundir horarios y forma de acceso",
+              "referencia_semana": 11,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 10
+                }
+              ]
+            },
+            {
+              "codigo": "4.1.2",
+              "nombre": "Abrir el espacio a la comunidad",
+              "referencia_semana": 12,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P4",
+                  "cantidad": 16
+                },
+                {
+                  "recurso": "P1",
+                  "cantidad": 6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "codigo": "4.2",
+          "nombre": "Transferir la operación",
+          "subactividades": [
+            {
+              "codigo": "4.2.1",
+              "nombre": "Entregar documentación y responsabilidades",
+              "referencia_semana": 12,
+              "duracion_semanas": 1,
+              "avance": 0,
+              "asignaciones": [
+                {
+                  "recurso": "P1",
+                  "cantidad": 12
+                },
+                {
+                  "recurso": "P4",
+                  "cantidad": 6
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dependencias": [
+    {
+      "predecesora": "1.1.1",
+      "sucesora": "1.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.1.2",
+      "sucesora": "1.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.2.1",
+      "sucesora": "1.3.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.2.1",
+      "sucesora": "1.3.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.3.1",
+      "sucesora": "1.4",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.3.2",
+      "sucesora": "1.4",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.1.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.2.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.3.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "1.4",
+      "sucesora": "2.3.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.1.1",
+      "sucesora": "3.1.1",
+      "tipo": "FS",
+      "desfase_dias": 2
+    },
+    {
+      "predecesora": "2.1.2",
+      "sucesora": "3.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.2.1",
+      "sucesora": "3.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.2.2",
+      "sucesora": "3.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.3.1",
+      "sucesora": "3.1.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.3.2",
+      "sucesora": "3.1.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.1.1",
+      "sucesora": "3.1.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.1.1",
+      "sucesora": "3.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "2.3.1",
+      "sucesora": "3.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.1.2",
+      "sucesora": "3.2.1",
+      "tipo": "SS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.1.2",
+      "sucesora": "3.3.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.2.1",
+      "sucesora": "3.3.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.1.2",
+      "sucesora": "3.3.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.2.1",
+      "sucesora": "3.3.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.1",
+      "sucesora": "3.3.2",
+      "tipo": "FF",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.1",
+      "sucesora": "3.3.3",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.2",
+      "sucesora": "3.3.3",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.1",
+      "sucesora": "4.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.2",
+      "sucesora": "4.1.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "4.1.2",
+      "sucesora": "4.1.1",
+      "tipo": "SF",
+      "desfase_dias": -1
+    },
+    {
+      "predecesora": "3.3.3",
+      "sucesora": "4.1.2",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "3.3.3",
+      "sucesora": "4.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    },
+    {
+      "predecesora": "4.1.1",
+      "sucesora": "4.2.1",
+      "tipo": "FS",
+      "desfase_dias": 0
+    }
+  ],
+  "hitos": [
+    {
+      "codigo": "H1",
+      "logro": "Alcance y criterios de aceptación acordados",
+      "actividades": [
+        "1.2.1"
+      ],
+      "semana_prevista": 3,
+      "evidencia": "Documento de alcance firmado por dirección",
+      "indicador": "Binario: sí si el documento está firmado y tiene criterios medibles",
+      "criterio": "Sí/No; cumple con documento firmado",
+      "validador": "Coordinadora de proyecto, al cierre de la semana 3",
+      "accion_si_no_cumple": "Reunión extraordinaria para renegociar alcance antes de diseñar"
+    },
+    {
+      "codigo": "H2",
+      "logro": "Diseño y presupuesto autorizados",
+      "actividades": [
+        "1.3.1",
+        "1.3.2",
+        "1.4"
+      ],
+      "semana_prevista": 5,
+      "evidencia": "Acta de revisión de diseño y presupuesto",
+      "indicador": "Costo estimado / presupuesto aprobado",
+      "criterio": "Costo estimado ≤ 100% del presupuesto",
+      "validador": "Dirección, semana 5",
+      "accion_si_no_cumple": "Reducir alcance o buscar financiamiento antes de comprar"
+    },
+    {
+      "codigo": "H3",
+      "logro": "Recursos adquiridos y espacio acondicionado",
+      "actividades": [
+        "2.1.1",
+        "2.1.2",
+        "2.2.1",
+        "2.2.2",
+        "2.3.1",
+        "2.3.2"
+      ],
+      "semana_prevista": 8,
+      "evidencia": "Registro de compras, trabajos y pruebas técnicas",
+      "indicador": "Ítems recibidos / ítems comprados",
+      "criterio": "≥ 100% recibido y pruebas técnicas aprobadas",
+      "validador": "Ingeniero de infraestructura, semana 8",
+      "accion_si_no_cumple": "Escalar al proveedor y evaluar proveedor alternativo (solicitud de cambio)"
+    },
+    {
+      "codigo": "H4",
+      "logro": "Espacio instalado y probado",
+      "actividades": [
+        "3.1.1",
+        "3.1.2",
+        "3.2.1"
+      ],
+      "semana_prevista": 9,
+      "evidencia": "Inventario instalado, registro de pruebas y de formación",
+      "indicador": "Pruebas aprobadas / pruebas ejecutadas",
+      "criterio": "≥ 95% de pruebas aprobadas",
+      "validador": "Analista de operaciones, semana 9",
+      "accion_si_no_cumple": "Repetir pruebas y corregir incidencias antes del piloto"
+    },
+    {
+      "codigo": "H5",
+      "logro": "Piloto completado y ajustes aplicados",
+      "actividades": [
+        "3.3.1",
+        "3.3.2",
+        "3.3.3"
+      ],
+      "semana_prevista": 11,
+      "evidencia": "Registro de uso, encuestas y correcciones",
+      "indicador": "Respuestas favorables / respuestas válidas",
+      "criterio": "≥ 85% de satisfacción",
+      "validador": "Coordinadora de proyecto, semana 11",
+      "accion_si_no_cumple": "Extender piloto una semana y registrar solicitud de cambio"
+    },
+    {
+      "codigo": "H6",
+      "logro": "Espacio abierto y operación transferida",
+      "actividades": [
+        "4.1.1",
+        "4.1.2",
+        "4.2.1"
+      ],
+      "semana_prevista": 12,
+      "evidencia": "Registro de apertura, primeras reservas y acta de entrega",
+      "indicador": "Binario: abierto y acta de entrega firmada",
+      "criterio": "Sí/No",
+      "validador": "Dirección, semana 12",
+      "accion_si_no_cumple": "Mantener apertura restringida hasta completar la entrega"
+    }
+  ],
+  "etapas_cambio": [
+    "Necesidad",
+    "Evaluación",
+    "Riesgos",
+    "Planificación",
+    "Comunicación inicial",
+    "Implementación",
+    "Seguimiento",
+    "Resultados corto plazo",
+    "Correctivas",
+    "Adopción cultural"
+  ],
+  "solicitudes_cambio": [
+    {
+      "codigo": "SC-001",
+      "nombre": "Ampliar capacidad de 20 a 30 puestos",
+      "tipo": "Tecnología",
+      "prioridad": "Alta",
+      "riesgo": "Medio",
+      "impacto": "Alto",
+      "estado": "En curso",
+      "responsable": "P1",
+      "justificacion": "Mayor demanda detectada en la encuesta",
+      "impacto_estimado": {
+        "dias": 5,
+        "costo": 2400000
+      },
+      "tarea_afectada": "3.1.1",
+      "etapas": [
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "En curso",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente"
+      ]
+    },
+    {
+      "codigo": "SC-002",
+      "nombre": "Sustituir sistema de reservas por solución externa",
+      "tipo": "Tecnología",
+      "prioridad": "Crítica",
+      "riesgo": "Alto",
+      "impacto": "Alto",
+      "estado": "En curso",
+      "responsable": "P4",
+      "justificacion": "El desarrollo interno no cumple el plazo",
+      "impacto_estimado": {
+        "dias": -5,
+        "costo": -300000
+      },
+      "tarea_afectada": "2.3.2",
+      "etapas": [
+        "Completado",
+        "Completado",
+        "Completado",
+        "En curso",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente"
+      ]
+    },
+    {
+      "codigo": "SC-003",
+      "nombre": "Agregar segunda jornada de capacitación",
+      "tipo": "Personas",
+      "prioridad": "Media",
+      "riesgo": "Bajo",
+      "impacto": "Medio",
+      "estado": "Abierto",
+      "responsable": "P1",
+      "justificacion": "Rotación de responsables del espacio",
+      "impacto_estimado": {
+        "dias": 2,
+        "costo": 420000
+      },
+      "tarea_afectada": "3.2.1",
+      "etapas": [
+        "Completado",
+        "En curso",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente"
+      ]
+    },
+    {
+      "codigo": "SC-004",
+      "nombre": "Cambiar proveedor de mobiliario",
+      "tipo": "Proceso",
+      "prioridad": "Alta",
+      "riesgo": "Alto",
+      "impacto": "Alto",
+      "estado": "Cerrado",
+      "responsable": "P5",
+      "justificacion": "Retraso del proveedor original",
+      "impacto_estimado": {
+        "dias": 3,
+        "costo": -150000
+      },
+      "tarea_afectada": "2.1.1",
+      "etapas": [
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado",
+        "Completado"
+      ]
+    },
+    {
+      "codigo": "SC-005",
+      "nombre": "Ampliar horario de apertura los sábados",
+      "tipo": "Proceso",
+      "prioridad": "Baja",
+      "riesgo": "Bajo",
+      "impacto": "Bajo",
+      "estado": "Abierto",
+      "responsable": "P4",
+      "justificacion": "Solicitud de usuarios del piloto",
+      "impacto_estimado": {
+        "dias": 0,
+        "costo": 600000
+      },
+      "tarea_afectada": "4.1.2",
+      "etapas": [
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente",
+        "Pendiente"
+      ]
+    }
+  ]
+}
