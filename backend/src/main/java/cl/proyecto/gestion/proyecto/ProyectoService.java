@@ -1,6 +1,7 @@
 package cl.proyecto.gestion.proyecto;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.recalculo.RecalculoService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProyectoService {
 
     private final ProyectoRepository repo;
+    private final RecalculoService recalculo;
 
-    public ProyectoService(ProyectoRepository repo) {
+    public ProyectoService(ProyectoRepository repo, RecalculoService recalculo) {
         this.repo = repo;
+        this.recalculo = recalculo;
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +55,9 @@ public class ProyectoService {
             throw ApiException.conflicto("CODIGO_DUPLICADO", "Ya existe un proyecto con el código " + nuevoCodigo + ".");
         }
         aplicar(p, r);
-        return repo.save(p);
+        repo.save(p);
+        recalculo.recalcular(p.id); // la fecha de inicio puede haber cambiado
+        return p;
     }
 
     /** Cierra el proyecto: queda en solo lectura. Si no tenía fecha de fin real, se usa la de hoy. */
