@@ -36,6 +36,6 @@ frontend/   SPA React + Vite + TypeScript           docs/      requerimientos, m
 
 ## Reglas de trabajo (resumen)
 
-- `main` está protegida: todo entra por Pull Request con 1 aprobación y CI en verde.
+- Todo entra a `main` por Pull Request que fusiona su autor cuando el CI está en verde (sin aprobación obligatoria de otro).
 - Ramas: `feat/<n°issue>-descripcion`, `fix/<n°issue>-descripcion`. Commits: `feat:`, `fix:`, `docs:`, `test:`.
 - Todo PR referencia su issue (`Closes #N`). Los detalles están en la guía de desarrollo.

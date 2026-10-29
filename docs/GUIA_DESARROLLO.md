@@ -79,7 +79,7 @@ Más detalle en `docs/arquitectura.md` y `docs/modelo-datos.md`.
 | **C** | @cristianmonsalve14 | Autenticación y roles, gestión del cambio, tablero de cambio, seed del caso de prueba, guion de demo y manual de instalación | 70 h |
 
 Cada uno es dueño de su módulo de punta a punta (API + pantalla + pruebas) y lo explica en la demo.
-El `CODEOWNERS` solicita como revisor al dueño de cada carpeta. Revisión cruzada: **A revisa a B, B revisa a C, C revisa a A**.
+El `CODEOWNERS` solicita como revisor al dueño de cada carpeta. Sin revisión obligatoria: cada uno fusiona sus propios PR cuando el CI está en verde (trabajamos en horario vespertino y sin reuniones fijas).
 Las horas son estimaciones del plan: si vas con desvío, avisa en el daily para rebalancear.
 
 ## 6. Calendario (hoy 22 oct -> entrega 5 nov)
@@ -203,7 +203,7 @@ Total de issues: **66** (el tablero del proyecto los trae todos con estimación 
 ## 9. Cómo trabajamos
 
 **Git (trunk-based con ramas cortas)**
-- `main` está protegida (si el plan de GitHub lo permite): todo entra por PR, 1 aprobación, CI en verde.
+- Todo entra a `main` por PR y cada uno fusiona el suyo (squash) cuando el CI está en verde y ya probó el cambio; no se requiere aprobación de otro. Nunca se sube directo a `main`.
 - Rama por issue: `feat/<n°>-<descripcion>`, `fix/<n°>-<descripcion>`. Commits `feat:`, `fix:`, `docs:`, `test:`.
 - PR pequeños y frecuentes (idealmente menos de un día). El PR dice `Closes #<n°>` y completa el checklist de la plantilla.
 - Los archivos compartidos (`config/`, `common/`, `App.tsx`, `api/`) se tocan con PR chicos para evitar conflictos.
@@ -212,7 +212,7 @@ Total de issues: **66** (el tablero del proyecto los trae todos con estimación 
 
 **Seguimiento remoto**
 - **Daily asíncrono** (chat del equipo, 3 líneas): qué hice, qué haré, qué me bloquea.
-- **2 llamadas por semana:** planificación del sprint (30 min) y demo interna + retro (30-45 min). Cada uno muestra lo que funciona **desplegado**.
+- **Sin reuniones fijas:** las decisiones se escriben en el chat o en el issue y, si nadie objeta en 24 h, quedan aprobadas. Una llamada corta nocturna solo para ensayar la demo (T-07).
 - Actas, riesgos, decisiones (ADR), cambios del propio proyecto y reportes de avance en `docs/gestion/`.
 - Cada bug es un issue (`tipo-bug`) enlazado a la bolsa de bugs de su dueño; cada cambio de alcance es un issue "Cambio del propio proyecto".
 
@@ -252,6 +252,6 @@ Además: el rol VISUALIZADOR (solo lectura) y la explicación de por qué cambi�
 
 - [ ] Aceptar la invitación al repositorio y al proyecto de GitHub.
 - [ ] Clonar, copiar `.env.example` a `.env` y correr `docker compose up --build`; verificar `http://localhost:8080/api/health`.
-- [ ] Reunión de arranque (T-01) y decidir el stack definitivo (ADR-001).
+- [ ] Acordar por escrito en el chat el stack definitivo (ADR-001, T-01).
 - [ ] Cada uno abre su primer issue del Sprint 0 y crea su rama.
 - [ ] Copiar los archivos del profesor a `docs/referencias/`.
