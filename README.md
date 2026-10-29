@@ -9,9 +9,9 @@ precedencias (FS, SS, FF, SF), KPI configurables, gestión del cambio (10 etapas
 
 | Dev | GitHub | Responsabilidad |
 |---|---|---|
-| A | Manuel-dev-a | Núcleo de planificación: modelo de datos, proyectos y EDT, motor de dependencias, Gantt, servicio de recálculo |
-| B | Hector-dev-b | Recursos, tiempos y costos, hitos, administrador de KPI, tablero de proyecto, despliegue |
-| C | Cristian-dev-c | Gestión del cambio, tablero de cambio, autenticación y roles, seed del caso de prueba, documentación |
+| A | ManuelCaceresDuocUC | Núcleo de planificación: modelo de datos, proyectos y EDT, motor de dependencias, Gantt, servicio de recálculo |
+| B | HeOlivares | Recursos, tiempos y costos, hitos, administrador de KPI, tablero de proyecto, despliegue |
+| C | cristianmonsalve14 | Gestión del cambio, tablero de cambio, autenticación y roles, seed del caso de prueba, documentación |
 
 Tablero de gestión del propio desarrollo: pestaña **Projects** del repositorio (`ManuelCaceresDuocUC/gestion-proyectos`).
 

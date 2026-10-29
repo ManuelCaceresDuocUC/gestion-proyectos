@@ -1,7 +1,7 @@
 # Plan del proyecto (desarrollo)
 
 - **Objetivo:** entregar la aplicación integrada y la demostración el jueves **5 de noviembre de 2026**.
-- **Equipo:** Manuel-dev-a (A), Hector-dev-b (B), Cristian-dev-c (C). Trabajo remoto.
+- **Equipo:** ManuelCaceresDuocUC (A), HeOlivares (B), cristianmonsalve14 (C). Trabajo remoto.
 - **Seguimiento:** GitHub Project del repositorio (Tablero, Tabla y Roadmap), daily asíncrono y 2 llamadas semanales.
 - **Entorno desplegado:** (completar con la URL, issue B-02)
 

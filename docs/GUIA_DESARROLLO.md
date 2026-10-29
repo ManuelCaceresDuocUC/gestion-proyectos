@@ -74,9 +74,9 @@ Más detalle en `docs/arquitectura.md` y `docs/modelo-datos.md`.
 
 | Dev | GitHub | Módulos (backend y frontend) | Horas estimadas |
 |---|---|---|---|
-| **A** | @Manuel-dev-a | Modelo de datos, proyectos y EDT, motor de dependencias, recálculo, línea base, Gantt | 75 h |
-| **B** | @Hector-dev-b | Recursos y calendario, costos, sobreasignación, hitos, KPI (proyecto y cambio), tablero de proyecto, despliegue | 78 h |
-| **C** | @Cristian-dev-c | Autenticación y roles, gestión del cambio, tablero de cambio, seed del caso de prueba, guion de demo y manual de instalación | 70 h |
+| **A** | @ManuelCaceresDuocUC | Modelo de datos, proyectos y EDT, motor de dependencias, recálculo, línea base, Gantt | 75 h |
+| **B** | @HeOlivares | Recursos y calendario, costos, sobreasignación, hitos, KPI (proyecto y cambio), tablero de proyecto, despliegue | 78 h |
+| **C** | @cristianmonsalve14 | Autenticación y roles, gestión del cambio, tablero de cambio, seed del caso de prueba, guion de demo y manual de instalación | 70 h |
 
 Cada uno es dueño de su módulo de punta a punta (API + pantalla + pruebas) y lo explica en la demo.
 El `CODEOWNERS` solicita como revisor al dueño de cada carpeta. Revisión cruzada: **A revisa a B, B revisa a C, C revisa a A**.
@@ -117,7 +117,7 @@ Cada issue vive en GitHub (`[código] título`, con descripción y criterios de 
 o `dev-c`, milestone del sprint y asignación. Las tareas **T-xx** son de equipo: participan los 3 y el responsable coordina.
 La columna "Depende de" indica qué debe estar listo antes (puedes empezar con un mock).
 
-### Dev A (@Manuel-dev-a): núcleo de planificación
+### Dev A (@ManuelCaceresDuocUC): núcleo de planificación
 
 | Código | Tarea | Sprint | Horas | Rúbrica | Depende de |
 |---|---|---|---|---|---|
@@ -145,7 +145,7 @@ La columna "Depende de" indica qué debe estar listo antes (puedes empezar con u
 | A-20 | Documentar modelo de datos y arquitectura | S4 | 3 | R1 | - |
 | T-08 | Entrega final: tag v1.0, README y revisión contra la rúbrica | S4 | 2 | R8 | - |
 
-### Dev B (@Hector-dev-b): recursos, hitos, KPI, tablero de proyecto y despliegue
+### Dev B (@HeOlivares): recursos, hitos, KPI, tablero de proyecto y despliegue
 
 | Código | Tarea | Sprint | Horas | Rúbrica | Depende de |
 |---|---|---|---|---|---|
@@ -173,7 +173,7 @@ La columna "Depende de" indica qué debe estar listo antes (puedes empezar con u
 | T-06 | Reporte de avance semana 2 y actualización de riesgos | S3 | 1 | R8 | - |
 | B-20 | Manual de usuario: proyectos, EDT, recursos, Gantt, hitos y KPI | S4 | 3 | R8 | - |
 
-### Dev C (@Cristian-dev-c): cambio, tablero de cambio, auth, seed y docs
+### Dev C (@cristianmonsalve14): cambio, tablero de cambio, auth, seed y docs
 
 | Código | Tarea | Sprint | Horas | Rúbrica | Depende de |
 |---|---|---|---|---|---|
