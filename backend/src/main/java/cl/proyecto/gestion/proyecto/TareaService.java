@@ -1,6 +1,7 @@
 package cl.proyecto.gestion.proyecto;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.recalculo.RecalculoService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -21,10 +22,12 @@ public class TareaService {
 
     private final TareaRepository repo;
     private final ProyectoService proyectos;
+    private final RecalculoService recalculo;
 
-    public TareaService(TareaRepository repo, ProyectoService proyectos) {
+    public TareaService(TareaRepository repo, ProyectoService proyectos, RecalculoService recalculo) {
         this.repo = repo;
         this.proyectos = proyectos;
+        this.recalculo = recalculo;
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +67,9 @@ public class TareaService {
         t.orden = hermanos(proyectoId, t.parentId).stream().mapToInt(h -> h.orden).max().orElse(0) + 1;
         t.codigo = padre == null ? String.valueOf(t.orden) : padre.codigo + "." + t.orden;
         copiar(t, r);
-        return repo.save(t);
+        repo.save(t);
+        recalculo.recalcular(proyectoId);
+        return t;
     }
 
     @Transactional
@@ -72,7 +77,9 @@ public class TareaService {
         Tarea t = obtener(id);
         proyectos.obtenerEditable(t.proyectoId);
         copiar(t, r);
-        return repo.save(t);
+        repo.save(t);
+        recalculo.recalcular(t.proyectoId);
+        return t;
     }
 
     /** Elimina la tarea y todo lo que cuelga de ella, y renumera a sus hermanos. */
@@ -90,6 +97,7 @@ public class TareaService {
                 "No se puede eliminar: la tarea o alguna de sus subtareas está referenciada por otro registro (por ejemplo una solicitud de cambio).");
         }
         renumerar(proyectoId, parentId, hermanos(proyectoId, parentId));
+        recalculo.recalcular(proyectoId);
     }
 
     /** Mueve la tarea a la posición indicada (1 = primera) entre sus hermanos y renumera. */
@@ -105,6 +113,7 @@ public class TareaService {
         lista.removeIf(h -> h.id.equals(t.id));
         lista.add(posicion - 1, t);
         renumerar(t.proyectoId, t.parentId, lista);
+        recalculo.recalcular(t.proyectoId);
     }
 
     // ---------------------------------------------------------------- utilidades

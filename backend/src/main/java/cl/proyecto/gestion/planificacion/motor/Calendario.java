@@ -29,4 +29,13 @@ public class Calendario {
         }
         return r;
     }
+
+    /** Cantidad de días hábiles entre dos fechas, ambas incluidas (0 si fin es anterior a inicio). */
+    public int diasHabilesEntre(LocalDate inicio, LocalDate fin) {
+        int n = 0;
+        for (LocalDate d = inicio; !d.isAfter(fin); d = d.plusDays(1)) {
+            if (esLaborable(d)) n++;
+        }
+        return n;
+    }
 }
