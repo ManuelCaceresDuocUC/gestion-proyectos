@@ -1,10 +1,9 @@
 package cl.proyecto.gestion.planificacion.recalculo;
 
-import cl.proyecto.gestion.planificacion.motor.Calendario;
+import cl.proyecto.gestion.planificacion.calendario.CalendarioProyectos;
 import cl.proyecto.gestion.proyecto.Proyecto;
 import cl.proyecto.gestion.proyecto.ProyectoRepository;
 import cl.proyecto.gestion.proyecto.TareaRepository;
-import java.util.Set;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +17,13 @@ public class PasoConsolidacionCostos implements PasoRecalculo {
 
     private final ProyectoRepository proyectos;
     private final TareaRepository tareas;
+    private final CalendarioProyectos calendarios;
     private final ConsolidadorEdt consolidador = new ConsolidadorEdt();
 
-    public PasoConsolidacionCostos(ProyectoRepository proyectos, TareaRepository tareas) {
+    public PasoConsolidacionCostos(ProyectoRepository proyectos, TareaRepository tareas, CalendarioProyectos calendarios) {
         this.proyectos = proyectos;
         this.tareas = tareas;
+        this.calendarios = calendarios;
     }
 
     @Override
@@ -32,7 +33,7 @@ public class PasoConsolidacionCostos implements PasoRecalculo {
             return;
         }
         var lista = tareas.findByProyectoId(proyectoId);
-        consolidador.aplicar(proyecto, lista, new Calendario(Set.of()));
+        consolidador.aplicar(proyecto, lista, calendarios.de(proyecto));
         tareas.saveAll(lista);
         proyectos.save(proyecto);
     }

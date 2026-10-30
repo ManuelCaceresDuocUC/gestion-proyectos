@@ -2,20 +2,44 @@ package cl.proyecto.gestion.planificacion.motor;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.EnumSet;
 import java.util.Set;
 
-/** Calendario laboral. La implementación por defecto es lunes a viernes menos los feriados indicados. */
+/**
+ * Calendario laboral: días de la semana laborables menos los días no laborables (feriados).
+ * Por defecto lunes a viernes.
+ */
 public class Calendario {
+    private static final String LETRAS = "LMXJVSD"; // lunes, martes, miércoles (X), jueves, viernes, sábado, domingo
+
+    private final Set<DayOfWeek> laborables;
     private final Set<LocalDate> noLaborables;
 
     public Calendario(Set<LocalDate> noLaborables) {
+        this(EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY), noLaborables);
+    }
+
+    public Calendario(Set<DayOfWeek> laborables, Set<LocalDate> noLaborables) {
+        if (laborables.isEmpty()) {
+            throw new IllegalArgumentException("El calendario necesita al menos un día laborable a la semana.");
+        }
+        this.laborables = laborables;
         this.noLaborables = noLaborables;
     }
 
+    /** Crea el calendario desde el texto de días del proyecto (por ejemplo "LMXJV"; L M X J V S D). */
+    public static Calendario deProyecto(String diasLaborales, Set<LocalDate> noLaborables) {
+        EnumSet<DayOfWeek> dias = EnumSet.noneOf(DayOfWeek.class);
+        String texto = diasLaborales == null || diasLaborales.isBlank() ? "LMXJV" : diasLaborales;
+        for (char c : texto.toCharArray()) {
+            int i = LETRAS.indexOf(c);
+            if (i >= 0) dias.add(DayOfWeek.of(i + 1));
+        }
+        return new Calendario(dias, noLaborables);
+    }
+
     public boolean esLaborable(LocalDate d) {
-        return d.getDayOfWeek() != DayOfWeek.SATURDAY
-            && d.getDayOfWeek() != DayOfWeek.SUNDAY
-            && !noLaborables.contains(d);
+        return laborables.contains(d.getDayOfWeek()) && !noLaborables.contains(d);
     }
 
     /** Suma (o resta, si n es negativo) n días hábiles. */

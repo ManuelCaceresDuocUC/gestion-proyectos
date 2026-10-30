@@ -20,10 +20,10 @@
       "rol": "ADMIN"
     },
     {
-      "nombre": "Visualizador Demo",
-      "email": "visualizador@demo.cl",
+      "nombre": "Usuario Proyecto Demo",
+      "email": "usuario@demo.cl",
       "password": "demo1234",
-      "rol": "VISUALIZADOR"
+      "rol": "USUARIO_PROYECTO"
     }
   ],
   "tipos_recurso": [

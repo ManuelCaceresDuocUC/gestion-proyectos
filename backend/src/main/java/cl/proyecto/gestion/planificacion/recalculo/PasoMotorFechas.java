@@ -1,9 +1,8 @@
 package cl.proyecto.gestion.planificacion.recalculo;
 
 import cl.proyecto.gestion.common.ApiException;
-import cl.proyecto.gestion.planificacion.dependencia.Dependencia;
+import cl.proyecto.gestion.planificacion.calendario.CalendarioProyectos;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaRepository;
-import cl.proyecto.gestion.planificacion.motor.Calendario;
 import cl.proyecto.gestion.planificacion.motor.CicloDetectadoException;
 import cl.proyecto.gestion.planificacion.motor.DependenciaPlan;
 import cl.proyecto.gestion.planificacion.motor.FechasCalculadas;
@@ -36,12 +35,15 @@ public class PasoMotorFechas implements PasoRecalculo {
     private final ProyectoRepository proyectos;
     private final TareaRepository tareas;
     private final DependenciaRepository dependencias;
+    private final CalendarioProyectos calendarios;
     private final MotorPlanificacion motor = new MotorPlanificacion();
 
-    public PasoMotorFechas(ProyectoRepository proyectos, TareaRepository tareas, DependenciaRepository dependencias) {
+    public PasoMotorFechas(ProyectoRepository proyectos, TareaRepository tareas, DependenciaRepository dependencias,
+                           CalendarioProyectos calendarios) {
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.dependencias = dependencias;
+        this.calendarios = calendarios;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class PasoMotorFechas implements PasoRecalculo {
 
         Map<Long, FechasCalculadas> fechas;
         try {
-            fechas = motor.calcular(proyecto.fechaInicio, planes, deps, new Calendario(Set.of()));
+            fechas = motor.calcular(proyecto.fechaInicio, planes, deps, calendarios.de(proyecto));
         } catch (CicloDetectadoException e) {
             throw ApiException.conflicto("CICLO_EN_DEPENDENCIAS", e.getMessage());
         }

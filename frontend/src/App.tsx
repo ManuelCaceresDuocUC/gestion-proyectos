@@ -8,7 +8,7 @@ import HitosPagina from "./features/hitos/HitosPagina";
 import CambiosPagina from "./features/cambios/CambiosPagina";
 import TablerosPagina from "./features/tableros/TablerosPagina";
 
-// TODO (C-03): guardas por rol (ADMIN edita; VISUALIZADOR solo lee) y layout definitivo.
+// TODO (C-03): guardas por rol (ADMIN administra todo; USUARIO_PROYECTO trabaja los proyectos sin administrar usuarios ni KPI) y layout definitivo.
 const enlaces = [
   ["/proyectos", "Proyectos"],
   ["/gantt", "Gantt"],

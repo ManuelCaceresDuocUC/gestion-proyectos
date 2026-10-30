@@ -1,5 +1,5 @@
 // Tipos compartidos con los DTOs del backend. Se completan en el Sprint 0 junto con docs/api/.
-export type Rol = "ADMIN" | "VISUALIZADOR";
+export type Rol = "ADMIN" | "USUARIO_PROYECTO";
 export type TipoDependencia = "FS" | "SS" | "FF" | "SF";
 export type TipoTarea = "ETAPA" | "ACTIVIDAD" | "SUBACTIVIDAD";
 export type Semaforo = "VERDE" | "AMARILLO" | "ROJO";

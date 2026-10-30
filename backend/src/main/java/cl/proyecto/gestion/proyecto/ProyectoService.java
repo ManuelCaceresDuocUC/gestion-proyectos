@@ -64,7 +64,7 @@ public class ProyectoService {
     @Transactional
     public Proyecto cerrar(Long id) {
         Proyecto p = obtenerEditable(id);
-        p.estado = EstadoProyecto.CERRADO;
+        p.estado = EstadoProyecto.TERMINADO;
         p.cerradoEn = Instant.now();
         if (p.fechaFinReal == null) {
             p.fechaFinReal = LocalDate.now();
@@ -72,17 +72,29 @@ public class ProyectoService {
         return repo.save(p);
     }
 
+    /** Elimina un proyecto que aún no empieza (estado PLANIFICADO) junto con su EDT, recursos asignados e hitos. */
+    @Transactional
+    public void eliminar(Long id) {
+        Proyecto p = obtener(id);
+        if (p.estado != EstadoProyecto.PLANIFICADO) {
+            throw ApiException.conflicto("PROYECTO_NO_ELIMINABLE",
+                "Solo se pueden eliminar proyectos en estado PLANIFICADO. Este está " + p.estado + ".");
+        }
+        repo.delete(p);
+        repo.flush();
+    }
+
     /** Devuelve el proyecto o falla si no existe o ya está cerrado. Lo usan también la EDT y los demás módulos. */
     public Proyecto obtenerEditable(Long id) {
         Proyecto p = obtener(id);
-        if (p.estado == EstadoProyecto.CERRADO) {
+        if (p.estado == EstadoProyecto.TERMINADO) {
             throw ApiException.conflicto("PROYECTO_CERRADO", "El proyecto " + p.codigo + " está cerrado y no admite cambios.");
         }
         return p;
     }
 
     private void rechazarCierreDirecto(ProyectoRequest r) {
-        if (r.estado() == EstadoProyecto.CERRADO) {
+        if (r.estado() == EstadoProyecto.TERMINADO) {
             throw ApiException.invalido("USAR_CERRAR", "Para cerrar un proyecto usa POST /api/proyectos/{id}/cerrar.");
         }
     }

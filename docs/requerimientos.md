@@ -37,7 +37,7 @@ lo completan y lo cierran en el Sprint 0. Columna **Issue** = dónde se implemen
 | RF-TAB-01 | Tablero de proyecto: avances, hitos, costos, recursos y atrasos | R7 | B-21 |
 | RF-TAB-02 | Tablero de cambio: estados, riesgos, tiempos, adopción y alertas | R7 | C-12 |
 | RF-TAB-03 | Filtros y actualización dinámica en ambos tableros | R7 | C-13 |
-| RF-INT-01 | Dos roles: ADMIN (edita) y VISUALIZADOR (solo lectura) | R8 | C-01, B-04 |
+| RF-INT-01 | Dos roles: ADMIN (administra todo) y USUARIO_PROYECTO (trabaja los proyectos; no administra usuarios ni KPI ni aprueba cambios) | R8 | C-01, B-04 |
 | RF-INT-02 | Persistencia en base de datos relacional | R1, R8 | A-01 |
 | RF-INT-03 | Caso de prueba mínimo cargado por seed | R8 | C-07, C-11 |
 | RF-INT-04 | Demostración de los 3 recálculos (duración, recursos, solicitud aprobada) | R8 | A-18, B-18, C-14, C-16 |
