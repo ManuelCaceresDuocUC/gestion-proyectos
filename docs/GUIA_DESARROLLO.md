@@ -178,7 +178,7 @@ La columna "Depende de" indica qué debe estar listo antes (puedes empezar con u
 | Código | Tarea | Sprint | Horas | Rúbrica | Depende de |
 |---|---|---|---|---|---|
 | T-02 | Acordar contratos de API entre módulos (docs/api) | S0 | 3 | R1 | A-01 (modelo de datos) |
-| C-01 | Autenticación JWT y 2 roles (ADMIN / VISUALIZADOR) | S0 | 5 | R8 | - |
+| C-01 | Autenticación JWT y 2 roles (ADMIN / USUARIO_PROYECTO) | S0 | 5 | R8 | - |
 | C-02 | Requerimientos: gestión del cambio, tableros e integración | S0 | 2 | R1 | - |
 | C-03 | Solicitudes de cambio: modelo, CRUD y filtros | S1 | 4 | R6 | - |
 | C-04 | Las 10 etapas del cambio con control de estado | S1 | 3 | R6 | C-03 |
@@ -237,7 +237,7 @@ La demostración (guion en `docs/pruebas/guion-demo.md`) muestra, comprobando ef
 1. **Cambiar una duración** (A-18).
 2. **Modificar recursos** (B-18).
 3. **Aprobar una solicitud** (C-14).
-Además: el rol VISUALIZADOR (solo lectura) y la explicación de por qué cambió cada número.
+Además: el rol USUARIO_PROYECTO y la explicación de por qué cambió cada número.
 
 ## 11. Pendiente de aclarar con el profesor
 

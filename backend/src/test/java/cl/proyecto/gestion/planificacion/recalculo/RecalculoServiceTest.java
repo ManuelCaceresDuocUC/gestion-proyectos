@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.calendario.NoLaborable;
+import cl.proyecto.gestion.planificacion.calendario.NoLaborableRepository;
 import cl.proyecto.gestion.planificacion.dependencia.Dependencia;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaRepository;
 import cl.proyecto.gestion.planificacion.motor.TipoDependencia;
@@ -29,6 +31,7 @@ class RecalculoServiceTest {
     @Autowired TareaService tareas;
     @Autowired DependenciaRepository dependencias;
     @Autowired RecalculoService recalculo;
+    @Autowired NoLaborableRepository noLaborables;
 
     static LocalDate d(int dia) { return LocalDate.of(2026, 11, dia); }
 
@@ -84,6 +87,29 @@ class RecalculoServiceTest {
             null, null, null, BigDecimal.ZERO, null, null, d(9)));
         assertThat(tareas.obtener(a.id).inicioPlan).isEqualTo(d(9));
         assertThat(tareas.obtener(b.id).inicioPlan).isEqualTo(d(12));
+    }
+
+    @Test
+    void unFeriadoCorreLasFechas() {
+        NoLaborable feriado = new NoLaborable();
+        feriado.proyectoId = proyectoId;
+        feriado.fecha = d(3); // martes
+        feriado.descripcion = "Feriado de prueba";
+        noLaborables.save(feriado);
+        recalculo.recalcular(proyectoId);
+        assertThat(tareas.obtener(a.id).finPlan).isEqualTo(d(5));    // lun, mie, jue
+        assertThat(tareas.obtener(b.id).inicioPlan).isEqualTo(d(6)); // vie
+        assertThat(tareas.obtener(b.id).finPlan).isEqualTo(d(9));    // vie, lun
+    }
+
+    @Test
+    void unFeriadoGeneralAfectaATodosLosProyectos() {
+        NoLaborable feriado = new NoLaborable();
+        feriado.proyectoId = null;
+        feriado.fecha = d(3);
+        noLaborables.save(feriado);
+        recalculo.recalcular(proyectoId);
+        assertThat(tareas.obtener(a.id).finPlan).isEqualTo(d(5));
     }
 
     @Test

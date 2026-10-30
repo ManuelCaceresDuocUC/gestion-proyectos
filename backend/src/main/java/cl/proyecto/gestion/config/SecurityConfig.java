@@ -17,8 +17,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Seguridad base. TODO (issue C-02): reemplazar permitAll por JWT con 2 roles:
- *  - ADMIN: lectura y escritura en todos los módulos
- *  - VISUALIZADOR: solo lectura (GET)
+ *  - ADMIN: todo, incluidos usuarios, administrador de KPI y aprobación de solicitudes de cambio
+ *  - USUARIO_PROYECTO: lectura y escritura de proyectos, EDT, recursos, hitos y solicitudes (no administra
+ *    usuarios ni KPI, y no aprueba ni rechaza cambios)
  */
 @Configuration
 public class SecurityConfig {

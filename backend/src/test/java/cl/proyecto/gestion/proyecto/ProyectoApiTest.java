@@ -1,5 +1,6 @@
 package cl.proyecto.gestion.proyecto;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -81,5 +82,15 @@ class ProyectoApiTest {
         mvc.perform(get("/api/proyectos/" + id + "/edt"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].hijos").isArray());
+    }
+
+    @Test
+    void eliminaUnProyectoPlanificado() throws Exception {
+        String body = mvc.perform(post("/api/proyectos").contentType(MediaType.APPLICATION_JSON)
+                .content(json("T-API-6", "1")))
+            .andReturn().getResponse().getContentAsString();
+        String id = body.replaceAll(".*\"id\":(\\d+).*", "$1");
+        mvc.perform(delete("/api/proyectos/" + id)).andExpect(status().isNoContent());
+        mvc.perform(get("/api/proyectos/" + id)).andExpect(status().isNotFound());
     }
 }
