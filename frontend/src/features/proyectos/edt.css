@@ -1,0 +1,53 @@
+/* Vista de la EDT: lista con filas definidas y esquema (organigrama) que crece al agregar tareas. */
+.edt-vista { margin-top: 16px; }
+.edt-barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.edt-modos { display: inline-flex; border: 1px solid var(--borde); border-radius: 6px; overflow: hidden; }
+.edt-modos button { font: inherit; border: 0; padding: 5px 14px; background: #fff; cursor: pointer; border-right: 1px solid var(--borde); }
+.edt-modos button:last-child { border-right: 0; }
+.edt-modos button[aria-pressed="true"] { background: var(--primario); color: #fff; }
+.edt-rejilla { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1250px) { .edt-rejilla.edt-doble { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+
+/* lista */
+.edt-lista { border: 1px solid var(--borde); border-radius: 8px; background: #fff; overflow-x: auto; }
+.edt-cab, .edt-fila { display: grid; grid-template-columns: minmax(260px, 1fr) 64px 170px 100px auto; align-items: center; gap: 10px; padding: 0 12px; min-width: 760px; }
+.edt-cab { min-height: 34px; font-size: 12px; font-weight: 600; color: #656d76; background: var(--fondo); border-bottom: 2px solid var(--borde); text-transform: uppercase; letter-spacing: .03em; }
+.edt-fila { min-height: 42px; border-bottom: 1px solid var(--borde); }
+.edt-fila.edt-par { background: #f6f8fa; }
+.edt-fila:hover { background: #ddf4ff80; }
+.edt-fila.edt-n0 { background: #eaf2ff; border-bottom: 1px solid #b6d3ff; border-top: 1px solid #b6d3ff; font-weight: 600; }
+.edt-fila.edt-n0:hover { background: #dbe9ff; }
+.edt-nombre { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.edt-sangria { flex: none; align-self: stretch; background-image: repeating-linear-gradient(to right, transparent 0 10px, #c3cbd3 10px 11px, transparent 11px 22px); }
+.edt-tipo { flex: none; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: .03em; }
+.edt-tipo-ETAPA { background: #1f6feb; color: #fff; }
+.edt-tipo-ACTIVIDAD { background: #dafbe1; color: #116329; border: 1px solid #a6e3b5; }
+.edt-tipo-SUBACTIVIDAD { background: #fff1d6; color: #7d4e00; border: 1px solid #f0cf8f; }
+.edt-codigo { flex: none; font-variant-numeric: tabular-nums; font-weight: 700; min-width: 40px; }
+.edt-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.edt-dur, .edt-fechas { font-size: 13px; color: #3d444d; white-space: nowrap; }
+.edt-prog { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.edt-prog .progreso { width: 60px; }
+.edt-acc { display: flex; gap: 4px; justify-content: flex-end; }
+.edt-form { padding: 8px 12px 12px 34px; border-bottom: 1px solid var(--borde); background: #fff; min-width: 760px; box-sizing: border-box; }
+.edt-form .tarjeta { margin: 0; }
+.edt-vacio { padding: 24px; text-align: center; color: #656d76; }
+
+/* esquema */
+.esq { border: 1px solid var(--borde); border-radius: 8px; background: #fff; background-image: radial-gradient(#d8dee4 1px, transparent 1px); background-size: 18px 18px; overflow: auto; max-height: 640px; padding: 8px; }
+.esq h4 { margin: 0 0 4px; position: sticky; left: 0; }
+.esq svg { display: block; font-family: system-ui, sans-serif; }
+.esq-enlace { fill: none; stroke: #8c959f; stroke-width: 1.4; }
+.esq-caja { stroke-width: 1.2; }
+.esq-caja-RAIZ { fill: #1f2328; stroke: #1f2328; }
+.esq-caja-ETAPA { fill: #1f6feb; stroke: #1558c0; }
+.esq-caja-ACTIVIDAD { fill: #dafbe1; stroke: #5fbf7a; }
+.esq-caja-SUBACTIVIDAD { fill: #fff1d6; stroke: #e0b05b; }
+.esq-cod { font-size: 11px; font-weight: 700; }
+.esq-nom { font-size: 12px; }
+.esq-txt-RAIZ, .esq-txt-ETAPA { fill: #fff; }
+.esq-txt-ACTIVIDAD { fill: #116329; }
+.esq-txt-SUBACTIVIDAD { fill: #7d4e00; }
+.esq-niveles { display: flex; gap: 12px; font-size: 12px; color: #656d76; flex-wrap: wrap; margin-bottom: 6px; position: sticky; left: 0; }
+.esq-niveles span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.esq-niveles .n1::before { background: #1f6feb; } .esq-niveles .n2::before { background: #5fbf7a; } .esq-niveles .n3::before { background: #e0b05b; }

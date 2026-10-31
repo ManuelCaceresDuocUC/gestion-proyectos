@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { edtApi, proyectosApi } from "../../api/planificacion";
 import type { NodoEdt, Proyecto } from "../../types/planificacion";
-import ArbolEdt from "./ArbolEdt";
 import Confirmar from "./Confirmar";
 import FormularioProyecto from "./FormularioProyecto";
 import PanelDependencias from "./PanelDependencias";
+import VistaEdt from "./VistaEdt";
 import { ETIQUETA_ESTADO, dinero, fecha, mensajeDe, porcentaje } from "./formato";
 import { puedeEditar } from "./permisos";
 
@@ -94,7 +94,7 @@ export default function ProyectoDetalle({ id, volver }: Props) {
         </dl>
       )}
 
-      <ArbolEdt proyectoId={id} nodos={arbol} editable={editable} alCambiar={() => void cargar()} />
+      <VistaEdt proyectoId={id} nombreProyecto={`${proyecto.codigo} ${proyecto.nombre}`} nodos={arbol} editable={editable} alCambiar={() => void cargar()} />
       <PanelDependencias proyectoId={id} arbol={arbol} editable={editable} alCambiar={() => void cargar()} />
 
       {cerrando && (
