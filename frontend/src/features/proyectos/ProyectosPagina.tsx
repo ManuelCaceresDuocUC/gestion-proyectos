@@ -1,9 +1,13 @@
-// Dueño: Dev A. Issues: A-10, A-11
+import { useSearchParams } from "react-router-dom";
+import ListadoProyectos from "./ListadoProyectos";
+import ProyectoDetalle from "./ProyectoDetalle";
+
+/** /proyectos muestra el listado; /proyectos?id=3 muestra el detalle del proyecto 3. */
 export default function ProyectosPagina() {
-  return (
-    <section>
-      <h2>Proyectos y EDT</h2>
-      <p>Pendiente de implementar (A-10, A-11).</p>
-    </section>
-  );
+  const [params, setParams] = useSearchParams();
+  const id = Number(params.get("id"));
+  if (Number.isInteger(id) && id > 0) {
+    return <ProyectoDetalle id={id} volver={() => setParams({})} />;
+  }
+  return <ListadoProyectos abrir={(nuevo) => setParams({ id: String(nuevo) })} />;
 }
