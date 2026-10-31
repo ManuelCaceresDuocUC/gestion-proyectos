@@ -1,5 +1,5 @@
-# Crea por la API un proyecto de ejemplo para probar el Gantt: 3 etapas, actividades y subactividades,
-# los 4 tipos de dependencia, un hito, avances, linea base y luego un cambio de duracion que genera desviaciones.
+# Crea por la API un proyecto de ejemplo con el tamano del caso minimo: 4 etapas (entregables), 12 actividades,
+# 20 subactividades, los 4 tipos de dependencia, un hito, avances, linea base y un cambio de duracion con desviaciones.
 # Requisitos: base arriba y backend corriendo en http://localhost:8080 (docker compose up --build -d, o mvn spring-boot:run).
 # Ejecutar desde la raiz del repo:  powershell -ExecutionPolicy Bypass -File .\scripts\demo-gantt.ps1
 $ErrorActionPreference = "Stop"
@@ -11,7 +11,7 @@ function Enviar($metodo, $ruta, $obj) {
 }
 
 $codigo = "GANTT-" + (Get-Date -Format "HHmmss")
-$p = Enviar Post "/proyectos" @{ codigo = $codigo; nombre = "Proyecto de ejemplo para el Gantt"; presupuesto = 5000000; moneda = "CLP"; fechaInicio = "2026-11-02" }
+$p = Enviar Post "/proyectos" @{ codigo = $codigo; nombre = "Sistema de gestion de proyectos (ejemplo)"; presupuesto = 5000000; moneda = "CLP"; fechaInicio = "2026-11-02" }
 $id = $p.id
 function Nueva($padre, $nombre, $dias) {
     $cuerpo = @{ nombre = $nombre }
@@ -23,49 +23,89 @@ function Dep($pred, $suc, $tipo, $desfase) {
     Enviar Post "/proyectos/$id/dependencias" @{ predecesoraId = $pred.id; sucesoraId = $suc.id; tipo = $tipo; desfaseDias = $desfase } | Out-Null
 }
 
-# EDT: etapa > actividad > subactividad (las dependencias van entre tareas sin hijos)
-$e1 = Nueva $null "Planificacion" $null
-$a11 = Nueva $e1 "Levantamiento" $null
-$s111 = Nueva $a11 "Entrevistas" 3
-$s112 = Nueva $a11 "Informe de requisitos" 2
-$a12 = Nueva $e1 "Diseno" $null
-$s121 = Nueva $a12 "Arquitectura" 4
-$s122 = Nueva $a12 "Prototipo" 3
+# EDT orientada a entregables: etapa y actividad son sustantivos (lo que se entrega); la subactividad es el trabajo (verbo).
+# Las dependencias van entre subactividades (tareas sin hijos).
+$t = @{}   # codigo -> tarea creada
+function Etapa($cod, $nombre) { $script:t[$cod] = Nueva $null $nombre $null }
+function Act($cod, $padre, $nombre) { $script:t[$cod] = Nueva $script:t[$padre] $nombre $null }
+function Sub($cod, $padre, $nombre, $dias) { $script:t[$cod] = Nueva $script:t[$padre] $nombre $dias }
 
-$e2 = Nueva $null "Construccion" $null
-$a21 = Nueva $e2 "Backend" $null
-$s211 = Nueva $a21 "API" 6
-$s212 = Nueva $a21 "Base de datos" 3
-$a22 = Nueva $e2 "Frontend" $null
-$s221 = Nueva $a22 "Pantallas" 5
+Etapa "1" "Especificacion de requisitos"
+Act "1.1" "1" "Catalogo de requisitos"
+Sub "1.1.1" "1.1" "Entrevistar a usuarios" 3
+Sub "1.1.2" "1.1" "Redactar requisitos" 2
+Act "1.2" "1" "Modelo de datos"
+Sub "1.2.1" "1.2" "Disenar modelo entidad-relacion" 3
+Sub "1.2.2" "1.2" "Validar modelo con el docente" 1
+Act "1.3" "1" "Plan de pruebas"
+Sub "1.3.1" "1.3" "Redactar casos de prueba" 2
 
-$e3 = Nueva $null "Cierre" $null
-$a31 = Nueva $e3 "Pruebas" 4
-$a32 = Nueva $e3 "Entrega" 0
+Etapa "2" "Diseno aprobado"
+Act "2.1" "2" "Arquitectura del sistema"
+Sub "2.1.1" "2.1" "Definir la arquitectura" 3
+Sub "2.1.2" "2.1" "Documentar decisiones (ADR)" 2
+Act "2.2" "2" "Prototipos de interfaz"
+Sub "2.2.1" "2.2" "Dibujar prototipos" 4
+Sub "2.2.2" "2.2" "Revisar prototipos con usuarios" 1
+Act "2.3" "2" "Diseno de base de datos"
+Sub "2.3.1" "2.3" "Escribir migraciones" 3
 
-# Dependencias de los 4 tipos
-Dep $s111 $s112 "FS" 0   # informe empieza al terminar las entrevistas
-Dep $s112 $s121 "FS" 0
-Dep $s121 $s122 "SS" 1   # prototipo empieza 1 dia despues de la arquitectura
-Dep $s111 $s122 "SF" 0   # fin del prototipo no antes del inicio de las entrevistas
-Dep $s122 $s211 "FS" 0
-Dep $s211 $s212 "FF" 0   # BD termina junto con la API
-Dep $s211 $s221 "FS" 1
-Dep $s212 $a31 "FS" 0
-Dep $s221 $a31 "FS" 0
-Dep $a31 $a32 "FS" 0
+Etapa "3" "Sistema desarrollado y probado"
+Act "3.1" "3" "Modulo backend"
+Sub "3.1.1" "3.1" "Implementar la API" 6
+Sub "3.1.2" "3.1" "Implementar el motor de planificacion" 5
+Act "3.2" "3" "Modulo frontend"
+Sub "3.2.1" "3.2" "Construir las pantallas" 5
+Sub "3.2.2" "3.2" "Construir el Gantt" 4
+Act "3.3" "3" "Informe de pruebas"
+Sub "3.3.1" "3.3" "Ejecutar pruebas integradas" 3
+
+Etapa "4" "Sistema entregado y documentado"
+Act "4.1" "4" "Manual de usuario"
+Sub "4.1.1" "4.1" "Redactar el manual" 2
+Sub "4.1.2" "4.1" "Tomar capturas" 1
+Act "4.2" "4" "Sistema desplegado"
+Sub "4.2.1" "4.2" "Desplegar en el servidor" 2
+Sub "4.2.2" "4.2" "Entregar al docente (hito)" 0
+Act "4.3" "4" "Informe de cierre"
+Sub "4.3.1" "4.3" "Redactar el informe de cierre" 2
+
+# Dependencias de los 4 tipos: Dep predecesora sucesora tipo desfase
+function D($p, $s, $tipo, $desfase) { Dep $script:t[$p] $script:t[$s] $tipo $desfase }
+D "1.1.1" "1.1.2" "FS" 0
+D "1.1.2" "1.2.1" "FS" 0
+D "1.2.1" "1.2.2" "FS" 0
+D "1.1.2" "1.3.1" "FS" 0
+D "1.2.2" "2.1.1" "FS" 0
+D "2.1.1" "2.1.2" "FS" 0
+D "2.1.1" "2.2.1" "SS" 1     # prototipos empiezan 1 dia despues que la arquitectura
+D "2.2.1" "2.2.2" "FS" 0
+D "2.2.2" "2.3.1" "FS" 0
+D "2.3.1" "3.1.1" "FS" 0
+D "2.2.2" "3.2.1" "FS" 0
+D "3.1.1" "3.1.2" "SS" 2
+D "3.1.2" "3.2.2" "FF" 0     # el Gantt termina junto con el motor
+D "3.2.1" "3.2.2" "FS" 0
+D "3.1.2" "3.3.1" "FS" 0
+D "3.2.2" "3.3.1" "FS" 0
+D "3.3.1" "4.1.1" "FS" 0
+D "4.1.1" "4.1.2" "FS" 0
+D "3.3.1" "4.2.1" "FS" 0
+D "4.2.1" "4.2.2" "FS" 0
+D "4.2.1" "4.3.1" "SF" 0     # el informe no termina antes de que empiece el despliegue
+D "4.2.2" "4.3.1" "FS" 0
 
 # Avance real de las primeras tareas
-Enviar Patch "/tareas/$($s111.id)" @{ inicioReal = "2026-11-02"; finReal = "2026-11-04"; avance = 100 } | Out-Null
-Enviar Patch "/tareas/$($s112.id)" @{ inicioReal = "2026-11-05"; avance = 50 } | Out-Null
+Enviar Patch "/tareas/$($t['1.1.1'].id)" @{ inicioReal = "2026-11-02"; finReal = "2026-11-04"; avance = 100 } | Out-Null
+Enviar Patch "/tareas/$($t['1.1.2'].id)" @{ inicioReal = "2026-11-05"; avance = 50 } | Out-Null
 
 # Linea base y luego un cambio: la API pasa de 6 a 9 dias
 Enviar Post "/proyectos/$id/linea-base" @{ motivo = "Linea base inicial" } | Out-Null
-$r = Enviar Patch "/tareas/$($s211.id)" @{ duracionDias = 9 }
+$r = Enviar Patch "/tareas/$($t['3.1.1'].id)" @{ duracionDias = 9 }
 
 Write-Host ""
 Write-Host "Proyecto $codigo creado (id $id)." -ForegroundColor Cyan
-Write-Host "Se fijo la linea base y luego la API paso de 6 a 9 dias; fechas que se movieron:"
+Write-Host "Se fijo la linea base y luego 'Implementar la API' paso de 6 a 9 dias; fechas que se movieron:"
 foreach ($c in $r.cambios) {
     Write-Host ("  {0} {1}: {2} -> {3}  (antes {4} -> {5})" -f $c.codigo, $c.nombre, $c.inicioDespues, $c.finDespues, $c.inicioAntes, $c.finAntes)
 }
