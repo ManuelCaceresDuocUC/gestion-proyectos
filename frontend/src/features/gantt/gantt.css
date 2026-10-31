@@ -1,0 +1,33 @@
+.g-contenedor { display: flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; background: #fff; }
+.g-lista { flex: 0 0 280px; border-right: 1px solid var(--borde); font-size: 13px; box-sizing: content-box; }
+.g-item { display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; box-sizing: border-box; border-bottom: 1px solid transparent; }
+.g-item:hover { background: var(--fondo); }
+.g-item-sel { background: #ddf4ff; }
+.g-item-atrasada { color: var(--peligro); }
+.g-codigo { font-weight: 600; font-variant-numeric: tabular-nums; }
+.g-plegar { width: 16px; border: 0; background: none; cursor: pointer; padding: 0; display: inline-block; }
+.g-area { overflow-x: auto; flex: 1; }
+.g-svg { display: block; font-family: system-ui, sans-serif; }
+.g-fila { fill: transparent; stroke: #eaeef2; cursor: pointer; }
+.g-fila-sel { fill: #ddf4ff80; }
+.g-finde { fill: #f6f8fa; }
+.g-grilla { stroke: #eaeef2; }
+.g-marca { font-size: 10px; fill: #656d76; }
+.g-mes { font-size: 12px; font-weight: 600; fill: #1f2328; }
+.g-barra { fill: #9ec5fe; stroke: #4c8dff; cursor: pointer; }
+.g-avance { fill: #1f6feb; pointer-events: none; }
+.g-resumen { fill: #3d444d; cursor: pointer; }
+.g-hito { fill: #8250df; cursor: pointer; }
+.g-base { fill: #8c959f; opacity: .8; }
+.g-real { fill: #1a7f37; }
+.g-atrasada { fill: #ff8182; stroke: #cf222e; }
+.g-hoy { stroke: #cf222e; stroke-width: 1.5; stroke-dasharray: 4 3; }
+.g-hoy-texto { font-size: 10px; fill: #cf222e; }
+.g-flecha { fill: none; stroke: #57606a; stroke-width: 1.2; }
+.g-punta { fill: #57606a; }
+.g-leyenda { font-size: 12px; color: #656d76; }
+.g-l { display: inline-block; width: 14px; height: 8px; margin: 0 2px 0 8px; vertical-align: middle; }
+.g-l-barra { background: #9ec5fe; } .g-l-avance { background: #1f6feb; } .g-l-base { background: #8c959f; height: 4px; }
+.g-l-atrasada { background: #ff8182; } .g-l-hito { background: #8250df; width: 8px; transform: rotate(45deg); } .g-l-hoy { background: #cf222e; width: 2px; height: 12px; }
+.g-panel { margin-top: 12px; }
+.g-dep { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--borde); font-size: 13px; flex-wrap: wrap; }
