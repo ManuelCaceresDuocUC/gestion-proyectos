@@ -154,4 +154,18 @@ class MotorPlanificacionTest {
         assertEquals(d(5), calc(List.of(t(1, 3), t(2, 1)), ds).get(2L).inicio());
         assertEquals(d(10), calc(List.of(t(1, 6), t(2, 1)), ds).get(2L).inicio());
     }
+
+    @Test
+    void caminoEntreEncuentraLaRutaMasCorta() {
+        var deps = List.of(dep(1, 2, TipoDependencia.FS, 0), dep(2, 3, TipoDependencia.SS, 0),
+            dep(3, 4, TipoDependencia.FF, 0), dep(1, 4, TipoDependencia.FS, 0));
+        assertEquals(List.of(1L, 4L), motor.caminoEntre(1, 4, deps));
+        assertEquals(List.of(1L, 2L, 3L), motor.caminoEntre(1, 3, deps));
+    }
+
+    @Test
+    void caminoEntreSinRutaEsVacio() {
+        var deps = List.of(dep(1, 2, TipoDependencia.FS, 0));
+        assertEquals(List.of(), motor.caminoEntre(2, 1, deps));
+    }
 }

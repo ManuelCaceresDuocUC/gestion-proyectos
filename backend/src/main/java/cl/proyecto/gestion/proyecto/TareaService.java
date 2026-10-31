@@ -1,6 +1,7 @@
 package cl.proyecto.gestion.proyecto;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.dependencia.DependenciaRepository;
 import cl.proyecto.gestion.planificacion.recalculo.RecalculoService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -23,11 +24,14 @@ public class TareaService {
     private final TareaRepository repo;
     private final ProyectoService proyectos;
     private final RecalculoService recalculo;
+    private final DependenciaRepository dependencias;
 
-    public TareaService(TareaRepository repo, ProyectoService proyectos, RecalculoService recalculo) {
+    public TareaService(TareaRepository repo, ProyectoService proyectos, RecalculoService recalculo,
+                        DependenciaRepository dependencias) {
         this.repo = repo;
         this.proyectos = proyectos;
         this.recalculo = recalculo;
+        this.dependencias = dependencias;
     }
 
     @Transactional(readOnly = true)
@@ -57,6 +61,11 @@ public class TareaService {
             if (padre.tipo == TipoTarea.SUBACTIVIDAD) {
                 throw ApiException.conflicto("JERARQUIA_INVALIDA",
                     "Una subactividad no puede tener hijos: la EDT llega hasta 3 niveles (etapa, actividad, subactividad).");
+            }
+            if (dependencias.existsByPredecesoraIdOrSucesoraId(padre.id, padre.id)) {
+                throw ApiException.conflicto("TAREA_CON_DEPENDENCIAS",
+                    padre.codigo + " " + padre.nombre + " tiene dependencias: las dependencias son entre tareas sin subtareas. "
+                        + "Elimínelas antes de agregarle subtareas.");
             }
         }
         Tarea t = new Tarea();
