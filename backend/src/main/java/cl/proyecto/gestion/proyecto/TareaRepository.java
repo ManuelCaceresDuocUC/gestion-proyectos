@@ -7,6 +7,8 @@ public interface TareaRepository extends JpaRepository<Tarea, Long> {
 
     List<Tarea> findByProyectoId(Long proyectoId);
 
+    boolean existsByParentId(Long parentId);
+
     /** Etapas de un proyecto, en orden. */
     List<Tarea> findByProyectoIdAndParentIdIsNullOrderByOrden(Long proyectoId);
 

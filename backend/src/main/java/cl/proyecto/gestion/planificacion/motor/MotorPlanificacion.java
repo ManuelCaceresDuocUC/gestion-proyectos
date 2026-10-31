@@ -47,6 +47,39 @@ public class MotorPlanificacion {
     }
 
     /**
+     * Camino más corto de tareas desde "desde" hasta "hasta" siguiendo las dependencias (predecesora -> sucesora),
+     * con ambos extremos incluidos; lista vacía si no hay camino. Sirve para explicar un ciclo al crear una dependencia.
+     */
+    public List<Long> caminoEntre(long desde, long hasta, Collection<DependenciaPlan> deps) {
+        Map<Long, List<Long>> salientes = new HashMap<>();
+        for (DependenciaPlan d : deps) {
+            salientes.computeIfAbsent(d.predecesoraId(), k -> new ArrayList<>()).add(d.sucesoraId());
+        }
+        Map<Long, Long> anterior = new HashMap<>();
+        ArrayDeque<Long> cola = new ArrayDeque<>();
+        cola.add(desde);
+        anterior.put(desde, desde);
+        while (!cola.isEmpty()) {
+            Long actual = cola.poll();
+            if (actual == hasta) {
+                ArrayList<Long> camino = new ArrayList<>();
+                for (Long n = actual; ; n = anterior.get(n)) {
+                    camino.add(0, n);
+                    if (n == desde) break;
+                }
+                return camino;
+            }
+            for (Long s : salientes.getOrDefault(actual, List.of())) {
+                if (!anterior.containsKey(s)) {
+                    anterior.put(s, actual);
+                    cola.add(s);
+                }
+            }
+        }
+        return List.of();
+    }
+
+    /**
      * Calcula inicio y fin de cada tarea respetando los 4 tipos de dependencia y sus desfases (ADR-002).
      * Paso hacia adelante en orden topológico: cada tarea empieza lo más temprano que permiten el inicio del
      * proyecto, su inicio mínimo y todas sus predecesoras (gana la más restrictiva).
