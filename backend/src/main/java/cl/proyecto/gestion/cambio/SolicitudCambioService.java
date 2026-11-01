@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * C-03: crear, consultar, editar y borrar solicitudes. No aplica el cambio al plan (eso es C-09)
- * ni valida transiciones de estado (C-08).
+ * C-03: crear, consultar, editar y borrar solicitudes. Al crear, C-04 genera las 10 etapas.
+ * No aplica el cambio al plan (C-09) ni valida transiciones de estado (C-08).
  */
 @Service
 public class SolicitudCambioService {
@@ -21,12 +21,14 @@ public class SolicitudCambioService {
     private final SolicitudCambioRepository repo;
     private final ProyectoService proyectos;
     private final TareaRepository tareas;
+    private final CambioEtapaService etapas;
 
     public SolicitudCambioService(SolicitudCambioRepository repo, ProyectoService proyectos,
-                                  TareaRepository tareas) {
+                                  TareaRepository tareas, CambioEtapaService etapas) {
         this.repo = repo;
         this.proyectos = proyectos;
         this.tareas = tareas;
+        this.etapas = etapas;
     }
 
     @Transactional(readOnly = true)
@@ -66,7 +68,9 @@ public class SolicitudCambioService {
         s.aplicada = false;
         s.estado = EstadoSolicitud.ABIERTO;
         aplicar(s, r, true);
-        return repo.save(s);
+        s = repo.save(s);
+        etapas.generar(s.id);
+        return s;
     }
 
     @Transactional
