@@ -12,3 +12,4 @@ frontend/dist/
 .DS_Store
 # Entorno
 .env
+docker-compose.override.yml

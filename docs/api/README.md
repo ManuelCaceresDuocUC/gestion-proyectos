@@ -11,7 +11,7 @@ La documentación generada está en `/swagger-ui.html` cuando el backend corre.
 | recursos y asignaciones | `/api/recursos`, `/api/asignaciones` | B | por definir |
 | hitos | `/api/hitos` | B | por definir |
 | KPI | `/api/kpi` | B | por definir |
-| solicitudes de cambio | `/api/cambios` | C | por definir |
+| solicitudes de cambio | `/api/proyectos/{id}/cambios`, `/api/cambios` | C | [cambios.md](cambios.md) (C-03) |
 | tableros | `/api/tablero/proyecto/{id}`, `/api/tablero/cambio/{id}` | C | por definir |
 
 Convenciones: JSON en español (`nombre`, `fechaInicio`...), fechas ISO-8601, errores como
