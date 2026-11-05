@@ -6,7 +6,7 @@ import java.util.Set;
 
 /**
  * Grafo de estados de una solicitud (C-08). Sin Spring: el servicio lo consulta al PUT,
- * aprobar y rechazar. El mismo estado se considera válido (el formulario reenvía el actual).
+ * aprobar, rechazar y aplicar. El mismo estado se considera válido (el formulario reenvía el actual).
  *
  * <pre>
  * ABIERTO            → EN_EVALUACION
@@ -58,6 +58,11 @@ public final class TransicionesSolicitud {
 
     public static boolean puedeRechazar(EstadoSolicitud desde) {
         return desde == EstadoSolicitud.EN_EVALUACION;
+    }
+
+    /** Aplicar al plan solo desde {@code APROBADO}. La bandera {@code aplicada} la mira el servicio. */
+    public static boolean puedeAplicar(EstadoSolicitud desde) {
+        return desde == EstadoSolicitud.APROBADO;
     }
 
     private static String etiqueta(EstadoSolicitud estado) {

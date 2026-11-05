@@ -56,6 +56,16 @@ class TransicionesSolicitudTest {
     }
 
     @Test
+    void aplicarSoloDesdeAprobado() {
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.APROBADO)).isTrue();
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.EN_EVALUACION)).isFalse();
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.ABIERTO)).isFalse();
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.EN_IMPLEMENTACION)).isFalse();
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.RECHAZADO)).isFalse();
+        assertThat(TransicionesSolicitud.puedeAplicar(EstadoSolicitud.CERRADO)).isFalse();
+    }
+
+    @Test
     void rechazadoYCerradoSonTerminales() {
         assertThat(TransicionesSolicitud.esTerminal(EstadoSolicitud.RECHAZADO)).isTrue();
         assertThat(TransicionesSolicitud.esTerminal(EstadoSolicitud.CERRADO)).isTrue();

@@ -9,6 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import cl.proyecto.gestion.proyecto.ProyectoRequest;
 import cl.proyecto.gestion.proyecto.ProyectoService;
+import cl.proyecto.gestion.proyecto.Tarea;
+import cl.proyecto.gestion.proyecto.TareaRequest;
+import cl.proyecto.gestion.proyecto.TareaService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-03 por HTTP. Cuando C-01 active la seguridad, agregar @WithMockUser. */
+/** C-03 / C-08 / C-09 por HTTP. Cuando C-01 active la seguridad, agregar @WithMockUser. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
@@ -28,6 +31,7 @@ class SolicitudCambioApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired ProyectoService proyectos;
+    @Autowired TareaService tareas;
 
     Long proyectoId;
 
@@ -179,6 +183,66 @@ class SolicitudCambioApiTest {
     }
 
     @Test
+    void aplicarTiempoPorHttpMueveDuracion() throws Exception {
+        Tarea etapa = tareas.crear(proyectoId, new TareaRequest(null, "Etapa", null, null, null, null));
+        Tarea hoja = tareas.crear(proyectoId, new TareaRequest(etapa.id, "Hoja", null, 5, null, null));
+        String id = crearAprobada("Plazo", "TIEMPO", hoja.id, 3);
+
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.aplicada").value(true))
+            .andExpect(jsonPath("$.aplicadaEn").isNotEmpty())
+            .andExpect(jsonPath("$.estado").value("EN_IMPLEMENTACION"));
+
+        mvc.perform(get("/api/tareas/" + hoja.id))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.duracionDias").value(8));
+    }
+
+    @Test
+    void aplicarDosVecesEs409() throws Exception {
+        String id = crearAprobada("Costo", "COSTO", null, null);
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.aplicada").value(true));
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("YA_APLICADA"));
+    }
+
+    @Test
+    void aplicarSinAprobarEs409() throws Exception {
+        String id = crearYPasarAEvaluacion("AunNo");
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("TRANSICION_INVALIDA"));
+    }
+
+    @Test
+    void aplicarTiempoSinTareaEs400() throws Exception {
+        String id = crearAprobada("SinTarea", "TIEMPO", null, 2);
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.codigo").value("TAREA_REQUERIDA"));
+    }
+
+    @Test
+    void aplicarInexistenteEs404() throws Exception {
+        mvc.perform(post("/api/cambios/-1/aplicar"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.codigo").value("NO_ENCONTRADO"));
+    }
+
+    @Test
+    void aplicarEnProyectoCerradoEs409() throws Exception {
+        String id = crearAprobada("Tarde", "COSTO", null, null);
+        proyectos.cerrar(proyectoId);
+        mvc.perform(post("/api/cambios/" + id + "/aplicar"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("PROYECTO_CERRADO"));
+    }
+
+    @Test
     void diasAtrasoEnLaRespuesta() throws Exception {
         LocalDate fin = LocalDate.now().minusDays(5);
         mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
@@ -189,13 +253,33 @@ class SolicitudCambioApiTest {
     }
 
     private String crearYPasarAEvaluacion(String nombre) throws Exception {
+        return crearYPasarAEvaluacion(nombre, "TIEMPO", null, null);
+    }
+
+    private String crearAprobada(String nombre, String tipo, Long tareaId, Integer impactoDias) throws Exception {
+        String id = crearYPasarAEvaluacion(nombre, tipo, tareaId, impactoDias);
+        mvc.perform(post("/api/cambios/" + id + "/aprobar")).andExpect(status().isOk());
+        return id;
+    }
+
+    private String crearYPasarAEvaluacion(String nombre, String tipo, Long tareaId, Integer impactoDias)
+            throws Exception {
+        String extra = "";
+        if (tareaId != null) {
+            extra += ",\"tareaId\":" + tareaId;
+        }
+        if (impactoDias != null) {
+            extra += ",\"impactoDias\":" + impactoDias;
+        }
+        String datos = "{\"nombre\":\"" + nombre + "\",\"tipo\":\"" + tipo + "\"" + extra + "}";
         String body = mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\":\"" + nombre + "\",\"tipo\":\"TIEMPO\"}"))
+                .content(datos))
             .andReturn().getResponse().getContentAsString();
         String id = body.replaceAll(".*\"id\":(\\d+).*", "$1");
         mvc.perform(put("/api/cambios/" + id).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"nombre\":\"" + nombre + "\",\"tipo\":\"TIEMPO\",\"estado\":\"EN_EVALUACION\"}"))
+                .content("{\"nombre\":\"" + nombre + "\",\"tipo\":\"" + tipo + "\",\"estado\":\"EN_EVALUACION\""
+                    + extra + "}"))
             .andExpect(status().isOk());
         return id;
     }
