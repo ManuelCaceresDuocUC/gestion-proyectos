@@ -121,6 +121,64 @@ class SolicitudCambioApiTest {
     }
 
     @Test
+    void putConSaltoIlegalEs409() throws Exception {
+        String body = mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"Original\",\"tipo\":\"TIEMPO\"}"))
+            .andReturn().getResponse().getContentAsString();
+        String id = body.replaceAll(".*\"id\":(\\d+).*", "$1");
+
+        mvc.perform(put("/api/cambios/" + id).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"Original\",\"tipo\":\"TIEMPO\",\"estado\":\"APROBADO\"}"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("TRANSICION_INVALIDA"));
+    }
+
+    @Test
+    void aprobarYRechazarPorHttp() throws Exception {
+        String idOk = crearYPasarAEvaluacion("Para aprobar");
+        mvc.perform(post("/api/cambios/" + idOk + "/aprobar"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.estado").value("APROBADO"))
+            .andExpect(jsonPath("$.aprobadaEn").isNotEmpty())
+            .andExpect(jsonPath("$.aplicada").value(false));
+
+        String idNo = crearYPasarAEvaluacion("Para rechazar");
+        mvc.perform(post("/api/cambios/" + idNo + "/rechazar"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.estado").value("RECHAZADO"))
+            .andExpect(jsonPath("$.aprobadaEn").value((Object) null));
+    }
+
+    @Test
+    void aprobarEnProyectoCerradoEs409() throws Exception {
+        String id = crearYPasarAEvaluacion("Cerrado");
+        proyectos.cerrar(proyectoId);
+        mvc.perform(post("/api/cambios/" + id + "/aprobar"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("PROYECTO_CERRADO"));
+    }
+
+    @Test
+    void aprobarInexistenteEs404() throws Exception {
+        mvc.perform(post("/api/cambios/-1/aprobar"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.codigo").value("NO_ENCONTRADO"));
+    }
+
+    @Test
+    void aprobarAbiertaEs409() throws Exception {
+        String body = mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"Abierta\",\"tipo\":\"TIEMPO\"}"))
+            .andReturn().getResponse().getContentAsString();
+        String id = body.replaceAll(".*\"id\":(\\d+).*", "$1");
+        mvc.perform(post("/api/cambios/" + id + "/aprobar"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.codigo").value("TRANSICION_INVALIDA"));
+    }
+
+    @Test
     void diasAtrasoEnLaRespuesta() throws Exception {
         LocalDate fin = LocalDate.now().minusDays(5);
         mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
@@ -128,5 +186,17 @@ class SolicitudCambioApiTest {
                 .content("{\"nombre\":\"Atrasada\",\"tipo\":\"TIEMPO\",\"finPrevisto\":\"" + fin + "\"}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.diasAtraso").value(5));
+    }
+
+    private String crearYPasarAEvaluacion(String nombre) throws Exception {
+        String body = mvc.perform(post("/api/proyectos/" + proyectoId + "/cambios")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"" + nombre + "\",\"tipo\":\"TIEMPO\"}"))
+            .andReturn().getResponse().getContentAsString();
+        String id = body.replaceAll(".*\"id\":(\\d+).*", "$1");
+        mvc.perform(put("/api/cambios/" + id).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"" + nombre + "\",\"tipo\":\"TIEMPO\",\"estado\":\"EN_EVALUACION\"}"))
+            .andExpect(status().isOk());
+        return id;
     }
 }
