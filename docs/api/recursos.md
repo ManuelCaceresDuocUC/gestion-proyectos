@@ -124,12 +124,89 @@ DELETE /api/recursos/{id}
 
 Respuesta: `204 No Content`.
 
+## Asignaciones
+
+### Listar asignaciones de una tarea
+
+```http
+GET /api/asignaciones/tarea/{tareaId}
+```
+
+La tarea debe existir. Responde `404 NO_ENCONTRADO` si no existe.
+
+### Obtener una asignación
+
+```http
+GET /api/asignaciones/{id}
+```
+
+### Crear una asignación
+
+```http
+POST /api/asignaciones
+Content-Type: application/json
+```
+
+```json
+{
+  "tareaId": 15,
+  "recursoId": 3,
+  "cantidad": 1.00,
+  "tarifa": 25000.00,
+  "horasSemana": 40.0,
+  "semanas": 2.0
+}
+```
+
+La `tarifa` es opcional. Si se omite, se utiliza la tarifa vigente del recurso.
+
+Las asignaciones solo pueden asociarse a tareas sin subtareas. Si la tarea tiene hijos, responde `409 TAREA_NO_HOJA`.
+
+Respuesta `201 Created`:
+
+```json
+{
+  "id": 1,
+  "tareaId": 15,
+  "recursoId": 3,
+  "cantidad": 1.00,
+  "tarifa": 25000.00,
+  "horasSemana": 40.0,
+  "semanas": 2.0,
+  "costoPlan": 0.00,
+  "cantidadReal": 0.00,
+  "costoReal": 0.00
+}
+```
+
+### Actualizar una asignación
+
+```http
+PUT /api/asignaciones/{id}
+Content-Type: application/json
+```
+
+Utiliza el mismo cuerpo de la creación.
+
+### Eliminar una asignación
+
+```http
+DELETE /api/asignaciones/{id}
+```
+
+Respuesta: `204 No Content`.
+
 ## Errores
 
 | Código | HTTP | Situación |
 |---|---:|---|
-| `NO_ENCONTRADO` | 404 | El tipo o recurso no existe |
+| `NO_ENCONTRADO` | 404 | El tipo, recurso, tarea o asignación no existe |
 | `TIPO_RECURSO_DUPLICADO` | 409 | Ya existe un tipo con ese nombre |
 | `TIPO_RECURSO_EN_USO` | 409 | Se intenta eliminar un tipo asociado a recursos |
 | `TIPO_RECURSO_INEXISTENTE` | 400 | El recurso referencia un tipo inexistente |
+| `ASIGNACION_DUPLICADA` | 409 | La tarea ya tiene asignado ese recurso |
+| `TAREA_NO_HOJA` | 409 | La tarea tiene subtareas |
+| `RECURSO_INACTIVO` | 409 | Se intenta asignar un recurso inactivo |
+| `TAREA_DE_OTRO_PROYECTO` | 400 | La nueva tarea pertenece a otro proyecto |
+| `PROYECTO_CERRADO` | 409 | El proyecto no admite cambios |
 | `VALIDACION` | 400 | Faltan campos o hay valores inválidos |
