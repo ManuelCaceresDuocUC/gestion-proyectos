@@ -7,16 +7,26 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * Carga el caso de prueba (classpath:seed/caso-prueba.json y kpi-definiciones.json) si la base está vacía.
- * TODO: issue C-09 (v1: estructura, recursos), C-13 (v2: dependencias, asignaciones, hitos, cambios).
+ * C-07: al arrancar, carga el recorte v1 del caso de prueba si {@code APP_SEED_ENABLED=true}.
+ * No duplica {@code EEC-2026}. Dependencias, hitos, solicitudes y KPI quedan para C-11.
  */
 @Component
 @ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")
 public class SeedRunner implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(SeedRunner.class);
 
+    private final SeedService seed;
+
+    public SeedRunner(SeedService seed) {
+        this.seed = seed;
+    }
+
     @Override
     public void run(String... args) {
-        log.info("Seed habilitado, pero la carga del caso de prueba aún no está implementada (issue C-09).");
+        if (seed.cargar()) {
+            log.info("Seed C-07: caso de prueba cargado.");
+        } else {
+            log.info("Seed C-07: el caso ya estaba, no se repite.");
+        }
     }
 }
