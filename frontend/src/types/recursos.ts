@@ -25,3 +25,25 @@ export interface RecursoDatos {
   capacidadHorasDia: number | null;
   activo?: boolean;
 }
+
+export interface Asignacion {
+  id: number;
+  tareaId: number;
+  recursoId: number;
+  cantidad: number;
+  tarifa: number;
+  horasSemana: number | null;
+  semanas: number | null;
+  costoPlan: number;
+  cantidadReal: number;
+  costoReal: number;
+}
+
+export interface AsignacionDatos {
+  tareaId: number;
+  recursoId: number;
+  cantidad: number;
+  tarifa?: number;
+  horasSemana?: number;
+  semanas?: number;
+}

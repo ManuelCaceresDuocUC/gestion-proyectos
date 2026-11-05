@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type {
+  Asignacion,
+  AsignacionDatos,
   Recurso,
   RecursoDatos,
   TipoRecurso,
@@ -43,4 +45,21 @@ export const recursosApi = {
 
   eliminar: (id: number) =>
     api<void>(`/recursos/${id}`, conCuerpo("DELETE")),
+};
+
+export const asignacionesApi = {
+  listarPorTarea: (tareaId: number) =>
+    api<Asignacion[]>(`/asignaciones/tarea/${tareaId}`),
+
+  obtener: (id: number) =>
+    api<Asignacion>(`/asignaciones/${id}`),
+
+  crear: (datos: AsignacionDatos) =>
+    api<Asignacion>("/asignaciones", conCuerpo("POST", datos)),
+
+  actualizar: (id: number, datos: AsignacionDatos) =>
+    api<Asignacion>(`/asignaciones/${id}`, conCuerpo("PUT", datos)),
+
+  eliminar: (id: number) =>
+    api<void>(`/asignaciones/${id}`, conCuerpo("DELETE")),
 };
