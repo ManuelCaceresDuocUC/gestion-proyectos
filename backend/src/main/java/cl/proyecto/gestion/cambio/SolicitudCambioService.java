@@ -5,6 +5,7 @@ import cl.proyecto.gestion.proyecto.ProyectoService;
 import cl.proyecto.gestion.proyecto.Tarea;
 import cl.proyecto.gestion.proyecto.TareaRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -13,7 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * C-03: crear, consultar, editar y borrar solicitudes. Al crear, C-04 genera las 10 etapas.
- * No aplica el cambio al plan (C-09) ni valida transiciones de estado (C-08).
+ * El PUT valida el grafo de estado (C-08). Aprobar/rechazar son POST dedicados.
+ * No aplica el cambio al plan (C-09).
  */
 @Service
 public class SolicitudCambioService {
@@ -22,13 +24,16 @@ public class SolicitudCambioService {
     private final ProyectoService proyectos;
     private final TareaRepository tareas;
     private final CambioEtapaService etapas;
+    private final CambioHistorialRepository historial;
 
     public SolicitudCambioService(SolicitudCambioRepository repo, ProyectoService proyectos,
-                                  TareaRepository tareas, CambioEtapaService etapas) {
+                                  TareaRepository tareas, CambioEtapaService etapas,
+                                  CambioHistorialRepository historial) {
         this.repo = repo;
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.etapas = etapas;
+        this.historial = historial;
     }
 
     @Transactional(readOnly = true)
@@ -89,6 +94,32 @@ public class SolicitudCambioService {
         repo.delete(s);
     }
 
+    /** Solo desde EN_EVALUACION. Marca {@code aprobadaEn}; no pone {@code aplicada} (C-09). */
+    @Transactional
+    public SolicitudCambio aprobar(Long id) {
+        SolicitudCambio s = obtener(id);
+        proyectos.obtenerEditable(s.proyectoId);
+        if (!TransicionesSolicitud.puedeAprobar(s.estado)) {
+            throw ApiException.conflicto("TRANSICION_INVALIDA",
+                "Solo se puede aprobar una solicitud en evaluación.");
+        }
+        pasarA(s, EstadoSolicitud.APROBADO);
+        return repo.save(s);
+    }
+
+    /** Solo desde EN_EVALUACION. */
+    @Transactional
+    public SolicitudCambio rechazar(Long id) {
+        SolicitudCambio s = obtener(id);
+        proyectos.obtenerEditable(s.proyectoId);
+        if (!TransicionesSolicitud.puedeRechazar(s.estado)) {
+            throw ApiException.conflicto("TRANSICION_INVALIDA",
+                "Solo se puede rechazar una solicitud en evaluación.");
+        }
+        pasarA(s, EstadoSolicitud.RECHAZADO);
+        return repo.save(s);
+    }
+
     private void validarTarea(Long proyectoId, Long tareaId) {
         if (tareaId == null) {
             return;
@@ -143,7 +174,7 @@ public class SolicitudCambioService {
             s.impacto = ImpactoSolicitud.MEDIO;
         }
         if (!alta && r.estado() != null) {
-            s.estado = r.estado();
+            pasarA(s, r.estado());
         }
         s.tareaId = r.tareaId();
         if (r.impactoDias() != null) {
@@ -163,5 +194,27 @@ public class SolicitudCambioService {
         s.costoReal = r.costoReal();
         s.accionCorrectiva = r.accionCorrectiva();
         s.resultado = r.resultado();
+    }
+
+    private void pasarA(SolicitudCambio s, EstadoSolicitud nuevo) {
+        TransicionesSolicitud.exigir(s.estado, nuevo);
+        if (s.estado == nuevo) {
+            return;
+        }
+        EstadoSolicitud anterior = s.estado;
+        s.estado = nuevo;
+        if (nuevo == EstadoSolicitud.APROBADO && s.aprobadaEn == null) {
+            s.aprobadaEn = Instant.now();
+        }
+        registrarEstado(s.id, anterior, nuevo);
+    }
+
+    private void registrarEstado(Long solicitudId, EstadoSolicitud anterior, EstadoSolicitud nuevo) {
+        CambioHistorial h = new CambioHistorial();
+        h.solicitudId = solicitudId;
+        h.campo = "estado";
+        h.valorAnterior = anterior.name();
+        h.valorNuevo = nuevo.name();
+        historial.save(h);
     }
 }
