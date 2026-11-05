@@ -1,10 +1,11 @@
-# API de solicitudes de cambio (C-03, C-04, C-08)
+# API de solicitudes de cambio (C-03, C-04, C-08, C-09)
 
 Base: `/api`. Errores como `{ "codigo": "...", "mensaje": "...", "detalles": [...] }`.
 Fechas en ISO-8601 (`yyyy-MM-dd`); instantes en ISO-8601 UTC.
 
-Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado y aprobar/rechazar**.
-No guarda evidencias ni expone el GET del historial (C-05) y no aplica el cambio al plan (C-09).
+Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado, aprobar/rechazar
+y aplicar una solicitud aprobada al plan vigente**.
+No guarda evidencias ni expone el GET del historial (C-05).
 Hoy las rutas están abiertas (`permitAll`); C-01 / C-02 agregarán JWT.
 
 ## Catálogos
@@ -30,6 +31,7 @@ Hoy las rutas están abiertas (`permitAll`); C-01 / C-02 agregarán JWT.
 | DELETE | `/cambios/{id}` | 204 |
 | POST | `/cambios/{id}/aprobar` | 200. Sin body. Solo desde `EN_EVALUACION` |
 | POST | `/cambios/{id}/rechazar` | 200. Sin body. Solo desde `EN_EVALUACION` |
+| POST | `/cambios/{id}/aplicar` | 200. Sin body. Solo desde `APROBADO` y si aún no está aplicada |
 | GET | `/cambios/{id}/etapas` | 200. Las 10 + calculados. 404 si no existe la solicitud |
 | PATCH | `/cambios/{id}/etapas/{numero}` | 200. Body: `{"estado":"EN_CURSO"}`. `numero` es 1–10 |
 
@@ -128,9 +130,9 @@ RECHAZADO, CERRADO → (terminales)
 Aprobar y rechazar **solo** desde `EN_EVALUACION` (los `POST` de abajo). Un salto fuera del grafo
 responde 409 `TRANSICION_INVALIDA` y no cambia la fila.
 
-Cualquier cambio real de `estado` (PUT, aprobar o rechazar) deja una fila en `cambio_historial`
-(`campo` = `estado`, `valorAnterior` / `valorNuevo` = el nombre del catálogo). El GET de esa
-bitácora es C-05. `usuarioId` queda nulo hasta C-01.
+Cualquier cambio real de `estado` (PUT, aprobar, rechazar o aplicar) deja una fila en
+`cambio_historial` (`campo` = `estado`, `valorAnterior` / `valorNuevo` = el nombre del catálogo).
+El GET de esa bitácora es C-05. `usuarioId` queda nulo hasta C-01.
 
 ## Aprobar y rechazar
 
@@ -146,6 +148,28 @@ Si el proyecto está `TERMINADO` → 409 `PROYECTO_CERRADO`.
 
 También se puede llegar a `APROBADO` con un PUT `estado=APROBADO` desde `EN_EVALUACION`; en ese
 caso también se llena `aprobadaEn`. Los `POST` son el camino pensado para C-10.
+
+## Aplicar al plan (C-09)
+
+`POST /api/cambios/{id}/aplicar` (sin body). Solo si `estado = APROBADO` y `aplicada = false`.
+
+Efectos, en una sola transacción:
+
+- Tipo **TIEMPO**: suma `impactoDias` a la duración de la tarea hoja (`tareaId`) con
+  `CronogramaService.parchear`. Ese servicio dispara el recálculo; **no se escriben fechas a mano**.
+  `impactoDias` es un delta (puede ser negativo). La duración resultante no puede ser menor que 0.
+- Otros tipos (`ALCANCE`, `COSTO`, `RECURSO`, `TECNOLOGIA`, `ORGANIZACION`): no mueven el plan.
+- Marca `aplicada = true` y llena `aplicadaEn` (la primera vez).
+- Pasa a `EN_IMPLEMENTACION` (el único salto válido desde `APROBADO`) y deja historial de `estado`.
+
+La **línea base no se toca**. Solo cambia el plan vigente. Un segundo `POST` responde 409 `YA_APLICADA`
+y no vuelve a sumar días.
+
+Si el impacto de TIEMPO falla (sin tarea, tarea con hijos, duración negativa), no se marca `aplicada`
+ni se cambia el estado.
+
+Hace falta `tareaId` al aplicar un TIEMPO. En el alta/PUT sigue siendo opcional: el 400 aparece
+recién en este `POST`.
 
 ## Etapas (C-04)
 
@@ -189,14 +213,18 @@ Calculado; **no se persiste**. Porcentaje 0–100.
 |---|---|---|
 | `VALIDACION` | 400 | Falta `nombre`, `tipo` o `estado` de etapa, o un campo no cumple el tamaño |
 | `TAREA_DE_OTRO_PROYECTO` | 400 | `tareaId` existe pero es de otro proyecto |
+| `TAREA_REQUERIDA` | 400 | Se aplica un TIEMPO sin `tareaId` |
+| `DURACION_INVALIDA` | 400 | `duración + impactoDias` quedaría negativa |
 | `NO_ENCONTRADO` | 404 | No existe el proyecto, la solicitud, la tarea o la etapa (`numero` fuera de 1–10) |
-| `PROYECTO_CERRADO` | 409 | El proyecto está `TERMINADO` (alta, edición, baja, aprobar, rechazar o PATCH de etapa) |
-| `TRANSICION_INVALIDA` | 409 | El nuevo `estado` no es un paso válido, o se aprueba/rechaza fuera de `EN_EVALUACION` |
+| `PROYECTO_CERRADO` | 409 | El proyecto está `TERMINADO` (alta, edición, baja, aprobar, rechazar, aplicar o PATCH de etapa) |
+| `TRANSICION_INVALIDA` | 409 | El nuevo `estado` no es un paso válido; se aprueba/rechaza fuera de `EN_EVALUACION`; o se aplica fuera de `APROBADO` |
+| `YA_APLICADA` | 409 | La solicitud ya fue aplicada al plan |
+| `TAREA_CON_HIJOS` | 409 | Se aplica un TIEMPO sobre una etapa o actividad con subtareas |
 
 Un valor fuera de catálogo (`tipo`, `estado`, …) responde 400. Consultar un proyecto cerrado sí
 devuelve el listado y las etapas; solo se bloquean las escrituras.
 
 ## Fuera de este contrato
 
-No hay `GET /cambios/{id}/historial` ni CRUD de evidencias (C-05). No hay
-`POST /cambios/{id}/aplicar`. `aplicada` y `aplicadaEn` quedan en falso / nulo hasta C-09.
+No hay `GET /cambios/{id}/historial` ni CRUD de evidencias (C-05).
+No hay botones de aplicar en el front (C-10).

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** API de solicitudes de cambio (C-03, C-08). Contrato en docs/api/cambios.md. */
+/** API de solicitudes de cambio (C-03, C-08, C-09). Contrato en docs/api/cambios.md. */
 @RestController
 @RequestMapping("/api")
 public class SolicitudCambioController {
@@ -76,6 +76,11 @@ public class SolicitudCambioController {
     @PostMapping("/cambios/{id}/rechazar")
     public SolicitudCambioResponse rechazar(@PathVariable Long id) {
         return conEtapas(servicio.rechazar(id));
+    }
+
+    @PostMapping("/cambios/{id}/aplicar")
+    public SolicitudCambioResponse aplicar(@PathVariable Long id) {
+        return conEtapas(servicio.aplicarAlPlan(id));
     }
 
     private SolicitudCambioResponse conEtapas(SolicitudCambio s) {

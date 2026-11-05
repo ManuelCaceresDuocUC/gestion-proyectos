@@ -1,6 +1,8 @@
 package cl.proyecto.gestion.cambio;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.cronograma.CronogramaService;
+import cl.proyecto.gestion.planificacion.cronograma.TareaPatch;
 import cl.proyecto.gestion.proyecto.ProyectoService;
 import cl.proyecto.gestion.proyecto.Tarea;
 import cl.proyecto.gestion.proyecto.TareaRepository;
@@ -15,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * C-03: crear, consultar, editar y borrar solicitudes. Al crear, C-04 genera las 10 etapas.
  * El PUT valida el grafo de estado (C-08). Aprobar/rechazar son POST dedicados.
- * No aplica el cambio al plan (C-09).
+ * aplicarAlPlan (C-09) exige APROBADO, no aplicada y proyecto editable.
+ * Tipo TIEMPO suma impactoDias a la duración de la hoja vía CronogramaService (él dispara el recálculo).
+ * Al aplicar: aplicada, aplicadaEn, estado EN_IMPLEMENTACION e historial.
  */
 @Service
 public class SolicitudCambioService {
@@ -25,15 +29,17 @@ public class SolicitudCambioService {
     private final TareaRepository tareas;
     private final CambioEtapaService etapas;
     private final CambioHistorialRepository historial;
+    private final CronogramaService cronograma;
 
     public SolicitudCambioService(SolicitudCambioRepository repo, ProyectoService proyectos,
                                   TareaRepository tareas, CambioEtapaService etapas,
-                                  CambioHistorialRepository historial) {
+                                  CambioHistorialRepository historial, CronogramaService cronograma) {
         this.repo = repo;
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.etapas = etapas;
         this.historial = historial;
+        this.cronograma = cronograma;
     }
 
     @Transactional(readOnly = true)
@@ -120,16 +126,76 @@ public class SolicitudCambioService {
         return repo.save(s);
     }
 
+    /**
+     * Solo desde {@code APROBADO}, si aún no está aplicada y el proyecto admite cambios.
+     * Tipo {@code TIEMPO}: nueva duración = duración actual + {@code impactoDias}, vía
+     * {@link CronogramaService#parchear} (ese servicio ya recalcula; no se llama otra vez).
+     * Los demás tipos no mueven el plan vigente.
+     * Después marca {@code aplicada}/{@code aplicadaEn} y pasa a {@code EN_IMPLEMENTACION}.
+     */
+    @Transactional
+    public SolicitudCambio aplicarAlPlan(Long id) {
+        SolicitudCambio s = obtener(id);
+        proyectos.obtenerEditable(s.proyectoId);
+        exigirAplicable(s);
+        aplicarImpactoAlPlan(s);
+        marcarAplicada(s);
+        return repo.save(s);
+    }
+
+    private void exigirAplicable(SolicitudCambio s) {
+        if (s.aplicada) {
+            throw ApiException.conflicto("YA_APLICADA",
+                "La solicitud " + s.codigo + " ya fue aplicada al plan.");
+        }
+        if (!TransicionesSolicitud.puedeAplicar(s.estado)) {
+            throw ApiException.conflicto("TRANSICION_INVALIDA",
+                "Solo se puede aplicar una solicitud aprobada.");
+        }
+    }
+
+    private void aplicarImpactoAlPlan(SolicitudCambio s) {
+        if (s.tipo != TipoSolicitud.TIEMPO) {
+            return;
+        }
+        if (s.tareaId == null) {
+            throw ApiException.invalido("TAREA_REQUERIDA",
+                "Una solicitud de tipo TIEMPO necesita la tarea a la que se aplica el plazo.");
+        }
+        Tarea tarea = resolverTarea(s.proyectoId, s.tareaId);
+        int actual = tarea.duracionDias == null ? 0 : tarea.duracionDias;
+        int nueva = actual + s.impactoDias;
+        if (nueva < 0) {
+            throw ApiException.invalido("DURACION_INVALIDA",
+                "El impacto de " + s.impactoDias + " días dejaría la duración de "
+                    + tarea.codigo + " en " + nueva + ".");
+        }
+        cronograma.parchear(s.tareaId, new TareaPatch(nueva, null, null, null));
+    }
+
+    private void marcarAplicada(SolicitudCambio s) {
+        s.aplicada = true;
+        if (s.aplicadaEn == null) {
+            s.aplicadaEn = Instant.now();
+        }
+        pasarA(s, EstadoSolicitud.EN_IMPLEMENTACION);
+    }
+
     private void validarTarea(Long proyectoId, Long tareaId) {
         if (tareaId == null) {
             return;
         }
+        resolverTarea(proyectoId, tareaId);
+    }
+
+    private Tarea resolverTarea(Long proyectoId, Long tareaId) {
         Tarea tarea = tareas.findById(tareaId)
             .orElseThrow(() -> ApiException.noEncontrado("No existe la tarea " + tareaId + "."));
         if (!proyectoId.equals(tarea.proyectoId)) {
             throw ApiException.invalido("TAREA_DE_OTRO_PROYECTO",
                 "La tarea " + tarea.codigo + " no pertenece a este proyecto.");
         }
+        return tarea;
     }
 
     private String siguienteCodigo(Long proyectoId) {

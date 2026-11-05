@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.lineabase.LineaBaseService;
 import cl.proyecto.gestion.proyecto.Proyecto;
 import cl.proyecto.gestion.proyecto.ProyectoRequest;
 import cl.proyecto.gestion.proyecto.ProyectoService;
@@ -19,14 +20,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-03 / C-08. Usa la base real; cada test se revierte al terminar. */
+/** C-03 / C-08 / C-09. Usa la base real; cada test se revierte al terminar. */
 @SpringBootTest
 @Transactional
 class SolicitudCambioServiceTest {
 
     @Autowired SolicitudCambioService servicio;
+    @Autowired SolicitudCambioRepository repo;
     @Autowired ProyectoService proyectos;
     @Autowired TareaService tareas;
+    @Autowired LineaBaseService lineaBase;
     @Autowired CambioHistorialRepository historial;
 
     Long proyectoId;
@@ -195,6 +198,153 @@ class SolicitudCambioServiceTest {
     }
 
     @Test
+    void aplicarAlPlanSoloDesdeAprobado() {
+        SolicitudCambio abierta = servicio.crear(proyectoId, req("Temprano", TipoSolicitud.TIEMPO));
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(abierta.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+        assertThat(servicio.obtener(abierta.id).aplicada).isFalse();
+
+        SolicitudCambio enEval = enEvaluacion("AunNo");
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(enEval.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+        assertThat(servicio.obtener(enEval.id).estado).isEqualTo(EstadoSolicitud.EN_EVALUACION);
+        assertThat(servicio.obtener(enEval.id).aplicada).isFalse();
+
+        servicio.rechazar(enEval.id);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(enEval.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+    }
+
+    @Test
+    void noAplicarSiElProyectoEstaCerrado() {
+        SolicitudCambio s = enEvaluacion("Cerrado");
+        servicio.aprobar(s.id);
+        proyectos.cerrar(proyectoId);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("PROYECTO_CERRADO");
+        assertThat(servicio.obtener(s.id).aplicada).isFalse();
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.APROBADO);
+    }
+
+    @Test
+    void noAplicarSiYaEstaAplicada() {
+        SolicitudCambio s = servicio.aprobar(enEvaluacion("Dup").id);
+        s.aplicada = true;
+        repo.save(s);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("YA_APLICADA");
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.APROBADO);
+    }
+
+    @Test
+    void aplicarTiempoSumaImpactoALaHoja() {
+        Tarea hoja = hojaConDuracion(5);
+        SolicitudCambio s = aprobada("Plazo", TipoSolicitud.TIEMPO, 3, hoja.id);
+        SolicitudCambio aplicada = servicio.aplicarAlPlan(s.id);
+        assertThat(tareas.obtener(hoja.id).duracionDias).isEqualTo(8);
+        assertThat(aplicada.aplicada).isTrue();
+        assertThat(aplicada.aplicadaEn).isNotNull();
+        assertThat(aplicada.estado).isEqualTo(EstadoSolicitud.EN_IMPLEMENTACION);
+    }
+
+    @Test
+    void aplicarEscribeHistorialYNoSeRepite() {
+        Tarea hoja = hojaConDuracion(5);
+        SolicitudCambio s = aprobada("Plazo", TipoSolicitud.TIEMPO, 3, hoja.id);
+        servicio.aplicarAlPlan(s.id);
+
+        List<CambioHistorial> bitacora = historial.findBySolicitudIdOrderByFechaAsc(s.id);
+        assertThat(bitacora).extracting(h -> h.valorNuevo)
+            .containsExactly("EN_EVALUACION", "APROBADO", "EN_IMPLEMENTACION");
+        assertThat(bitacora.get(2).campo).isEqualTo("estado");
+        assertThat(bitacora.get(2).valorAnterior).isEqualTo("APROBADO");
+
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("YA_APLICADA");
+        assertThat(tareas.obtener(hoja.id).duracionDias).isEqualTo(8);
+    }
+
+    @Test
+    void aplicarTiempoSinTareaEsInvalido() {
+        SolicitudCambio s = aprobada("SinTarea", TipoSolicitud.TIEMPO, 4, null);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TAREA_REQUERIDA");
+        assertThat(servicio.obtener(s.id).aplicada).isFalse();
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.APROBADO);
+    }
+
+    @Test
+    void aplicarTiempoATareaConHijosSeRechaza() {
+        Tarea etapa = tareas.crear(proyectoId, new TareaRequest(null, "Padre", null, null, null, null));
+        tareas.crear(proyectoId, new TareaRequest(etapa.id, "Hija", null, 4, null, null));
+        Integer duracionAntes = tareas.obtener(etapa.id).duracionDias;
+        SolicitudCambio s = aprobada("Padre", TipoSolicitud.TIEMPO, 2, etapa.id);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TAREA_CON_HIJOS");
+        assertThat(tareas.obtener(etapa.id).duracionDias).isEqualTo(duracionAntes);
+        assertThat(servicio.obtener(s.id).aplicada).isFalse();
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.APROBADO);
+    }
+
+    @Test
+    void aplicarTiempoNoDejaDuracionNegativa() {
+        Tarea hoja = hojaConDuracion(2);
+        SolicitudCambio s = aprobada("Acortar", TipoSolicitud.TIEMPO, -5, hoja.id);
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("DURACION_INVALIDA");
+        assertThat(tareas.obtener(hoja.id).duracionDias).isEqualTo(2);
+        assertThat(servicio.obtener(s.id).aplicada).isFalse();
+    }
+
+    @Test
+    void aplicarCostoNoMueveLaDuracion() {
+        Tarea hoja = hojaConDuracion(5);
+        SolicitudCambio s = aprobada("Presupuesto", TipoSolicitud.COSTO, 10, hoja.id);
+        SolicitudCambio aplicada = servicio.aplicarAlPlan(s.id);
+        assertThat(tareas.obtener(hoja.id).duracionDias).isEqualTo(5);
+        assertThat(aplicada.aplicada).isTrue();
+        assertThat(aplicada.estado).isEqualTo(EstadoSolicitud.EN_IMPLEMENTACION);
+    }
+
+    @Test
+    void aplicarTiempoMueveElPlanYConservaLaLineaBase() {
+        Long pid = proyectos.crear(new ProyectoRequest(
+            "T-C09-" + System.nanoTime() % 1_000_000,
+            "Base",
+            null, null, null, BigDecimal.ZERO, null, null, LocalDate.of(2026, 11, 2))).id;
+        Tarea etapa = tareas.crear(pid, new TareaRequest(null, "Etapa", null, null, null, null));
+        Tarea hoja = tareas.crear(pid, new TareaRequest(etapa.id, "Hoja", null, 5, null, null));
+        lineaBase.fijar(pid, "v1");
+
+        Tarea congelada = tareas.obtener(hoja.id);
+        LocalDate inicioBase = congelada.inicioBase;
+        LocalDate finBase = congelada.finBase;
+        LocalDate finPlanAntes = congelada.finPlan;
+        LocalDate finProyectoBase = proyectos.obtener(pid).fechaFinBase;
+        assertThat(inicioBase).isNotNull();
+        assertThat(finBase).isEqualTo(finPlanAntes);
+
+        servicio.aplicarAlPlan(aprobada(pid, "Plazo", TipoSolicitud.TIEMPO, 3, hoja.id).id);
+
+        Tarea vigente = tareas.obtener(hoja.id);
+        assertThat(vigente.duracionDias).isEqualTo(8);
+        assertThat(vigente.inicioBase).isEqualTo(inicioBase);
+        assertThat(vigente.finBase).isEqualTo(finBase);
+        assertThat(vigente.finPlan).isAfter(finPlanAntes);
+        assertThat(proyectos.obtener(pid).fechaFinBase).isEqualTo(finProyectoBase);
+        assertThat(proyectos.obtener(pid).fechaFinPlan).isAfter(finProyectoBase);
+    }
+
+    @Test
+    void aplicarNoAceptaEnImplementacionSinHaberseAplicado() {
+        SolicitudCambio s = aprobada("Salto", TipoSolicitud.COSTO, null, null);
+        servicio.actualizar(s.id, req("Salto", TipoSolicitud.COSTO, EstadoSolicitud.EN_IMPLEMENTACION));
+        assertThatThrownBy(() -> servicio.aplicarAlPlan(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("TRANSICION_INVALIDA");
+        assertThat(servicio.obtener(s.id).aplicada).isFalse();
+    }
+
+    @Test
     void cambiarEstadoEscribeHistorial() {
         SolicitudCambio s = servicio.crear(proyectoId, req("Bitacora", TipoSolicitud.TIEMPO));
         servicio.actualizar(s.id, req("Bitacora", TipoSolicitud.TIEMPO, EstadoSolicitud.EN_EVALUACION));
@@ -262,6 +412,23 @@ class SolicitudCambioServiceTest {
     private SolicitudCambio enEvaluacion(String nombre) {
         SolicitudCambio s = servicio.crear(proyectoId, req(nombre, TipoSolicitud.TIEMPO));
         return servicio.actualizar(s.id, req(nombre, TipoSolicitud.TIEMPO, EstadoSolicitud.EN_EVALUACION));
+    }
+
+    private SolicitudCambio aprobada(String nombre, TipoSolicitud tipo, Integer impactoDias, Long tareaId) {
+        return aprobada(proyectoId, nombre, tipo, impactoDias, tareaId);
+    }
+
+    private SolicitudCambio aprobada(Long pid, String nombre, TipoSolicitud tipo, Integer impactoDias, Long tareaId) {
+        SolicitudCambio s = servicio.crear(pid,
+            req(nombre, tipo, null, null, null, null, null, impactoDias, tareaId));
+        servicio.actualizar(s.id,
+            req(nombre, tipo, EstadoSolicitud.EN_EVALUACION, null, null, null, null, impactoDias, tareaId));
+        return servicio.aprobar(s.id);
+    }
+
+    private Tarea hojaConDuracion(int dias) {
+        Tarea etapa = tareas.crear(proyectoId, new TareaRequest(null, "Etapa", null, null, null, null));
+        return tareas.crear(proyectoId, new TareaRequest(etapa.id, "Hoja", null, dias, null, null));
     }
 
     private static SolicitudCambioRequest req(String nombre, TipoSolicitud tipo) {
