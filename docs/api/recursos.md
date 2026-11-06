@@ -122,7 +122,8 @@ Usa el mismo cuerpo de la creación.
 DELETE /api/recursos/{id}
 ```
 
-Respuesta: `204 No Content`.
+Respuesta: `204 No Content`. Si el recurso no tiene asignaciones, se elimina físicamente. Si tiene asignaciones,
+se conserva para mantener el historial y solo se marca como `activo: false`.
 
 ## Asignaciones
 

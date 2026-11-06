@@ -10,6 +10,8 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
 
     List<Asignacion> findByRecursoIdOrderById(Long recursoId);
 
+    boolean existsByRecursoId(Long recursoId);
+
     Optional<Asignacion> findByTareaIdAndRecursoId(Long tareaId, Long recursoId);
 
     boolean existsByTareaIdAndRecursoId(Long tareaId, Long recursoId);
