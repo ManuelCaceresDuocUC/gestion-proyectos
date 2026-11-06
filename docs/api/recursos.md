@@ -122,7 +122,8 @@ Usa el mismo cuerpo de la creación.
 DELETE /api/recursos/{id}
 ```
 
-Respuesta: `204 No Content`.
+Respuesta: `204 No Content`. Si el recurso no tiene asignaciones, se elimina físicamente. Si tiene asignaciones,
+se conserva para mantener el historial y solo se marca como `activo: false`.
 
 ## Asignaciones
 
@@ -161,6 +162,12 @@ Content-Type: application/json
 La `tarifa` es opcional. Si se omite, se utiliza la tarifa vigente del recurso.
 
 Las asignaciones solo pueden asociarse a tareas sin subtareas. Si la tarea tiene hijos, responde `409 TAREA_NO_HOJA`.
+
+Al crear, actualizar o eliminar una asignación se ejecuta el recálculo del proyecto. El costo planificado de cada
+asignación es `cantidad x tarifa`; el costo real es `cantidadReal x tarifa`. El paso de costos escribe esos valores
+en las asignaciones y tareas hoja. Luego la consolidación suma las hojas hacia las actividades, etapas y proyecto sin
+duplicar importes. La respuesta del proyecto expone `presupuesto`, `costoPlan` y `costoReal` para comparar el costo
+planificado y real contra el presupuesto.
 
 Respuesta `201 Created`:
 

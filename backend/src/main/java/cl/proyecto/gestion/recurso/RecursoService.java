@@ -10,10 +10,15 @@ public class RecursoService {
 
     private final RecursoRepository repo;
     private final TipoRecursoRepository tipos;
+    private final AsignacionRepository asignaciones;
 
-    public RecursoService(RecursoRepository repo, TipoRecursoRepository tipos) {
+    public RecursoService(
+        RecursoRepository repo,
+        TipoRecursoRepository tipos,
+        AsignacionRepository asignaciones) {
         this.repo = repo;
         this.tipos = tipos;
+        this.asignaciones = asignaciones;
     }
 
     @Transactional(readOnly = true)
@@ -51,6 +56,11 @@ public class RecursoService {
     @Transactional
     public void eliminar(Long id) {
         Recurso recurso = obtener(id);
+        if (asignaciones.existsByRecursoId(id)) {
+            recurso.activo = false;
+            repo.save(recurso);
+            return;
+        }
         repo.delete(recurso);
     }
 
