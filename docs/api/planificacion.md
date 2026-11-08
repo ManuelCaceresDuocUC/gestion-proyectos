@@ -4,6 +4,24 @@ Base: `/api`. Errores como `{ "codigo": "...", "mensaje": "...", "detalles": [..
 Toda operación de esta página **recalcula el proyecto** y responde con `cambios`: las tareas cuyas fechas plan
 se movieron (`tareaId, codigo, nombre, inicioAntes, finAntes, inicioDespues, finDespues`), incluidas etapas y actividades.
 
+## Calendario laboral
+
+Los proyectos usan `diasLaborales` (por defecto `LMXJV`) y pueden tener días no laborables propios.
+También se pueden registrar feriados generales enviando `proyectoId: null`; estos afectan a todos los proyectos.
+El motor excluye ambos tipos de días al calcular fechas plan y duraciones.
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| GET | `/no-laborables?proyectoId={id}` | días del proyecto y feriados generales ordenados por fecha |
+| GET | `/no-laborables` | feriados generales |
+| GET | `/no-laborables/{id}` | un día no laborable |
+| POST | `/no-laborables` | 201; body `{proyectoId, fecha, descripcion}` |
+| PUT | `/no-laborables/{id}` | día actualizado |
+| DELETE | `/no-laborables/{id}` | 204 |
+
+`fecha` es obligatoria y debe usar `yyyy-MM-dd`. No se puede repetir la misma fecha dentro del
+mismo proyecto. Los cambios sobre un proyecto terminado responden `409 PROYECTO_CERRADO`.
+
 ## Dependencias
 Solo entre tareas **sin subtareas** (las fechas de etapas y actividades se calculan desde sus hijos).
 Tipos: `FS`, `SS`, `FF`, `SF`. `desfaseDias` en días hábiles; negativo = adelanto; si no viene, 0.
