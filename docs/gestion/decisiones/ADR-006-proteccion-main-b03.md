@@ -1,0 +1,8 @@
+# ADR-006 · Protección de `main` para B-03
+
+- **Estado:** aceptada
+- **Contexto:** B-03 exige que los cambios entren por Pull Request, con al menos una aprobación y CI en verde. El workflow `frontend-ci` ejecuta `npm install` y `npm run build` en cada Pull Request que toca `frontend/`.
+- **Decisión:** la rama `main` debe configurarse con Pull Request obligatorio, una aprobación requerida y el check `frontend-ci` exitoso antes de fusionar. La aprobación puede realizarla el propio autor del PR o cualquier otro integrante; no se exige que sea una persona distinta al autor. `CODEOWNERS` solicita revisores según el módulo afectado y la plantilla de PR exige enlazar el issue con `Closes #<número>`.
+- **Verificación:** el 8 de noviembre de 2026, `frontend-ci` terminó exitosamente en la rama de trabajo. La consulta de ramas de GitHub reportó `main` como no protegida (`protected: false`), por lo que la configuración de protección todavía debe aplicarse desde la administración del repositorio.
+- **Compromiso transitorio:** mientras la configuración no esté disponible o no pueda aplicarse por las restricciones del plan, el equipo acuerda no hacer pushes directos ni fusionar un PR sin una aprobación registrada por el autor o por otro integrante y CI en verde. El administrador del repositorio aplicará la regla en cuanto sea posible y conservará este ADR como evidencia del acuerdo.
+- **Consecuencias:** se agrega una verificación explícita antes de cada fusión y se reduce el riesgo de integrar cambios sin revisión o con el frontend sin compilar. La protección efectiva depende de la configuración de GitHub y no puede garantizarse solo con archivos versionados.

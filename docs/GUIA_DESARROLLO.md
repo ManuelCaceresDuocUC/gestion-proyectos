@@ -79,7 +79,7 @@ Más detalle en `docs/arquitectura.md` y `docs/modelo-datos.md`.
 | **C** | @cristianmonsalve14 | Autenticación y roles, gestión del cambio, tablero de cambio, seed del caso de prueba, guion de demo y manual de instalación | 70 h |
 
 Cada uno es dueño de su módulo de punta a punta (API + pantalla + pruebas) y lo explica en la demo.
-El `CODEOWNERS` solicita como revisor al dueño de cada carpeta. Sin revisión obligatoria: cada uno fusiona sus propios PR cuando el CI está en verde (trabajamos en horario vespertino y sin reuniones fijas).
+El `CODEOWNERS` solicita como revisor al dueño de cada carpeta. La protección de `main` exige Pull Request, al menos una aprobación del autor o de otro integrante y CI en verde; no exige aprobación de una persona distinta al autor y nunca se sube directo a `main`.
 Las horas son estimaciones del plan: si vas con desvío, avisa en el daily para rebalancear.
 
 ## 6. Calendario (hoy 22 oct -> entrega 5 nov)
@@ -203,7 +203,7 @@ Total de issues: **66** (el tablero del proyecto los trae todos con estimación 
 ## 9. Cómo trabajamos
 
 **Git (trunk-based con ramas cortas)**
-- Todo entra a `main` por PR y cada uno fusiona el suyo (squash) cuando el CI está en verde y ya probó el cambio; no se requiere aprobación de otro. Nunca se sube directo a `main`.
+- Todo entra a `main` por PR y se fusiona con squash cuando el CI está en verde, ya se probó el cambio y existe al menos una aprobación del autor o de otro integrante. No se exige aprobación de una persona distinta al autor y nunca se sube directo a `main`.
 - Rama por issue: `feat/<n°>-<descripcion>`, `fix/<n°>-<descripcion>`. Commits `feat:`, `fix:`, `docs:`, `test:`.
 - PR pequeños y frecuentes (idealmente menos de un día). El PR dice `Closes #<n°>` y completa el checklist de la plantilla.
 - Los archivos compartidos (`config/`, `common/`, `App.tsx`, `api/`) se tocan con PR chicos para evitar conflictos.

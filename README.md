@@ -26,6 +26,21 @@ cd frontend && npm install && npm run dev   # frontend en http://localhost:5173
 Comprobación: `http://localhost:8080/api/health` debe responder `{"status":"ok"}`.
 Documentación de la API (cuando exista): `http://localhost:8080/swagger-ui.html`.
 
+## Flujo mínimo para colaborar
+
+```bash
+git clone https://github.com/ManuelCaceresDuocUC/gestion-proyectos.git
+cd gestion-proyectos
+docker compose up --build
+cd frontend && npm install && npm run build
+git switch -c feat/<n°issue>-descripcion
+git push -u origin feat/<n°issue>-descripcion
+```
+
+Después del `push`, abre el Pull Request desde GitHub, conserva la plantilla,
+completa el checklist y usa `Closes #<n° del issue>`. La fusión requiere una
+aprobación, que puede realizar el propio autor, y el CI en verde.
+
 ## Despliegue online
 
 El despliegue definido en [`render.yaml`](render.yaml) publica PostgreSQL, el backend
@@ -63,6 +78,6 @@ frontend/   SPA React + Vite + TypeScript           docs/      requerimientos, m
 
 ## Reglas de trabajo (resumen)
 
-- Todo entra a `main` por Pull Request que fusiona su autor cuando el CI está en verde (sin aprobación obligatoria de otro).
+- Todo entra a `main` por Pull Request, con al menos una aprobación del autor o de otro integrante y el CI en verde; nunca se sube directo a `main`.
 - Ramas: `feat/<n°issue>-descripcion`, `fix/<n°issue>-descripcion`. Commits: `feat:`, `fix:`, `docs:`, `test:`.
 - Todo PR referencia su issue (`Closes #N`). Los detalles están en la guía de desarrollo.
