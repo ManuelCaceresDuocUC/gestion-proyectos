@@ -26,6 +26,33 @@ cd frontend && npm install && npm run dev   # frontend en http://localhost:5173
 Comprobación: `http://localhost:8080/api/health` debe responder `{"status":"ok"}`.
 Documentación de la API (cuando exista): `http://localhost:8080/swagger-ui.html`.
 
+## Despliegue online
+
+El despliegue definido en [`render.yaml`](render.yaml) publica PostgreSQL, el backend
+y el frontend como servicios de Render. Los tres servicios siguen la rama `main` y
+se redeployan automáticamente después de cada push aceptado en esa rama.
+
+URLs del entorno:
+
+- Frontend: <https://gestion-proyectos-frontend.onrender.com>
+- Backend: <https://gestion-proyectos-api.onrender.com/api/health>
+- PostgreSQL: base de datos privada de Render, accesible solo por el backend
+
+Al crear el Blueprint en Render, configura estos valores en el servicio `gestion-proyectos-api`:
+
+| Variable | Uso | Ejemplo local / valor online |
+|---|---|---|
+| `DB_URL` | URL JDBC completa; opcional si se usan las variables separadas | `jdbc:postgresql://localhost:5432/gestion` |
+| `DB_HOST`, `DB_PORT`, `DB_NAME` | Conexión a PostgreSQL cuando `DB_URL` no está definida | Los entrega Render |
+| `DB_USER`, `DB_PASSWORD` | Credenciales de PostgreSQL | Las entrega Render |
+| `JWT_SECRET` | Secreto para firmar tokens; mínimo 32 caracteres | Generar uno exclusivo y no publicarlo |
+| `CORS_ORIGINS` | Orígenes permitidos, separados por coma | `https://gestion-proyectos-frontend.onrender.com` |
+| `APP_SEED_ENABLED` | Carga el caso de demostración al iniciar | `true` en la demo, `false` en producción |
+
+Para el servicio `gestion-proyectos-frontend`, define `VITE_API_URL` con
+`https://gestion-proyectos-api.onrender.com`. Las variables `VITE_*` se incorporan
+durante el build, por lo que un cambio requiere un nuevo deploy del frontend.
+
 ## Estructura
 
 ```

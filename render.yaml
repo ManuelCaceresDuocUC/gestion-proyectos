@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: gestion-proyectos-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: gestion-proyectos-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: gestion-proyectos-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: gestion-proyectos-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: gestion-proyectos-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: gestion-proyectos-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: APP_SEED_ENABLED
+        value: "true"
+      - key: CORS_ORIGINS
+        value: https://gestion-proyectos-frontend.onrender.com
+
+  - type: web
+    name: gestion-proyectos-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        value: https://gestion-proyectos-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+databases:
+  - name: gestion-proyectos-db
+    plan: free
+    postgresMajorVersion: "16"

@@ -14,8 +14,10 @@ export class ErrorApi extends Error {
   }
 }
 
+const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+
 export async function api<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
-  const respuesta = await fetch(`/api${ruta}`, {
+  const respuesta = await fetch(`${apiBaseUrl}/api${ruta}`, {
     ...opciones,
     headers: { "Content-Type": "application/json", ...((opciones.headers as Record<string, string> | undefined) ?? {}) },
   });
