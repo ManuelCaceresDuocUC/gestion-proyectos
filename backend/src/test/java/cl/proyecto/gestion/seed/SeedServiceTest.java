@@ -15,6 +15,8 @@ import cl.proyecto.gestion.recurso.RecursoService;
 import cl.proyecto.gestion.recurso.TipoRecurso;
 import cl.proyecto.gestion.recurso.TipoRecursoRequest;
 import cl.proyecto.gestion.recurso.TipoRecursoService;
+import cl.proyecto.gestion.recurso.AsignacionRepository;
+import cl.proyecto.gestion.planificacion.recalculo.SobrecargaAlertaRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-07: recorte v1 — 4/12/20, recursos, hoja 1.4; no duplica EEC-2026 ni carga C-11. */
+/** C-07: recorte v1 — 4/12/20, recursos, asignaciones y alerta B-09; no duplica EEC-2026 ni carga C-11. */
 @SpringBootTest
 @Transactional
 class SeedServiceTest {
@@ -34,6 +36,8 @@ class SeedServiceTest {
     @Autowired RecursoService recursos;
     @Autowired DependenciaService dependencias;
     @Autowired SolicitudCambioService cambios;
+    @Autowired AsignacionRepository asignaciones;
+    @Autowired SobrecargaAlertaRepository alertas;
 
     @Test
     void cargaElRecorteV1YLaSegundaVezNoRepite() {
@@ -82,6 +86,9 @@ class SeedServiceTest {
 
         assertThat(dependencias.listar(p.id)).isEmpty();
         assertThat(cambios.listar(p.id, null, null, null, null, null, null)).isEmpty();
+        assertThat(asignaciones.count()).isGreaterThan(0);
+        assertThat(alertas.findByProyectoIdOrderByFechaAscRecursoNombreAsc(p.id))
+            .anyMatch(alerta -> "Ingeniero de infraestructura".equals(alerta.recursoNombre));
     }
 
     @Test
