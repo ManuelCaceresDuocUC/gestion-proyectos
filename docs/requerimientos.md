@@ -1,7 +1,7 @@
 # Requerimientos
 
-Borrador inicial derivado de la rúbrica y de las planillas del profesor. Los issues A-02, B-01 y C-02
-lo completan y lo cierran en el Sprint 0. Columna **Issue** = dónde se implementa; **Rúbrica** = indicador (R1-R8).
+Especificación funcional derivada de la rúbrica y de las planillas del profesor. Los issues A-02, B-01 y C-02
+la completan y la cierran en el Sprint 0. Columna **Issue** = dónde se implementa; **Rúbrica** = indicador (R1-R8).
 
 ## Requerimientos funcionales
 
@@ -41,6 +41,78 @@ lo completan y lo cierran en el Sprint 0. Columna **Issue** = dónde se implemen
 | RF-INT-02 | Persistencia en base de datos relacional | R1, R8 | A-01 |
 | RF-INT-03 | Caso de prueba mínimo cargado por seed | R8 | C-07, C-11 |
 | RF-INT-04 | Demostración de los 3 recálculos (duración, recursos, solicitud aprobada) | R8 | A-18, B-18, C-14, C-16 |
+
+## Especificación B-01
+
+Estos criterios detallan los requisitos de Dev B y son la referencia funcional para los contratos, el modelo de
+datos y las pruebas de los módulos de recursos, tiempos, costos, hitos y KPI.
+
+| ID | Prioridad | Criterio de aceptación |
+|---|---|---|
+| RF-TIE-01 | Alta | Registrar fechas planificadas, de línea base y reales, y calcular duración en días hábiles. |
+| RF-TIE-02 | Alta | Aplicar días laborales del proyecto y excluir feriados generales y días no laborables propios. |
+| RF-REC-01 | Alta | Mantener cuatro tipos de recurso; cada recurso debe tener tarifa y cada profesional capacidad diaria. |
+| RF-REC-02 | Alta | Asignar recursos a tareas hoja con cantidad y tarifa, rechazando duplicados y recursos inactivos. |
+| RF-REC-03 | Alta | Calcular `costo plan = cantidad x tarifa` y `costo real = cantidadReal x tarifa`, y consolidarlos sin duplicación. |
+| RF-REC-04 | Alta | Calcular `carga diaria = horas asignadas / días hábiles de la tarea` y alertar cuando `carga diaria > capacidad diaria`. |
+| RF-HIT-01 | Media | Registrar un hito de duración cero con todos los campos indicados en la matriz de hito siguiente. |
+| RF-HIT-02 | Alta | Impedir que un hito se marque cumplido antes del término de sus actividades asociadas. |
+| RF-KPI-01 | Alta | Configurar variables, fórmula, unidad, meta, operador, sentido, umbrales, periodicidad y responsable. |
+| RF-KPI-02 | Alta | Devolver `No calculable` con denominador cero y aplicar semáforo Verde >= 100%, Amarillo 80-99%, Rojo < 80%. |
+| RF-KPI-03 | Media | Guardar un snapshot histórico en cada recálculo y generar alertas cuando no se alcance la meta. |
+| RF-KPI-04/05 | Media | Cargar ocho KPI de proyecto e hitos y al menos doce KPI de gestión del cambio. |
+
+### Recursos, asignaciones y costos
+
+- Deben existir cuatro tipos de recurso en el caso mínimo. Cada recurso tiene nombre, tipo, tarifa vigente y estado
+  activo; un profesional además declara capacidad diaria.
+- La tarifa y la cantidad de una asignación no pueden ser negativas y una asignación solo puede apuntar a una tarea
+  hoja del mismo proyecto. Una tarea no puede repetir el mismo recurso.
+- La asignación conserva la tarifa aplicada para no alterar el historial cuando cambie la tarifa del recurso.
+- El costo planificado de una asignación es `cantidad x tarifa`; el costo real es `cantidadReal x tarifa`. El
+  recálculo persiste ambos valores y consolida las tareas hoja hacia la EDT y el proyecto sin duplicarlos.
+- Una modificación de asignación debe disparar el recálculo del proyecto. Un proyecto terminado no admite cambios.
+- La carga diaria de un profesional se calcula como `horas asignadas / días hábiles de la tarea`. Si la carga diaria
+  es mayor que la capacidad diaria del profesional, se genera una alerta de sobreasignación.
+
+### Tiempos y calendario laboral
+
+- Las fechas planificadas, de línea base y reales se mantienen separadas. La línea base solo cambia al fijar una nueva
+  versión y el recálculo no la modifica.
+- La duración se expresa en días hábiles según los días laborales del proyecto, excluyendo feriados generales y
+  días no laborables propios.
+- Un día no laborable se identifica por proyecto y fecha; la misma fecha no se puede registrar dos veces en el mismo
+  ámbito.
+
+### Hitos
+
+- Un hito representa un logro verificable y tiene duración cero. Sus campos son: logro, actividades asociadas,
+  semana prevista, fecha planificada, fecha de línea base, fecha real opcional, estado, evidencia, indicador,
+  unidad, criterio de aceptación, validador y acción si no se cumple.
+- Cada hito pertenece a un proyecto y puede asociarse a una o más actividades. No se puede marcar como cumplido sin
+  fecha real ni antes de que terminen sus actividades asociadas.
+- El caso mínimo debe contener seis hitos y cubrir estados pendientes, cumplidos y no cumplidos.
+
+### KPI
+
+- Un KPI configurable declara código, categoría, ámbito, fórmula, variables y origen, unidad, operador, sentido,
+  meta, umbrales, periodicidad y responsable.
+- Los operadores de meta admitidos son `>=`, `<=`, `>`, `<` y `entre límites`; el sentido indica si un valor mayor o
+  menor representa mejor cumplimiento.
+- Las fórmulas deben usar variables de la misma población y período. Un denominador cero produce el resultado
+  `No calculable`, sin dividir ni asignar un semáforo falso.
+- El cumplimiento se expresa como porcentaje y el semáforo es Verde (>= 100%), Amarillo (80-99%) o Rojo (< 80%),
+  según el sentido y la meta configurados. Solo se redondea el resultado final a dos decimales.
+- Cada recálculo guarda un histórico inmutable con valor, cumplimiento, semáforo y fecha de cálculo, y puede generar
+  una alerta cuando no se alcanza la meta.
+- El caso mínimo debe incluir ocho KPI de proyecto e hitos y al menos doce KPI de gestión del cambio.
+
+### Campos de hito
+
+La ficha de cada hito debe conservar los campos de `Actividad_Gantt_Hitos.xlsx`: logro verificable, actividades
+asociadas, semana prevista, evidencia, indicador o cálculo, unidad, criterio de aceptación, quién valida y acción si
+no se cumple. Las fechas planificada, de línea base y real, junto con el estado, permiten comprobar el cumplimiento
+sin confundir el hito con una tarea de duración positiva.
 
 ## Requerimientos no funcionales
 
