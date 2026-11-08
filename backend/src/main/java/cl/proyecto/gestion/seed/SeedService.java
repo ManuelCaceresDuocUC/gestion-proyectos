@@ -9,6 +9,8 @@ import cl.proyecto.gestion.proyecto.TareaService;
 import cl.proyecto.gestion.recurso.Recurso;
 import cl.proyecto.gestion.recurso.RecursoRequest;
 import cl.proyecto.gestion.recurso.RecursoService;
+import cl.proyecto.gestion.recurso.AsignacionRequest;
+import cl.proyecto.gestion.recurso.AsignacionService;
 import cl.proyecto.gestion.recurso.TipoRecurso;
 import cl.proyecto.gestion.recurso.TipoRecursoRequest;
 import cl.proyecto.gestion.recurso.TipoRecursoService;
@@ -22,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * C-07: carga el recorte v1 del caso de prueba usando los servicios (fechas las calcula el motor).
- * Si ya existe el proyecto {@code EEC-2026}, no hace nada.
+ * Incluye asignaciones para la demo de B-09. Si ya existe el proyecto {@code EEC-2026}, no hace nada.
  */
 @Service
 public class SeedService {
@@ -35,14 +37,16 @@ public class SeedService {
     private final TareaService tareas;
     private final TipoRecursoService tipos;
     private final RecursoService recursos;
+    private final AsignacionService asignaciones;
 
     public SeedService(ProyectoRepository proyectosRepo, ProyectoService proyectos, TareaService tareas,
-                       TipoRecursoService tipos, RecursoService recursos) {
+                       TipoRecursoService tipos, RecursoService recursos, AsignacionService asignaciones) {
         this.proyectosRepo = proyectosRepo;
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.tipos = tipos;
         this.recursos = recursos;
+        this.asignaciones = asignaciones;
     }
 
     /** {@code true} si cargó el caso; {@code false} si {@code EEC-2026} ya estaba. */
@@ -56,7 +60,7 @@ public class SeedService {
         Map<String, Long> tipoPorNombre = cargarTipos(c);
         Map<String, Long> recursoPorClave = cargarRecursos(c, tipoPorNombre);
         Long proyectoId = cargarProyecto(c.proyecto(), recursoPorClave);
-        cargarEdt(proyectoId, c);
+        cargarEdt(proyectoId, c, recursoPorClave);
         log.info("Seed C-07: proyecto {} creado.", c.proyecto().codigo());
         return true;
     }
@@ -101,25 +105,42 @@ public class SeedService {
             p.presupuesto(), p.moneda(), p.diasLaborales(), p.fechaInicio())).id;
     }
 
-    private void cargarEdt(Long proyectoId, CasoPrueba c) {
+    private void cargarEdt(Long proyectoId, CasoPrueba c, Map<String, Long> recursoPorClave) {
         for (CasoEtapa etapa : c.estructura()) {
             Long etapaId = tareas.crear(proyectoId,
                 new TareaRequest(null, etapa.nombre(), etapa.objetivo(), null, null, null)).id;
             for (CasoActividad act : etapa.actividades()) {
                 if (act.esHoja()) {
-                    tareas.crear(proyectoId, new TareaRequest(
+                    Long tareaId = tareas.crear(proyectoId, new TareaRequest(
                         etapaId, act.nombre(), null,
-                        CasoPruebaLector.diasDe(act.duracionSemanas()), null, avance(act.avance())));
+                        CasoPruebaLector.diasDe(act.duracionSemanas()), null, avance(act.avance()))).id;
+                    cargarAsignaciones(tareaId, act.asignaciones(), recursoPorClave);
                     continue;
                 }
                 Long actId = tareas.crear(proyectoId,
                     new TareaRequest(etapaId, act.nombre(), null, null, null, null)).id;
                 for (CasoSubactividad sub : act.subactividades()) {
-                    tareas.crear(proyectoId, new TareaRequest(
+                    Long tareaId = tareas.crear(proyectoId, new TareaRequest(
                         actId, sub.nombre(), null,
-                        CasoPruebaLector.diasDe(sub.duracionSemanas()), null, avance(sub.avance())));
+                        CasoPruebaLector.diasDe(sub.duracionSemanas()), null, avance(sub.avance()))).id;
+                    cargarAsignaciones(tareaId, sub.asignaciones(), recursoPorClave);
                 }
             }
+        }
+    }
+
+    private void cargarAsignaciones(
+        Long tareaId,
+        java.util.List<CasoAsignacion> definiciones,
+        Map<String, Long> recursoPorClave) {
+        for (CasoAsignacion definicion : definiciones) {
+            Long recursoId = recursoPorClave.get(definicion.recurso());
+            if (recursoId == null) {
+                throw new IllegalStateException(
+                    "El seed referencia un recurso inexistente: " + definicion.recurso());
+            }
+            asignaciones.crear(new AsignacionRequest(
+                tareaId, recursoId, definicion.cantidad(), null, null, null));
         }
     }
 

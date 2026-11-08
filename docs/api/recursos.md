@@ -169,6 +169,10 @@ en las asignaciones y tareas hoja. Luego la consolidación suma las hojas hacia 
 duplicar importes. La respuesta del proyecto expone `presupuesto`, `costoPlan` y `costoReal` para comparar el costo
 planificado y real contra el presupuesto.
 
+Para B-09, en una asignación de un profesional `cantidad` representa las horas totales de trabajo. Las horas se
+distribuyen entre los días hábiles de la tarea según el calendario del proyecto; `horasSemana` y `semanas` son
+datos complementarios y no participan en el cálculo de sobreasignación.
+
 Respuesta `201 Created`:
 
 ```json
@@ -194,6 +198,32 @@ Content-Type: application/json
 ```
 
 Utiliza el mismo cuerpo de la creación.
+
+### Consultar alertas de sobreasignación
+
+```http
+GET /api/proyectos/{proyectoId}/sobreasignaciones
+```
+
+Devuelve una alerta por profesional y fecha cuando la carga diaria supera estrictamente su capacidad. Las alertas
+se reemplazan en cada recálculo del proyecto e incluyen las tareas que contribuyen a la carga.
+
+```json
+[
+  {
+    "id": 1,
+    "recursoId": 3,
+    "profesional": "Ana Pérez",
+    "fecha": "2026-11-10",
+    "cargaHoras": 12.0000,
+    "capacidadHorasDia": 8.0,
+    "excesoHoras": 4.0000,
+    "tareas": [
+      { "id": 15, "codigo": "1.1.1", "nombre": "Tarea A" }
+    ]
+  }
+]
+```
 
 ### Eliminar una asignación
 

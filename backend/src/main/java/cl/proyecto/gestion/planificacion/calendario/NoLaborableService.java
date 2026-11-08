@@ -1,6 +1,8 @@
 package cl.proyecto.gestion.planificacion.calendario;
 
 import cl.proyecto.gestion.common.ApiException;
+import cl.proyecto.gestion.planificacion.recalculo.RecalculoService;
+import cl.proyecto.gestion.proyecto.EstadoProyecto;
 import cl.proyecto.gestion.proyecto.ProyectoService;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,10 +15,15 @@ public class NoLaborableService {
 
     private final NoLaborableRepository repo;
     private final ProyectoService proyectos;
+    private final RecalculoService recalculo;
 
-    public NoLaborableService(NoLaborableRepository repo, ProyectoService proyectos) {
+    public NoLaborableService(
+        NoLaborableRepository repo,
+        ProyectoService proyectos,
+        RecalculoService recalculo) {
         this.repo = repo;
         this.proyectos = proyectos;
+        this.recalculo = recalculo;
     }
 
     @Transactional(readOnly = true)
@@ -40,16 +47,30 @@ public class NoLaborableService {
         validarDuplicado(request.proyectoId(), request.fecha(), null);
         NoLaborable noLaborable = new NoLaborable();
         aplicar(noLaborable, request);
-        return guardar(noLaborable);
+        NoLaborable guardado = guardar(noLaborable);
+        if (guardado.proyectoId == null) {
+            recalcularTodosLosProyectosEditables();
+        } else {
+            recalculo.recalcular(guardado.proyectoId);
+        }
+        return guardado;
     }
 
     @Transactional
     public NoLaborable actualizar(Long id, NoLaborableRequest request) {
         NoLaborable noLaborable = obtener(id);
+        Long proyectoAnterior = noLaborable.proyectoId;
+        validarProyecto(proyectoAnterior);
         validarProyecto(request.proyectoId());
         validarDuplicado(request.proyectoId(), request.fecha(), id);
         aplicar(noLaborable, request);
-        return guardar(noLaborable);
+        NoLaborable actualizado = guardar(noLaborable);
+        if (proyectoAnterior == null || actualizado.proyectoId == null) {
+            recalcularTodosLosProyectosEditables();
+        } else {
+            recalcularAfectados(proyectoAnterior, actualizado.proyectoId);
+        }
+        return actualizado;
     }
 
     @Transactional
@@ -57,6 +78,12 @@ public class NoLaborableService {
         NoLaborable noLaborable = obtener(id);
         validarProyecto(noLaborable.proyectoId);
         repo.delete(noLaborable);
+        repo.flush();
+        if (noLaborable.proyectoId == null) {
+            recalcularTodosLosProyectosEditables();
+        } else {
+            recalculo.recalcular(noLaborable.proyectoId);
+        }
     }
 
     private void validarProyecto(Long proyectoId) {
@@ -94,5 +121,20 @@ public class NoLaborableService {
                 "DIA_NO_LABORABLE_DUPLICADO",
                 "Ya existe un día no laborable para ese proyecto y fecha.");
         }
+    }
+
+    private void recalcularAfectados(Long proyectoAnterior, Long proyectoNuevo) {
+        if (proyectoAnterior != null) {
+            recalculo.recalcular(proyectoAnterior);
+        }
+        if (proyectoNuevo != null && !proyectoNuevo.equals(proyectoAnterior)) {
+            recalculo.recalcular(proyectoNuevo);
+        }
+    }
+
+    private void recalcularTodosLosProyectosEditables() {
+        proyectos.listar(null, null).stream()
+            .filter(proyecto -> proyecto.estado != EstadoProyecto.TERMINADO)
+            .forEach(proyecto -> recalculo.recalcular(proyecto.id));
     }
 }

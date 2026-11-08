@@ -74,6 +74,7 @@ datos y las pruebas de los módulos de recursos, tiempos, costos, hitos y KPI.
 - Una modificación de asignación debe disparar el recálculo del proyecto. Un proyecto terminado no admite cambios.
 - La carga diaria de un profesional se calcula como `horas asignadas / días hábiles de la tarea`. Si la carga diaria
   es mayor que la capacidad diaria del profesional, se genera una alerta de sobreasignación.
+- En B-09, las horas asignadas son `asignacion.cantidad`; `horasSemana` y `semanas` no intervienen en esta alerta.
 
 ### Tiempos y calendario laboral
 

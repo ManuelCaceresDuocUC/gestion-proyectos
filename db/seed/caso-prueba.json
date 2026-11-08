@@ -1,5 +1,5 @@
 {
-  "_nota": "Caso de prueba base, derivado de Actividad_Gantt_Hitos.xlsx (espacio de estudio colaborativo) y adaptado a la estructura mínima de la rúbrica: 4 etapas, 12 actividades, 20 subactividades, 4 tipos de dependencia, 5 profesionales, 4 tipos de recurso, 6 hitos, 5 solicitudes de cambio. Datos ficticios. 'referencia_semana' es solo referencia; las fechas reales las calcula el motor de planificación a partir de las dependencias.",
+  "_nota": "Caso de prueba base, derivado de Actividad_Gantt_Hitos.xlsx (espacio de estudio colaborativo) y adaptado a la estructura mínima de la rúbrica: 4 etapas, 12 actividades, 20 subactividades, 4 tipos de dependencia, 5 profesionales, 4 tipos de recurso, 6 hitos, 5 solicitudes de cambio. Datos ficticios. 'referencia_semana' es solo referencia; las fechas reales las calcula el motor de planificación a partir de las dependencias. B-09: P2 en 1.1.2 tiene 45 h en 5 días hábiles (9 h/día > 8) para dejar una alerta de demo aunque C-11 separe las tareas con dependencias.",
   "proyecto": {
     "codigo": "EEC-2026",
     "nombre": "Habilitar un espacio de estudio colaborativo",
@@ -163,7 +163,7 @@
               "asignaciones": [
                 {
                   "recurso": "P2",
-                  "cantidad": 12
+                  "cantidad": 45
                 }
               ]
             }

@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * C-07: forma de {@code seed/caso-prueba.json}. Solo el recorte v1 (proyecto, tipos, profesionales,
- * recursos y EDT). El resto del archivo (usuarios, dependencias, hitos, solicitudes) se ignora.
+ * C-07: forma de {@code seed/caso-prueba.json}. Recorte v1 (proyecto, tipos, profesionales,
+ * recursos, EDT y asignaciones). El resto (usuarios, dependencias, hitos, solicitudes) se ignora.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CasoPrueba(
@@ -85,11 +85,17 @@ record CasoActividad(
     Boolean hoja,
     Integer referenciaSemana,
     Integer duracionSemanas,
-    Integer avance
+    Integer avance,
+    List<CasoAsignacion> asignaciones
 ) {
     @Override
     public List<CasoSubactividad> subactividades() {
         return subactividades == null ? List.of() : subactividades;
+    }
+
+    @Override
+    public List<CasoAsignacion> asignaciones() {
+        return asignaciones == null ? List.of() : asignaciones;
     }
 
     /** Actividad sin hijos (ej. 1.4): lleva duración propia. */
@@ -104,5 +110,14 @@ record CasoSubactividad(
     String nombre,
     Integer referenciaSemana,
     Integer duracionSemanas,
-    Integer avance
-) {}
+    Integer avance,
+    List<CasoAsignacion> asignaciones
+) {
+    @Override
+    public List<CasoAsignacion> asignaciones() {
+        return asignaciones == null ? List.of() : asignaciones;
+    }
+}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoAsignacion(String recurso, BigDecimal cantidad) {}

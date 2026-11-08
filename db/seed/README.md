@@ -11,7 +11,7 @@ Datos ficticios para la demo y las pruebas. Maven los empaqueta en el backend co
 ## Recorte v1 (C-07)
 
 Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos **con los servicios**
-(`TipoRecursoService`, `RecursoService`, `ProyectoService`, `TareaService`). Las fechas las calcula el motor; no hay SQL a mano.
+(`TipoRecursoService`, `RecursoService`, `ProyectoService`, `TareaService`, `AsignacionService`). Las fechas las calcula el motor; no hay SQL a mano.
 
 | Qué | Cuenta | Destino |
 |---|---|---|
@@ -20,6 +20,7 @@ Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos
 | Profesionales | 5 | P1…P5 |
 | Recursos | 7 | E1–E3, M1–M2, S1–S2 |
 | EDT | 4 etapas, 12 actividades, 20 subactividades | `TareaService.crear` |
+| Asignaciones | las del JSON | `AsignacionService.crear` (B-09 adelanta este recorte de C-11) |
 
 Reglas:
 
@@ -28,10 +29,11 @@ Reglas:
 - La actividad **1.4** es hoja (duración propia, sin hijos).
 - Los tipos se reutilizan por nombre (no falla si ya están).
 - `referencia_semana` es solo orientativa.
+- **Alerta de demo (B-09):** P2 en la subactividad 1.1.2 tiene `cantidad` 45 h en 5 días hábiles (9 h/día > capacidad 8). Es una sobreasignación de una sola tarea, así que sigue existiendo cuando C-11 agregue dependencias y deje de solapar todo el plan.
 
 ## Todavía no (C-11 / C-01)
 
-El JSON incluye usuarios, dependencias, asignaciones, hitos, solicitudes y KPI. **C-07 no los crea.**
+El JSON incluye usuarios, dependencias, hitos, solicitudes y KPI. **C-07 no los crea.** Las asignaciones sí se cargan (ver arriba); C-11 no debe duplicarlas.
 
 ## Cómo activarlo
 
