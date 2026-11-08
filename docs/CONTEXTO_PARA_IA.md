@@ -112,7 +112,7 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 
 ## 8. Flujo de trabajo (Git)
 - Una rama por issue o grupo corto: `feat/B-05-recursos`. PR pequeños y frecuentes; **el CI (backend y frontend) debe estar en verde**.
-- Auto-merge al tener el CI verde (sin revisión obligatoria). Commits y PR en español, con `Closes #<n° del issue>`.
+- Fusión por PR con al menos una aprobación del autor o de otro integrante y CI verde; no se exige aprobación de una persona distinta al autor y nunca se sube directo a `main`. Commits y PR en español, con `Closes #<n° del issue>`.
 - Antes de empezar: `git pull` en `main`. Si dos personas tocan el mismo archivo, resuelvan en el chat; las zonas compartidas son `App.tsx`, `OrdenRecalculo.java` y `docs/`.
 - Las decisiones se toman en el chat del equipo; 24 horas de silencio equivalen a aprobación.
 - Prueba local: `docker compose up --build -d`, `cd backend; mvn test`, `cd frontend; npm run build`.

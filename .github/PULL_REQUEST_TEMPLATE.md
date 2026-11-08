@@ -1,7 +1,7 @@
 ## Qué cambia
 <!-- Resumen breve -->
 
-Closes #
+Closes #<issue>
 
 ## Cómo probarlo
 <!-- Pasos o comandos -->
