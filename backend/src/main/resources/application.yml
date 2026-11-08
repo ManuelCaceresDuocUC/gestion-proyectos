@@ -2,7 +2,7 @@ spring:
   application:
     name: gestion
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/gestion}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:gestion}}
     username: ${DB_USER:gestion}
     password: ${DB_PASSWORD:gestion}
   jpa:

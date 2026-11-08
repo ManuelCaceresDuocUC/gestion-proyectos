@@ -3,7 +3,8 @@
 - **Objetivo:** entregar la aplicación integrada y la demostración el jueves **5 de noviembre de 2026**.
 - **Equipo:** ManuelCaceresDuocUC (A), HeOlivares (B), cristianmonsalve14 (C). Trabajo remoto.
 - **Seguimiento:** GitHub Project del repositorio (Tablero, Tabla y Roadmap), daily asíncrono y 2 llamadas semanales.
-- **Entorno desplegado:** (completar con la URL, issue B-02)
+- **Entorno desplegado:** [frontend en Render](https://gestion-proyectos-frontend.onrender.com) ·
+  [API/health](https://gestion-proyectos-api.onrender.com/api/health)
 
 | Sprint | Fechas | Foco |
 |---|---|---|
