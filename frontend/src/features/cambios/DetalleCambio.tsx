@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { cambiosApi } from "../../api/cambios";
-import type { CambioEtapa, SolicitudCambio } from "../../types/cambios";
+import type { CambioEtapa, CambioHistorial, SolicitudCambio } from "../../types/cambios";
 import type { EstadoEtapa } from "../../types";
 import FormularioCambio from "./FormularioCambio";
+import { ListaHistorial, PanelEvidencias } from "./TrazasCambio";
 import {
   ESTADOS_ETAPA,
   ETIQUETA_ESTADO,
@@ -31,19 +32,25 @@ interface Props {
   volver: () => void;
 }
 
-/** Ficha de una solicitud: impacto, etapas, aprobar/aplicar. Evidencias e historial son C-05. */
+/** Ficha de una solicitud: impacto, etapas, evidencias, historial y aprobar/aplicar. */
 export default function DetalleCambio({ id, volver }: Props) {
   const [solicitud, setSolicitud] = useState<SolicitudCambio | null>(null);
   const [etapas, setEtapas] = useState<CambioEtapa[]>([]);
+  const [historial, setHistorial] = useState<CambioHistorial[]>([]);
   const [error, setError] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [editando, setEditando] = useState(false);
 
   const cargar = useCallback(async () => {
     try {
-      const [s, e] = await Promise.all([cambiosApi.obtener(id), cambiosApi.etapas(id)]);
+      const [s, e, h] = await Promise.all([
+        cambiosApi.obtener(id),
+        cambiosApi.etapas(id),
+        cambiosApi.historial(id),
+      ]);
       setSolicitud(s);
       setEtapas(e.etapas);
+      setHistorial(h);
       setError("");
     } catch (err) {
       setError(mensajeDe(err));
@@ -55,10 +62,8 @@ export default function DetalleCambio({ id, volver }: Props) {
   async function mutar(accion: () => Promise<SolicitudCambio>) {
     setOcupado(true);
     try {
-      setSolicitud(await accion());
-      const e = await cambiosApi.etapas(id);
-      setEtapas(e.etapas);
-      setError("");
+      await accion();
+      await cargar();
     } catch (err) {
       setError(mensajeDe(err));
     } finally {
@@ -234,7 +239,8 @@ export default function DetalleCambio({ id, volver }: Props) {
             ))}
           </ol>
 
-          <p className="vacio">Evidencias e historial de trazabilidad: C-05 (aún no hay API).</p>
+          <PanelEvidencias solicitudId={id} editable={editable} />
+          <ListaHistorial filas={historial} />
         </>
       )}
     </section>

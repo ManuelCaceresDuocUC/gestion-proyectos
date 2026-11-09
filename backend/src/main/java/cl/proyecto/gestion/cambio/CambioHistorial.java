@@ -10,8 +10,8 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 /**
- * Bitácora de un cambio en la solicitud (tabla "cambio_historial", V1).
- * C-04 solo escribe al cambiar el estado de una etapa. El GET es C-05.
+ * Bitácora inmutable de un cambio (tabla "cambio_historial", V1).
+ * Se escribe al cambiar estado de solicitud o de etapa. El GET es C-05.
  */
 @Entity
 @Table(name = "cambio_historial")
