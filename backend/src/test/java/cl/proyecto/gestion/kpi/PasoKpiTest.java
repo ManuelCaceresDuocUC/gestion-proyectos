@@ -163,6 +163,37 @@ class PasoKpiTest {
     }
 
     @Test
+    void reponerVariablesSiLaDefinicionGlobalYaExiste() {
+        CatalogoKpiProyecto.Item item = CatalogoKpiProyecto.porCodigo("KP-02");
+        KpiDefinicion definicion = new KpiDefinicion();
+        definicion.codigo = item.codigo();
+        definicion.nombre = item.nombre();
+        definicion.categoria = item.categoria();
+        definicion.formula = item.formula();
+        definicion.unidad = item.unidad();
+        definicion.sentido = item.sentido();
+        definicion.operadorMeta = item.operador();
+        definicion.meta = item.meta();
+        definicion.umbralVerde = BigDecimal.ONE;
+        definicion.umbralAmarillo = new BigDecimal("0.8000");
+        definicion.activo = true;
+        definicion = definiciones.saveAndFlush(definicion);
+        KpiVariable presente = new KpiVariable();
+        presente.kpiId = definicion.id;
+        presente.nombre = "VALOR_GANADO";
+        variablesKpi.saveAndFlush(presente);
+
+        kpi.asegurarCatalogo();
+        assertThat(variablesKpi.findByKpiIdOrderByNombreAsc(definicion.id))
+                .extracting(v -> v.nombre)
+                .containsExactly("VALOR_GANADO", "VALOR_PLANIFICADO");
+
+        kpi.asegurarCatalogo();
+        assertThat(variablesKpi.findByKpiIdOrderByNombreAsc(definicion.id)).hasSize(2);
+        assertThat(definiciones.findByProyectoIdIsNullAndCodigo("KP-02")).isPresent();
+    }
+
+    @Test
     void sinFinPlanElAtrasoQuedaNoCalculable() {
         Proyecto proyecto = proyectos.crear(new ProyectoRequest(
                 "KPI-FIN-" + System.nanoTime(), "Sin fin", null, null, null,
