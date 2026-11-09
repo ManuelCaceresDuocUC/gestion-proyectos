@@ -7,6 +7,7 @@ import cl.proyecto.gestion.proyecto.Proyecto;
 import cl.proyecto.gestion.proyecto.ProyectoService;
 import cl.proyecto.gestion.proyecto.Tarea;
 import cl.proyecto.gestion.proyecto.TareaRepository;
+import cl.proyecto.gestion.proyecto.TipoTarea;
 import cl.proyecto.gestion.recurso.RecursoRepository;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -153,6 +154,10 @@ public class HitoService {
             if (!proyectoId.equals(t.proyectoId)) {
                 throw ApiException.invalido("TAREA_AJENA",
                     "La actividad " + t.codigo + " no pertenece a este proyecto.");
+            }
+            if (t.tipo == TipoTarea.ETAPA) {
+                throw ApiException.invalido("HITO_ETAPA_NO_ADMITIDA",
+                    "El hito solo puede asociarse a actividades, no a la etapa " + t.codigo + ".");
             }
             if (t.finPlan == null) {
                 throw ApiException.invalido("HITO_SIN_TERMINO",

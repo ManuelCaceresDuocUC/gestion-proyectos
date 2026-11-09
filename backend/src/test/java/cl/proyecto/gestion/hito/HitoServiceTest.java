@@ -8,6 +8,7 @@ import cl.proyecto.gestion.proyecto.Tarea;
 import cl.proyecto.gestion.proyecto.TareaRepository;
 import cl.proyecto.gestion.seed.SeedService;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,9 +87,27 @@ class HitoServiceTest {
             .isEqualTo("HITO_ANTES_DE_ACTIVIDADES");
     }
 
+    @Test
+    void noPermiteAsociarUnaEtapaComoActividadDelHito() {
+        Tarea etapa = tareas.findAll().stream()
+            .filter(t -> "1".equals(t.codigo))
+            .findFirst()
+            .orElseThrow();
+
+        assertThatThrownBy(() -> hitos.actualizar(h1.id(), copiaConTareas(h1, List.of(etapa.id))))
+            .extracting(e -> ((ApiException) e).getCodigo())
+            .isEqualTo("HITO_ETAPA_NO_ADMITIDA");
+    }
+
     private static HitoRequest copia(HitoResponse h, EstadoHito estado, int semana, LocalDate fechaReal, String evidencia) {
         return new HitoRequest(
             h.codigo(), h.logro(), semana, evidencia, h.indicador(), h.criterioAceptacion(),
             h.validador(), h.accionSiNoCumple(), estado, fechaReal, h.responsableId(), h.tareaIds());
+    }
+
+    private static HitoRequest copiaConTareas(HitoResponse h, List<Long> tareaIds) {
+        return new HitoRequest(
+            h.codigo(), h.logro(), h.semanaPrevista(), h.evidencia(), h.indicador(), h.criterioAceptacion(),
+            h.validador(), h.accionSiNoCumple(), h.estado(), h.fechaReal(), h.responsableId(), tareaIds);
     }
 }
