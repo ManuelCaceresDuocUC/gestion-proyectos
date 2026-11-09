@@ -54,7 +54,7 @@ Ciclo en el motor → `409 CICLO_EN_DEPENDENCIAS`.
 | 30 | `COSTOS` | `PasoCostos` | B | en main |
 | 35 | `CONSOLIDACION_COSTOS` | `PasoConsolidacionCostos` | A | en main |
 | 40 | `SOBREASIGNACION` | `PasoSobreasignacion` | B | en main |
-| 50 | `HITOS` | — | B | reservado (B-11 / B-16) |
+| 50 | `HITOS` | `PasoHitos` | B | registrado (B-16) |
 | 60 | `KPI` | — | B | reservado (B-12 / B-14 / B-17) |
 
 No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTOS después de COSTOS.
@@ -95,11 +95,12 @@ No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTO
   alerta si carga > capacidad. `horasSemana` y `semanas` no entran en esta fórmula (B-09 / ADR-007).
 - **Lee (API):** `GET /api/proyectos/{id}/sobreasignaciones`.
 
-### 50 `HITOS` (pendiente)
+### 50 `HITOS`
 
-- **Debe leer:** hitos del proyecto y tareas asociadas, fechas plan/real ya consolidadas.
-- **Debe escribir:** estado / fechas del hito según las reglas de B-11. No marcar cumplido antes del término de sus actividades.
-- B-11 no registra este paso: crear o editar un hito no recalcula. Hoy no hay bean.
+- **Lee:** hitos del proyecto, actividades de `hito_tarea` y sus fechas plan/real ya consolidadas. El calendario del proyecto sirve para ubicar la semana.
+- **Escribe:** `fechaPlan`, si quedó antes del `finPlan` más tardío de las actividades asociadas: la mueve al último día hábil de la semana de ese término (la misma regla que el seed). No toca `fechaBase` ni `fechaReal`.
+- **Estado:** un hito `CUMPLIDO` que deja de cumplir B-11 vuelve a `PENDIENTE`. Eso incluye: sin evidencia, sin `fechaReal`, sin actividades asociadas, un vínculo que no resuelve a una tarea, alguna actividad sin `finReal`, o `fechaReal` anterior a ese `finReal`. No pasa a `CUMPLIDO` ni a `NO_CUMPLIDO` por sí solo.
+- Idempotente. No lanza `ApiException` por un desfase: lo corrige. Crear o editar un hito (B-11) no dispara este paso; corre cuando otro cambio llama a `RecalculoService`.
 
 ### 60 `KPI`
 

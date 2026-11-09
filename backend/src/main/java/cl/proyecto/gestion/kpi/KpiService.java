@@ -6,9 +6,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,32 +110,46 @@ public class KpiService {
     @Transactional
     public void asegurarCatalogo() {
         for (CatalogoKpiProyecto.Item item : CatalogoKpiProyecto.todos()) {
-            if (definiciones.findByProyectoIdIsNullAndCodigo(item.codigo()).isPresent()) {
+            KpiDefinicion definicion = definiciones.findByProyectoIdIsNullAndCodigo(item.codigo())
+                    .orElseGet(() -> crearDefinicion(item));
+            asegurarVariables(definicion, item);
+        }
+    }
+
+    private KpiDefinicion crearDefinicion(CatalogoKpiProyecto.Item item) {
+        KpiDefinicion definicion = new KpiDefinicion();
+        definicion.proyectoId = null;
+        definicion.codigo = item.codigo();
+        definicion.nombre = item.nombre();
+        definicion.categoria = item.categoria();
+        definicion.descripcion = item.descripcion();
+        definicion.formula = item.formula();
+        definicion.unidad = item.unidad();
+        definicion.sentido = item.sentido();
+        definicion.operadorMeta = item.operador();
+        definicion.meta = item.meta();
+        definicion.metaMax = null;
+        definicion.umbralVerde = BigDecimal.ONE;
+        definicion.umbralAmarillo = new BigDecimal("0.8000");
+        definicion.responsable = item.responsable();
+        definicion.activo = true;
+        return definiciones.saveAndFlush(definicion);
+    }
+
+    /** Crea los nombres de la fórmula que falten. No borra ni reescribe los que ya están. */
+    private void asegurarVariables(KpiDefinicion definicion, CatalogoKpiProyecto.Item item) {
+        Set<String> presentes = new HashSet<>();
+        for (KpiVariable variable : variables.findByKpiIdOrderByNombreAsc(definicion.id)) {
+            presentes.add(variable.nombre);
+        }
+        for (String nombre : FormulaKpi.nombres(item.formula())) {
+            if (presentes.contains(nombre)) {
                 continue;
             }
-            KpiDefinicion definicion = new KpiDefinicion();
-            definicion.proyectoId = null;
-            definicion.codigo = item.codigo();
-            definicion.nombre = item.nombre();
-            definicion.categoria = item.categoria();
-            definicion.descripcion = item.descripcion();
-            definicion.formula = item.formula();
-            definicion.unidad = item.unidad();
-            definicion.sentido = item.sentido();
-            definicion.operadorMeta = item.operador();
-            definicion.meta = item.meta();
-            definicion.metaMax = null;
-            definicion.umbralVerde = BigDecimal.ONE;
-            definicion.umbralAmarillo = new BigDecimal("0.8000");
-            definicion.responsable = item.responsable();
-            definicion.activo = true;
-            definicion = definiciones.saveAndFlush(definicion);
-            for (String nombre : FormulaKpi.nombres(item.formula())) {
-                KpiVariable variable = new KpiVariable();
-                variable.kpiId = definicion.id;
-                variable.nombre = nombre;
-                variables.save(variable);
-            }
+            KpiVariable variable = new KpiVariable();
+            variable.kpiId = definicion.id;
+            variable.nombre = nombre;
+            variables.save(variable);
         }
     }
 

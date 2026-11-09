@@ -12,7 +12,7 @@ Evidencia y fuente van en `evidencia`. Unidad y criterio van en `criterioAceptac
 Quién valida y cuándo va en `validador`. `fechaBase` se lee y no se escribe en este módulo.
 
 Base: `/api`. JWT. Proyecto `TERMINADO` → `409 PROYECTO_CERRADO`.
-Crear o editar un hito no llama al recálculo y no mueve el Gantt. El paso `HITOS` (orden 50) sigue reservado para B-16.
+Crear o editar un hito no llama al recálculo y no mueve el Gantt. El paso `HITOS` (orden 50, `PasoHitos`) corre dentro de `RecalculoService`: si `fechaPlan` queda antes del término planificado de una actividad asociada, la mueve al último día hábil de la semana de ese término; un `CUMPLIDO` que deja de cumplir estas reglas vuelve a `PENDIENTE`, también si no quedan actividades asociadas resueltas. No marca `CUMPLIDO` ni `NO_CUMPLIDO` por sí solo.
 
 ## Rutas
 
