@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 /**
  * Forma de {@code seed/caso-prueba.json}.
  * C-07: proyecto, tipos, profesionales, recursos, EDT y asignaciones.
- * C-11: dependencias y solicitudes. C-01: usuarios. Hitos y KPI se ignoran.
+ * C-11: dependencias y solicitudes. C-01: usuarios. B-11: hitos. KPI se ignora.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CasoPrueba(
@@ -20,6 +20,7 @@ public record CasoPrueba(
     List<CasoRecurso> recursos,
     List<CasoEtapa> estructura,
     List<CasoDependencia> dependencias,
+    List<CasoHito> hitos,
     List<CasoSolicitud> solicitudesCambio
 ) {
     public CasoPrueba {
@@ -29,6 +30,7 @@ public record CasoPrueba(
         recursos = recursos == null ? List.of() : recursos;
         estructura = estructura == null ? List.of() : estructura;
         dependencias = dependencias == null ? List.of() : dependencias;
+        hitos = hitos == null ? List.of() : hitos;
         solicitudesCambio = solicitudesCambio == null ? List.of() : solicitudesCambio;
     }
 
@@ -132,6 +134,24 @@ record CasoAsignacion(String recurso, BigDecimal cantidad) {}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record CasoDependencia(String predecesora, String sucesora, String tipo, Integer desfaseDias) {}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoHito(
+    String codigo,
+    String logro,
+    List<String> actividades,
+    Integer semanaPrevista,
+    String evidencia,
+    String indicador,
+    String criterio,
+    String validador,
+    String accionSiNoCumple
+) {
+    @Override
+    public List<String> actividades() {
+        return actividades == null ? List.of() : actividades;
+    }
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record CasoImpactoEstimado(Integer dias, BigDecimal costo) {}

@@ -10,6 +10,9 @@ import cl.proyecto.gestion.cambio.PrioridadSolicitud;
 import cl.proyecto.gestion.cambio.SolicitudCambio;
 import cl.proyecto.gestion.cambio.SolicitudCambioService;
 import cl.proyecto.gestion.cambio.TipoSolicitud;
+import cl.proyecto.gestion.hito.EstadoHito;
+import cl.proyecto.gestion.hito.HitoResponse;
+import cl.proyecto.gestion.hito.HitoService;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaService;
 import cl.proyecto.gestion.planificacion.lineabase.LineaBaseService;
 import cl.proyecto.gestion.proyecto.EstadoProyecto;
@@ -49,6 +52,7 @@ class SeedServiceTest {
     @Autowired AsignacionRepository asignaciones;
     @Autowired SobrecargaAlertaRepository alertas;
     @Autowired UsuarioRepository usuarios;
+    @Autowired HitoService hitos;
 
     @Test
     void cargaElRecorteV1YLaSegundaVezNoRepite() {
@@ -127,15 +131,15 @@ class SeedServiceTest {
         assertUsuariosDemo();
     }
 
-    /** Conteos de la rúbrica que sí carga C-11 (hitos y KPI no hay servicio). */
+    /** Conteos de la rúbrica que carga el seed (KPI sigue sin servicio). */
     private void assertRecorteV2(Proyecto p, List<Tarea> edt) {
         assertThat(dependencias.listar(p.id)).hasSize(35);
         assertThat(dependencias.listar(p.id)).extracting(d -> d.tipo().name())
             .contains("FS", "SS", "FF", "SF");
         assertThat(dependencias.listar(p.id)).anyMatch(d -> d.desfaseDias() < 0);
 
-        assertThat(lineasBase.listar(p.id)).isNotEmpty();
-        assertThat(lineasBase.listar(p.id).getFirst().version).isEqualTo(1);
+        // La base de desarrollo puede tener versiones posteriores a la v1 del seed.
+        assertThat(lineasBase.listar(p.id)).extracting(b -> b.version).contains(1);
         assertThat(p.fechaFinBase).isNotNull();
 
         List<SolicitudCambio> sols = cambios.listar(p.id, null, null, null, null, null, null);
@@ -153,6 +157,28 @@ class SeedServiceTest {
         assertThat(ampliar.impactoDias).isEqualTo(5);
         assertThat(ampliar.tareaId).isEqualTo(porCodigo(edt, "3.1.1").id);
         assertThat(ampliar.impactoCosto).isEqualByComparingTo("2400000");
+        assertHitos(p, edt);
+    }
+
+    /** H1–H6 en PENDIENTE. La fecha prevista no queda antes del fin planificado de sus actividades. */
+    private void assertHitos(Proyecto p, List<Tarea> edt) {
+        List<HitoResponse> lista = hitos.listar(p.id);
+        assertThat(lista).extracting(HitoResponse::codigo)
+            .containsExactlyInAnyOrder("H1", "H2", "H3", "H4", "H5", "H6");
+        assertThat(lista).allSatisfy(h -> {
+            assertThat(h.estado()).isEqualTo(EstadoHito.PENDIENTE);
+            assertThat(h.fechaReal()).isNull();
+            assertThat(h.fechaPlan()).isNotNull();
+            assertThat(h.evidencia()).isNotBlank();
+            assertThat(h.actividades()).isNotEmpty();
+            assertThat(h.fechaPlan()).isAfterOrEqualTo(
+                h.actividades().stream().map(a -> a.finPlan()).max(LocalDate::compareTo).orElseThrow());
+        });
+        HitoResponse h1 = lista.stream().filter(h -> "H1".equals(h.codigo())).findFirst().orElseThrow();
+        assertThat(h1.semanaPrevista()).isEqualTo(3);
+        assertThat(h1.logro()).contains("Alcance");
+        assertThat(h1.actividades()).extracting(a -> a.codigo()).containsExactly("1.2.1");
+        assertThat(h1.actividades().getFirst().id()).isEqualTo(porCodigo(edt, "1.2.1").id);
     }
 
     /** Emails y roles; el hash es BCrypt. No se afirma el valor de la clave. */

@@ -98,8 +98,8 @@ No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTO
 ### 50 `HITOS` (pendiente)
 
 - **Debe leer:** hitos del proyecto y tareas asociadas, fechas plan/real ya consolidadas.
-- **Debe escribir:** estado / fechas del hito según B-11. No marcar cumplido antes del término de sus actividades.
-- Hoy no hay bean: el recálculo sigue sin este paso.
+- **Debe escribir:** estado / fechas del hito según las reglas de B-11. No marcar cumplido antes del término de sus actividades.
+- B-11 no registra este paso: crear o editar un hito no recalcula. Hoy no hay bean.
 
 ### 60 `KPI` (pendiente)
 

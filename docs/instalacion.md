@@ -94,7 +94,7 @@ Pantalla: **Ingreso** (`/login`) → Correo / Contraseña → **Ingresar**.
 3. **Cambios**: elige ese proyecto; 5 solicitudes `SC-01`…`SC-05`.
 4. **Recursos y costos**: alerta de P2 en la hoja 1.1.2.
 
-Hitos, KPI y tableros: las rutas existen y dicen pendiente (B-11, B-15, B-21, C-12). No es un fallo de instalación.
+**Hitos**: elija `EEC-2026`; deben aparecer H1–H6 en Pendiente. KPI y tableros: las rutas existen y dicen pendiente (B-15, B-21, C-12). No es un fallo de instalación.
 
 Detalle del seed: `db/seed/README.md`.
 

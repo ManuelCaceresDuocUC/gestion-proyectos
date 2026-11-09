@@ -98,7 +98,7 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 **Dev B** — recursos, costos, hitos, KPI, tablero de proyecto
 1. B-05/B-06: CRUD de tipos de recurso, recursos (profesionales) y asignaciones a subactividades (cantidad y tarifa).
 2. B-08 + B-16: `PasoCostos` (orden 30) y `PasoSobreasignacion` (40): costo plan y real por tarea hoja y alerta de profesionales sobreasignados. **Este es el recálculo 2 de la demo.**
-3. B-11: hitos (duración 0, asociados a tareas; no pueden ir antes de que terminen sus actividades) y `PasoHitos` (50).
+3. B-11: hitos (duración 0, asociados a tareas; no pueden ir antes de que terminen sus actividades). `PasoHitos` (50) queda en B-16.
 4. B-12/B-13/B-14: evaluador de KPI (fórmula en texto, variables, meta, umbrales, "No calculable" si el denominador es 0), los 8 KPI y el histórico (`PasoKpi`, 60).
 5. B-21: tablero de proyecto (recharts), leyendo lo ya calculado.
 6. Después: B-07 (calendario; ya existe `no_laborable` y el calendario en `planificacion/calendario`), B-10/B-15 (pantallas), B-17 (KPI de cambio).

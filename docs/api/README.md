@@ -24,7 +24,7 @@ servicios. Contrato: [recalculo.md](recalculo.md).
 | sobreasignación | `/proyectos/{id}/sobreasignaciones` | B | [recursos.md](recursos.md) (B-09) |
 | solicitudes de cambio | `/proyectos/{id}/cambios`, `/cambios`, `/cambios/{id}/etapas` | C | [cambios.md](cambios.md) — en main |
 | recálculo (interno) | — | A (+ pasos B/C) | [recalculo.md](recalculo.md) — no hay `POST /proyectos/{id}/recalcular` |
-| hitos | `/proyectos/{id}/hitos`, `/hitos/{id}` | B | [hitos.md](hitos.md) — **sin controlador** (B-11) |
+| hitos | `/proyectos/{id}/hitos`, `/hitos/{id}` | B | [hitos.md](hitos.md) — B-11 |
 | KPI | GET `/proyectos/{id}/kpi`; escrituras `/kpi/**` (ADMIN) | B | [kpi.md](kpi.md); [kpi-variables.md](kpi-variables.md) — **sin controlador** |
 | tablero de proyecto | `/tablero/proyecto/{id}` | B | [tableros.md](tableros.md) — **sin controlador** (B-21) |
 | tablero de cambio | `/tablero/cambio/{id}` | C | [tableros.md](tableros.md) — **sin controlador** (C-12) |

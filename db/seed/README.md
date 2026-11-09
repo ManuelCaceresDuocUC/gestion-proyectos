@@ -65,9 +65,19 @@ Reglas:
   Prioridad, riesgo e impacto (Alta, Crítica, Medio…) se normalizan a los enums V21.
 - Cada solicitud queda ligada a la tarea por código (`3.1.1`, etc.) y al responsable por clave (P1…).
 
-## Todavía no (B-11 / B-17)
+## Hitos (B-11)
 
-El JSON incluye hitos y KPI. **Este seed no los crea.**
+Si el proyecto todavía no tiene hitos, el seed crea H1–H6 con `HitoService`. Quedan en `PENDIENTE`,
+con la ficha del JSON (logro, actividades, evidencia, indicador, criterio, validador y acción)
+y sin fecha real. La semana del JSON es la propuesta de la planilla y se guarda como el último día
+hábil de esa semana. Si el motor dejó el término de las actividades después de ese viernes, el hito
+queda en la semana de ese término: la fecha prevista no puede ser anterior.
+
+Si el proyecto ya tiene algún hito, esta capa no se repite.
+
+## Todavía no (B-17)
+
+El JSON incluye KPI. **Este seed no los crea.**
 
 ## Cómo activarlo
 

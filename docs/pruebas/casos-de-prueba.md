@@ -6,7 +6,7 @@ Maven local ese día no corrió (`Flyway` no conectó a Postgres). Lo de abajo e
 
 ## Verificación del caso mínimo (rúbrica)
 
-El JSON trae el caso completo. El cargador (C-07 + C-11) no crea hitos ni KPI (no hay servicio).
+El JSON trae el caso completo. El cargador (C-07 + C-11 + B-11) crea los hitos. Los KPI siguen sin servicio.
 
 | Elemento | Requerido | En el JSON | Cargado | OK |
 |---|---|---|---|---|
@@ -16,7 +16,7 @@ El JSON trae el caso completo. El cargador (C-07 + C-11) no crea hitos ni KPI (n
 | Tipos de dependencia | 4 (FS, SS, FF, SF) | los 4 (35 filas; hay desfase negativo) | 35, los 4 tipos | Sí |
 | Profesionales | 5 | P1…P5 | 5 | Sí |
 | Tipos de recurso | 4 | Profesional, Equipamiento, Material, Servicio externo | 4 | Sí |
-| Hitos | 6 | H1…H6 | 0 (B-11) | No |
+| Hitos | 6 | H1…H6 | 6, `PENDIENTE`, sin fecha real (B-11) | Sí |
 | KPI de proyecto e hitos | 8 | KP-01…KP-08 | 0 (B-12/B-13) | No |
 | Solicitudes de cambio | 5 | SC-001… en JSON → `SC-01`…`SC-05` | 5, `ABIERTO`, 10 etapas cada una | Sí |
 | KPI de gestión del cambio | 12 | 13 (KC-01…KC-13) | 0 (B-17) | No |
