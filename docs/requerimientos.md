@@ -339,3 +339,21 @@ Contrato: `docs/api/kpi-variables.md`. No usar nombres fuera de esa lista.
 | CAMBIOS_ADOPTADOS | Cambios con la etapa 10 completada |
 | COSTO_REAL_CAMBIOS_CERRADOS, PRESUPUESTO_CAMBIOS_CERRADOS, DIAS_ATRASO_CAMBIOS | KC-11, KB-22 |
 | CAMBIOS_APROBADOS, CAMBIOS_APROBADOS_APLICADOS | KC-13 |
+
+### Origen de las variables de proyecto e hitos (B-13)
+
+Ninguna se ingresa a mano. `proyecto.avance` está en puntos 0–100 y entra a la fórmula como razón (`avance / 100`); lo mismo `AVANCE_PLAN`. Si la unidad del KPI es `%`, `EvaluadorKpi` multiplica esa razón por 100 una sola vez.
+
+- `AVANCE_REAL`: `proyecto.avance / 100`.
+- `AVANCE_PLAN`: avance planificado de cada hoja a la fecha del recálculo (100 si `finPlan` ya pasó, 0 si aún no empieza, si no los días hábiles transcurridos sobre la duración). Se sube por el árbol como la consolidación: promedio ponderado por duración y, si todos los pesos son 0, promedio simple.
+- `VALOR_GANADO`: suma del costo plan de cada hoja por su avance real. `VALOR_PLANIFICADO` y `COSTO_PLAN_A_LA_FECHA`: la misma suma usando la fracción planificada. `COSTO_REAL`: `proyecto.costoReal`.
+- `DIAS_ATRASO_PROYECTO`: sin línea base, 0. Con `fechaFinBase` y sin `fechaFinPlan`, la variable no se calcula y KP-04 queda «No calculable». Con ambas fechas, días hábiles de la base al fin plan (la misma cuenta que la comparación de línea base), mínimo 0.
+- `ACTIVIDADES_TOTAL` y `ACTIVIDADES_ATRASADAS`: hojas, es decir nodos sin hijos, sea cual sea su tipo. Atrasada: `finPlan` anterior a hoy y avance menor a 100.
+- `HITOS_VENCIDOS`: `fechaPlan` anterior a hoy. `HITOS_CUMPLIDOS_A_TIEMPO`: de esos, estado `CUMPLIDO` con `fechaReal` no posterior a `fechaPlan`.
+- `PROFESIONALES_TOTAL`: recursos distintos asignados al proyecto cuyo tipo se llama `Profesional`. `PROFESIONALES_SOBREASIGNADOS`: de esos, los que tienen al menos una fila en `sobreasignacion_alerta` (la tabla guarda una fila por profesional y fecha; el conteo es de personas).
+
+KP-01 guarda `meta` nula. Al evaluar, la meta efectiva es `AVANCE_PLAN × 100`, porque la comparación del evaluador ocurre en puntos porcentuales. Los ocho KPI son los de `db/seed/kpi-definiciones.json` (`KP-01`…`KP-08`). El paso de recálculo los inserta como definiciones globales si faltan. No inserta los de cambio.
+
+### Histórico y alertas (B-14)
+
+Cada recálculo agrega una fila en `kpi_historico` por KPI activo: valor, cumplimiento, semáforo y motivo `RECALCULO`. Valor nulo significa «No calculable». Hay alerta si el semáforo es rojo o si el cumplimiento es menor que el del snapshot anterior. El primero solo alerta en rojo. `GET /api/proyectos/{id}/kpi` devuelve el último snapshot y la alerta. `GET /api/kpi/{id}/historico?proyectoId=` devuelve la serie, más reciente primero.

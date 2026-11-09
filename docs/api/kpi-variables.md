@@ -20,19 +20,19 @@ sigue siendo «No calculable» y no se escala.
 
 | Variable | Significado | Origen |
 |---|---|---|
-| `AVANCE_REAL` | % de avance físico consolidado de la EDT | `proyecto.avance` / consolidación |
-| `AVANCE_PLAN` | % de avance planificado a la fecha | plan vs hoy |
+| `AVANCE_REAL` | % de avance físico consolidado de la EDT | `proyecto.avance / 100` (la columna está en puntos 0–100; la fórmula recibe razón 0–1) |
+| `AVANCE_PLAN` | % de avance planificado a la fecha | hojas a hoy, ponderadas como la consolidación (promedio simple si todos los pesos son 0); también sale en razón 0–1 |
 | `VALOR_PLANIFICADO` | PV: costo plan × % planificado | costos + avance plan |
 | `VALOR_GANADO` | EV: costo plan × % real | costos + avance real |
 | `COSTO_REAL` | AC acumulado | `proyecto.costoReal` / hojas |
 | `COSTO_PLAN_A_LA_FECHA` | costo plan acumulado a la fecha | costos + calendario |
-| `DIAS_ATRASO_PROYECTO` | fin plan actual − fin de línea base | comparación A-14 |
-| `ACTIVIDADES_TOTAL` | tareas hoja | EDT |
-| `ACTIVIDADES_ATRASADAS` | hojas vencidas con avance < 100 % | plan vs hoy |
+| `DIAS_ATRASO_PROYECTO` | fin plan actual − fin de línea base, en días hábiles, mínimo 0 | comparación A-14. Sin línea base: 0. Con línea base y sin `fechaFinPlan`: no calculable |
+| `ACTIVIDADES_TOTAL` | tareas sin hijos | EDT |
+| `ACTIVIDADES_ATRASADAS` | de esas hojas, fin plan anterior a hoy y avance < 100 %. Una subactividad con hijos no cuenta | plan vs hoy |
 | `HITOS_VENCIDOS` | hitos con fecha vencida | módulo hito (B-11) |
 | `HITOS_CUMPLIDOS_A_TIEMPO` | hitos cumplidos en plazo | módulo hito |
-| `PROFESIONALES_TOTAL` | profesionales del proyecto | recursos |
-| `PROFESIONALES_SOBREASIGNADOS` | con alerta de carga | paso 40 |
+| `PROFESIONALES_TOTAL` | profesionales distintos asignados al proyecto (tipo `Profesional`) | recursos |
+| `PROFESIONALES_SOBREASIGNADOS` | de esos, personas distintas con alerta de carga (no filas por fecha) | paso 40 |
 
 ## Gestión del cambio (KC-01 … KC-13)
 
