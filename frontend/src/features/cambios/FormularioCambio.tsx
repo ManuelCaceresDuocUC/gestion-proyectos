@@ -2,10 +2,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { cambiosApi } from "../../api/cambios";
 import type { SolicitudCambio, SolicitudCambioDatos } from "../../types/cambios";
-import type { EstadoSolicitud, ImpactoSolicitud, PrioridadSolicitud, RiesgoSolicitud, TipoSolicitud } from "../../types";
+import type { ImpactoSolicitud, PrioridadSolicitud, RiesgoSolicitud, TipoSolicitud } from "../../types";
 import {
-  ESTADOS_SOLICITUD,
-  ETIQUETA_ESTADO,
   ETIQUETA_IMPACTO,
   ETIQUETA_PRIORIDAD,
   ETIQUETA_RIESGO,
@@ -23,6 +21,7 @@ interface Props {
   solicitud?: SolicitudCambio;
   alGuardar: (guardada: SolicitudCambio) => void;
   alCancelar: () => void;
+  alEliminar?: () => void;
 }
 
 function iso(valor: string | null | undefined): string {
@@ -36,8 +35,8 @@ function numOpcional(texto: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** Crear o editar una solicitud (C-06). El PUT reenvía nombre y tipo. */
-export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alCancelar }: Props) {
+/** Crear o editar una solicitud (C-06). El estado se cambia en el detalle, no aquí. */
+export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alCancelar, alEliminar }: Props) {
   const [nombre, setNombre] = useState(solicitud?.nombre ?? "");
   const [tipo, setTipo] = useState<TipoSolicitud>(solicitud?.tipo ?? "TIEMPO");
   const [descripcion, setDescripcion] = useState(solicitud?.descripcion ?? "");
@@ -50,7 +49,7 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
   const [prioridad, setPrioridad] = useState<PrioridadSolicitud>(solicitud?.prioridad ?? "MEDIA");
   const [riesgo, setRiesgo] = useState<RiesgoSolicitud>(solicitud?.riesgo ?? "MEDIO");
   const [impacto, setImpacto] = useState<ImpactoSolicitud>(solicitud?.impacto ?? "MEDIO");
-  const [estado, setEstado] = useState<EstadoSolicitud>(solicitud?.estado ?? "ABIERTO");
+  const [tarea, setTarea] = useState(solicitud?.tareaId ? String(solicitud.tareaId) : "");
   const [impactoDias, setImpactoDias] = useState(solicitud ? String(solicitud.impactoDias) : "0");
   const [impactoCosto, setImpactoCosto] = useState(solicitud ? String(solicitud.impactoCosto) : "0");
   const [impactoAlcance, setImpactoAlcance] = useState(solicitud?.impactoAlcance ?? "");
@@ -79,13 +78,17 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
       prioridad,
       riesgo,
       impacto,
-      estado: solicitud ? estado : null,
+      estado: solicitud ? solicitud.estado : null,
+      tareaId: numOpcional(tarea),
       impactoDias: numOpcional(impactoDias) ?? 0,
       impactoCosto: numOpcional(impactoCosto) ?? 0,
       impactoAlcance: impactoAlcance.trim() || null,
       impactoRecursos: impactoRecursos.trim() || null,
+      resultadoEvaluacion: solicitud?.resultadoEvaluacion ?? null,
       presupuestoPrevisto: numOpcional(presupuesto),
       costoReal: numOpcional(costoReal),
+      accionCorrectiva: solicitud?.accionCorrectiva ?? null,
+      resultado: solicitud?.resultado ?? null,
     };
     setGuardando(true);
     try {
@@ -108,7 +111,11 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
     setBorrando(true);
     try {
       await cambiosApi.eliminar(solicitud.id);
-      alGuardar(solicitud);
+      if (alEliminar) {
+        alEliminar();
+      } else {
+        alGuardar(solicitud);
+      }
     } catch (err) {
       setError(mensajeDe(err));
     } finally {
@@ -128,13 +135,6 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
             {TIPOS_SOLICITUD.map((s) => <option key={s} value={s}>{ETIQUETA_TIPO[s]}</option>)}
           </select>
         </label>
-        {solicitud && (
-          <label>Estado
-            <select value={estado} onChange={(e) => setEstado(e.target.value as EstadoSolicitud)}>
-              {ESTADOS_SOLICITUD.map((s) => <option key={s} value={s}>{ETIQUETA_ESTADO[s]}</option>)}
-            </select>
-          </label>
-        )}
         <label>Prioridad
           <select value={prioridad} onChange={(e) => setPrioridad(e.target.value as PrioridadSolicitud)}>
             {PRIORIDADES.map((s) => <option key={s} value={s}>{ETIQUETA_PRIORIDAD[s]}</option>)}
@@ -155,6 +155,9 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
         </label>
         <label>Responsable (id)
           <input type="number" min={1} value={responsable} onChange={(e) => setResponsable(e.target.value)} />
+        </label>
+        <label>Tarea (id)
+          <input type="number" min={1} value={tarea} onChange={(e) => setTarea(e.target.value)} />
         </label>
         <label>Fecha de solicitud
           <input type="date" value={fechaSolicitud} onChange={(e) => setFechaSolicitud(e.target.value)} />
@@ -191,7 +194,7 @@ export default function FormularioCambio({ proyectoId, solicitud, alGuardar, alC
         <textarea rows={2} value={impactoRecursos} onChange={(e) => setImpactoRecursos(e.target.value)} />
       </label>
       {!solicitud && (
-        <p className="aviso">Al guardar se crea en estado Abierto, con las 10 etapas en Pendiente. El código (SC-01…) lo asigna el servidor.</p>
+        <p className="aviso">Al guardar se crea en estado Abierto, con las 10 etapas en Pendiente. El código (SC-01…) lo asigna el servidor. El estado se cambia en el detalle.</p>
       )}
       {error && <p className="error" role="alert">{error}</p>}
       <div className="acciones">

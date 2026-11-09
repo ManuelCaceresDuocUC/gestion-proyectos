@@ -1,12 +1,13 @@
-# API de solicitudes de cambio (C-03, C-04, C-08, C-09)
+# API de solicitudes de cambio (C-03, C-04, C-08, C-09, C-10)
 
 Base: `/api`. Errores como `{ "codigo": "...", "mensaje": "...", "detalles": [...] }`.
 Fechas en ISO-8601 (`yyyy-MM-dd`); instantes en ISO-8601 UTC.
 
 Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado, aprobar/rechazar
-y aplicar una solicitud aprobada al plan vigente**.
-No guarda evidencias ni expone el GET del historial (C-05).
-Hoy las rutas están abiertas (`permitAll`); C-01 / C-02 agregarán JWT.
+y aplicar una solicitud aprobada al plan vigente**. El detalle en el front (C-10) consume esas
+rutas. No guarda evidencias ni expone el GET del historial (C-05).
+Hoy las rutas están abiertas (`permitAll`); C-01 agregará JWT. El front hoy muestra aprobar a
+cualquiera (`puedeAprobar()`); en C-01 será solo ADMIN.
 
 ## Catálogos
 
@@ -224,7 +225,16 @@ Calculado; **no se persiste**. Porcentaje 0–100.
 Un valor fuera de catálogo (`tipo`, `estado`, …) responde 400. Consultar un proyecto cerrado sí
 devuelve el listado y las etapas; solo se bloquean las escrituras.
 
+## Pantalla de detalle (C-10)
+
+`/cambios` es el listado; `/cambios?id={id}` es la ficha. El clic en una fila abre el detalle.
+
+Ahí se ven impacto (días y costo), si está `aplicada` / `aplicadaEn`, las 10 etapas (PATCH de
+estado) y los botones según el grafo: enviar a evaluación (PUT), aprobar y rechazar (POST),
+aplicar al plan (POST C-09) y cerrar (PUT a `CERRADO`). El formulario de alta/edición **no**
+cambia el estado. El PUT reenvía `tareaId`. Si el tipo es `TIEMPO` y no hay tarea hoja, Aplicar
+queda deshabilitado. Otros tipos al aplicar no mueven el Gantt.
+
 ## Fuera de este contrato
 
-No hay `GET /cambios/{id}/historial` ni CRUD de evidencias (C-05).
-No hay botones de aplicar en el front (C-10).
+No hay `GET /cambios/{id}/historial` ni CRUD de evidencias (C-05). El detalle lo deja dicho.

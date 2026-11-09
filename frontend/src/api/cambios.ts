@@ -1,6 +1,13 @@
 // Llamadas a la API de solicitudes de cambio (docs/api/cambios.md).
 import { api } from "./client";
-import type { FiltrosSolicitud, SolicitudCambio, SolicitudCambioDatos } from "../types/cambios";
+import type {
+  CambioEtapa,
+  EtapasCambio,
+  FiltrosSolicitud,
+  SolicitudCambio,
+  SolicitudCambioDatos,
+} from "../types/cambios";
+import type { EstadoEtapa } from "../types";
 
 function conCuerpo(metodo: string, cuerpo?: unknown): RequestInit {
   return cuerpo === undefined ? { method: metodo } : { method: metodo, body: JSON.stringify(cuerpo) };
@@ -27,4 +34,10 @@ export const cambiosApi = {
   actualizar: (id: number, datos: SolicitudCambioDatos) =>
     api<SolicitudCambio>(`/cambios/${id}`, conCuerpo("PUT", datos)),
   eliminar: (id: number) => api<void>(`/cambios/${id}`, conCuerpo("DELETE")),
+  etapas: (id: number) => api<EtapasCambio>(`/cambios/${id}/etapas`),
+  parchearEtapa: (id: number, numero: number, estado: EstadoEtapa) =>
+    api<CambioEtapa>(`/cambios/${id}/etapas/${numero}`, conCuerpo("PATCH", { estado })),
+  aprobar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/aprobar`, conCuerpo("POST")),
+  rechazar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/rechazar`, conCuerpo("POST")),
+  aplicar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/aplicar`, conCuerpo("POST")),
 };
