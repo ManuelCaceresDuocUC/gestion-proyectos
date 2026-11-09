@@ -29,7 +29,7 @@ Esperar a que el API responda (`/api/health`). Front: el del compose o Vite. Si 
 | 0:45 | A | Proyectos → `EEC-2026` | Caso mínimo: 4 etapas, 12 actividades, 20 subactividades. EDT de 3 niveles; 1.4 es hoja. |
 | 2:00 | A | Gantt (`/gantt?id=…`) | Barras, dependencias FS/SS/FF/SF, línea base v1 (el seed la fija). Clic en una hoja: Plan vs Línea base. |
 | 3:30 | B | Recursos y costos | 4 tipos, 5 profesionales (P1…P5). En el proyecto: alerta de P2 en **1.1.2** (45 h / 5 días = 9 h/día > capacidad 8). Costo plan = cantidad × tarifa. |
-| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. Hitos / KPI / Tableros: pantallas pendientes (B-11, B-15, B-21, C-12). |
+| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. En el detalle: evidencias (texto/URL, sin archivos) e historial. Hitos / KPI / Tableros: pantallas pendientes (B-11, B-15, B-21, C-12). |
 | 6:00 | A | **Recálculo 1** | Ver bloque abajo. |
 | 9:00 | B | **Recálculo 2** | Ver bloque abajo. |
 | 11:30 | C | **Recálculo 3** | Ver bloque abajo. |

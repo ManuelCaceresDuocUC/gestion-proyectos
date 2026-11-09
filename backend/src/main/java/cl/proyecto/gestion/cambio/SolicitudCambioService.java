@@ -47,6 +47,12 @@ public class SolicitudCambioService {
     }
 
     @Transactional(readOnly = true)
+    public List<CambioHistorial> historial(Long id) {
+        obtener(id);
+        return historial.findBySolicitudIdOrderByFechaAsc(id);
+    }
+
+    @Transactional(readOnly = true)
     public SolicitudCambio obtener(Long id) {
         return repo.findById(id)
             .orElseThrow(() -> ApiException.noEncontrado("No existe la solicitud de cambio " + id + "."));
@@ -298,6 +304,7 @@ public class SolicitudCambioService {
         h.campo = "estado";
         h.valorAnterior = anterior.name();
         h.valorNuevo = nuevo.name();
+        h.usuarioId = seguridad.usuarioId();
         historial.save(h);
     }
 }

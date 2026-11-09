@@ -74,6 +74,47 @@ export function fecha(valor: string | null): string {
   return `${d}-${m}-${a}`;
 }
 
+/** Instant ISO → fecha y hora en America/Santiago. */
+export function fechaHora(valor: string | null): string {
+  if (!valor) return "—";
+  const d = new Date(valor);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("es-CL", {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "America/Santiago",
+  }).format(d);
+}
+
+/** `estado` o `etapa.{n}.estado` como los escribe el servidor. */
+export function etiquetaCampoHistorial(campo: string): string {
+  if (campo === "estado") return "Estado";
+  const etapa = /^etapa\.(\d+)\.estado$/.exec(campo);
+  return etapa ? `Etapa ${etapa[1]}` : campo;
+}
+
+export function etiquetaValorHistorial(campo: string, valor: string | null): string {
+  if (!valor) return "—";
+  if (campo === "estado" && valor in ETIQUETA_ESTADO) {
+    return ETIQUETA_ESTADO[valor as EstadoSolicitud];
+  }
+  if (campo.startsWith("etapa.") && valor in ETIQUETA_ETAPA) {
+    return ETIQUETA_ETAPA[valor as EstadoEtapa];
+  }
+  return valor;
+}
+
+/** Solo http(s) se abren; el resto se muestra como texto. */
+export function enlaceHttp(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url.trim());
+    return u.protocol === "http:" || u.protocol === "https:" ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function porcentaje(valor: number): string {
   return `${Math.round(valor)} %`;
 }

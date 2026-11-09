@@ -105,3 +105,31 @@ export interface EtapasCambio {
   avance: number;
   etapasBloqueadas: number;
 }
+
+/** GET/POST /cambios/{id}/evidencias. Sin archivos: descripción y URL. */
+export interface Evidencia {
+  id: number;
+  solicitudId: number;
+  descripcion: string;
+  url: string | null;
+  creadoPor: number | null;
+  creadoEn: string;
+}
+
+/** Cuerpo de POST /cambios/{id}/evidencias. */
+export interface EvidenciaDatos {
+  descripcion: string;
+  url?: string | null;
+}
+
+/** GET /cambios/{id}/historial. Inmutable; el servidor lo escribe al cambiar estado o etapa. */
+export interface CambioHistorial {
+  id: number;
+  solicitudId: number;
+  campo: string;
+  valorAnterior: string | null;
+  valorNuevo: string | null;
+  usuarioId: number | null;
+  comentario: string | null;
+  fecha: string;
+}

@@ -1,14 +1,14 @@
-# API de solicitudes de cambio (C-03, C-04, C-08, C-09, C-10)
+# API de solicitudes de cambio (C-03, C-04, C-05, C-08, C-09, C-10)
 
 Base: `/api`. Errores como `{ "codigo": "...", "mensaje": "...", "detalles": [...] }`.
 Fechas en ISO-8601 (`yyyy-MM-dd`); instantes en ISO-8601 UTC.
 
-Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado, aprobar/rechazar
-y aplicar una solicitud aprobada al plan vigente**. El detalle en el front (C-10) consume esas
-rutas. No guarda evidencias ni expone el GET del historial (C-05).
+Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado, aprobar/rechazar,
+aplicar una solicitud aprobada al plan vigente, GET del historial y evidencias (texto/URL)**.
+El detalle en el front (C-10 + C-05) consume esas rutas.
 C-01: todas las rutas de este módulo piden JWT salvo las públicas de [auth.md](auth.md).
 Aprobar y rechazar (POST y PUT a `APROBADO`/`RECHAZADO`) son solo **ADMIN** (403 `PROHIBIDO`).
-Aplicar al plan y el resto de escrituras las puede un `USUARIO_PROYECTO` autenticado.
+Aplicar al plan, evidencias y el resto de escrituras las puede un `USUARIO_PROYECTO` autenticado.
 El front oculta Aprobar/Rechazar si `puedeAprobar()` es falso.
 
 ## Catálogos
@@ -37,6 +37,10 @@ El front oculta Aprobar/Rechazar si `puedeAprobar()` es falso.
 | POST | `/cambios/{id}/aplicar` | 200. Sin body. Solo desde `APROBADO` y si aún no está aplicada |
 | GET | `/cambios/{id}/etapas` | 200. Las 10 + calculados. 404 si no existe la solicitud |
 | PATCH | `/cambios/{id}/etapas/{numero}` | 200. Body: `{"estado":"EN_CURSO"}`. `numero` es 1–10 |
+| GET | `/cambios/{id}/historial` | 200 lista (fecha ascendente). 404 si no existe la solicitud |
+| GET | `/cambios/{id}/evidencias` | 200 lista (`creadoEn` ascendente). 404 si no existe la solicitud |
+| POST | `/cambios/{id}/evidencias` | 201. Body: `EvidenciaRequest` |
+| DELETE | `/cambios/{id}/evidencias/{evidenciaId}` | 204. 404 si no existe o no es de esa solicitud |
 
 El listado ordena por `fechaSolicitud` descendente. Cada filtro nulo se ignora; si vienen varios, se combinan (AND).
 `desde` y `hasta` aplican a `fechaSolicitud` e incluyen los extremos.
@@ -135,7 +139,7 @@ responde 409 `TRANSICION_INVALIDA` y no cambia la fila.
 
 Cualquier cambio real de `estado` (PUT, aprobar, rechazar o aplicar) deja una fila en
 `cambio_historial` (`campo` = `estado`, `valorAnterior` / `valorNuevo` = el nombre del catálogo).
-El GET de esa bitácora es C-05. `usuarioId` sigue nulo (C-05).
+`usuarioId` es el `sub` del JWT (número). En tests con `@WithMockUser` (principal texto) queda nulo.
 
 ## Aprobar y rechazar
 
@@ -187,8 +191,7 @@ Al `POST` de la solicitud se crean siempre estas 10, en `PENDIENTE`:
 
 Cualquier etapa puede pasar a cualquiera de los 5 estados (no hay secuencia). El mismo estado
 no escribe historial. Un cambio de estado deja una fila en `cambio_historial`
-(`campo` = `etapa.{n}.estado`); el GET de esa bitácora es C-05. `actualizadoPor` / `usuarioId`
-siguen nulos (C-05).
+(`campo` = `etapa.{n}.estado`) y llena `actualizadoPor` / `usuarioId` con el id del JWT.
 
 `GET /cambios/{id}/etapas` responde:
 
@@ -196,7 +199,7 @@ siguen nulos (C-05).
 {
   "etapas": [
     { "id": 1, "solicitudId": 8, "numero": 1, "nombre": "Necesidad",
-      "estado": "COMPLETADO", "actualizadoEn": "2026-11-01T15:00:00Z", "actualizadoPor": null }
+      "estado": "COMPLETADO", "actualizadoEn": "2026-11-01T15:00:00Z", "actualizadoPor": 2 }
   ],
   "etapasCompletas": 1,
   "avance": 10,
@@ -213,26 +216,94 @@ Calculado; **no se persiste**. Porcentaje 0–100.
 - `etapasBloqueadas` = cuántas están `BLOQUEADO`
 - `NO_APLICA` no suma al avance
 
+## Historial (C-05)
+
+`GET /api/cambios/{id}/historial`. **Solo lectura**: no hay POST/PUT/DELETE. El servidor escribe
+la fila al cambiar el estado de la solicitud o de una etapa. Orden: `fecha` ascendente.
+
+No hay GET de historial por proyecto. `comentario` existe en la tabla y en el JSON; los writers
+actuales lo dejan nulo.
+
+```json
+[
+  {
+    "id": 1,
+    "solicitudId": 8,
+    "campo": "estado",
+    "valorAnterior": "ABIERTO",
+    "valorNuevo": "EN_EVALUACION",
+    "usuarioId": 2,
+    "comentario": null,
+    "fecha": "2026-11-09T17:15:00Z"
+  },
+  {
+    "id": 2,
+    "solicitudId": 8,
+    "campo": "etapa.1.estado",
+    "valorAnterior": "PENDIENTE",
+    "valorNuevo": "EN_CURSO",
+    "usuarioId": 2,
+    "comentario": null,
+    "fecha": "2026-11-09T17:36:00Z"
+  }
+]
+```
+
+El front muestra `estado` como «Estado», `etapa.{n}.estado` como «Etapa n», y traduce los
+catálogos. `usuarioId` nulo se ve como «—» (movimientos anteriores a C-05 o tests sin id en el JWT).
+
+## Evidencias (C-05)
+
+Descripción + URL. **No hay archivos** ni multipart. Guía: con texto o un enlace basta.
+
+| Método | Efecto |
+|---|---|
+| GET | Lista de esa solicitud, `creadoEn` ascendente |
+| POST | Alta. `descripcion` obligatoria (1–250, se recorta). `url` opcional (hasta 500); en blanco o solo espacios → `null` |
+| DELETE | Baja. Si `evidenciaId` no es de esa solicitud, 404 `NO_ENCONTRADO` (igual que si no existiera) |
+| PUT/PATCH | No existen |
+
+No hay listado global de evidencias. `creadoPor` es el id del JWT (o nulo, igual que el historial).
+
+Body de alta (`EvidenciaRequest`):
+
+```json
+{ "descripcion": "Acta del comité", "url": "https://ejemplo.cl/acta" }
+```
+
+Respuesta (`EvidenciaResponse`):
+
+```json
+{
+  "id": 4,
+  "solicitudId": 8,
+  "descripcion": "Acta del comité",
+  "url": "https://ejemplo.cl/acta",
+  "creadoPor": 2,
+  "creadoEn": "2026-11-09T17:36:00Z"
+}
+```
+
 ## Errores
 
 | Código | HTTP | Cuándo |
 |---|---|---|
 | `NO_AUTENTICADO` | 401 | Falta JWT o el token no es válido. Ver [auth.md](auth.md) |
 | `PROHIBIDO` | 403 | No ADMIN al aprobar/rechazar (POST o PUT) |
-| `VALIDACION` | 400 | Falta `nombre`, `tipo` o `estado` de etapa, o un campo no cumple el tamaño |
+| `VALIDACION` | 400 | Falta `nombre`, `tipo`, `estado` de etapa o `descripcion` de evidencia, o un campo no cumple el tamaño |
 | `TAREA_DE_OTRO_PROYECTO` | 400 | `tareaId` existe pero es de otro proyecto |
 | `TAREA_REQUERIDA` | 400 | Se aplica un TIEMPO sin `tareaId` |
 | `DURACION_INVALIDA` | 400 | `duración + impactoDias` quedaría negativa |
-| `NO_ENCONTRADO` | 404 | No existe el proyecto, la solicitud, la tarea o la etapa (`numero` fuera de 1–10) |
-| `PROYECTO_CERRADO` | 409 | El proyecto está `TERMINADO` (alta, edición, baja, aprobar, rechazar, aplicar o PATCH de etapa) |
+| `NO_ENCONTRADO` | 404 | No existe el proyecto, la solicitud, la tarea, la etapa (`numero` fuera de 1–10) o la evidencia (también si es de otra solicitud) |
+| `PROYECTO_CERRADO` | 409 | El proyecto está `TERMINADO` (alta, edición, baja, aprobar, rechazar, aplicar, PATCH de etapa o alta/baja de evidencia) |
 | `TRANSICION_INVALIDA` | 409 | El nuevo `estado` no es un paso válido; se aprueba/rechaza fuera de `EN_EVALUACION`; o se aplica fuera de `APROBADO` |
 | `YA_APLICADA` | 409 | La solicitud ya fue aplicada al plan |
 | `TAREA_CON_HIJOS` | 409 | Se aplica un TIEMPO sobre una etapa o actividad con subtareas |
 
 Un valor fuera de catálogo (`tipo`, `estado`, …) responde 400. Consultar un proyecto cerrado sí
-devuelve el listado y las etapas; solo se bloquean las escrituras.
+devuelve el listado, las etapas, el historial y las evidencias; solo se bloquean las escrituras.
 
-## Pantalla de detalle (C-10)
+## Pantalla de detalle (C-10, C-05)
 
 `/cambios` es el listado; `/cambios?id={id}` es la ficha. El clic en una fila abre el detalle.
 
@@ -242,6 +313,6 @@ aplicar al plan (POST C-09) y cerrar (PUT a `CERRADO`). El formulario de alta/ed
 cambia el estado. El PUT reenvía `tareaId`. Si el tipo es `TIEMPO` y no hay tarea hoja, Aplicar
 queda deshabilitado. Otros tipos al aplicar no mueven el Gantt.
 
-## Fuera de este contrato
-
-No hay `GET /cambios/{id}/historial` ni CRUD de evidencias (C-05). El detalle lo deja dicho.
+Debajo de las etapas: evidencias (formulario descripción + URL; quitar con confirmación) e
+historial de solo lectura. Un cambio de etapa o de estado recarga el historial. No se suben
+archivos; una URL que no sea `http`/`https` se muestra como texto.

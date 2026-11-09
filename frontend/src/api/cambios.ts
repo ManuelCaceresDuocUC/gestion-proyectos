@@ -1,8 +1,11 @@
-// Llamadas a la API de solicitudes de cambio (docs/api/cambios.md).
+// Llamadas a la API de solicitudes de cambio (docs/api/cambios.md, C-05 historial y evidencias).
 import { api } from "./client";
 import type {
   CambioEtapa,
+  CambioHistorial,
   EtapasCambio,
+  Evidencia,
+  EvidenciaDatos,
   FiltrosSolicitud,
   SolicitudCambio,
   SolicitudCambioDatos,
@@ -40,4 +43,10 @@ export const cambiosApi = {
   aprobar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/aprobar`, conCuerpo("POST")),
   rechazar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/rechazar`, conCuerpo("POST")),
   aplicar: (id: number) => api<SolicitudCambio>(`/cambios/${id}/aplicar`, conCuerpo("POST")),
+  historial: (id: number) => api<CambioHistorial[]>(`/cambios/${id}/historial`),
+  evidencias: (id: number) => api<Evidencia[]>(`/cambios/${id}/evidencias`),
+  crearEvidencia: (id: number, datos: EvidenciaDatos) =>
+    api<Evidencia>(`/cambios/${id}/evidencias`, conCuerpo("POST", datos)),
+  eliminarEvidencia: (id: number, evidenciaId: number) =>
+    api<void>(`/cambios/${id}/evidencias/${evidenciaId}`, conCuerpo("DELETE")),
 };

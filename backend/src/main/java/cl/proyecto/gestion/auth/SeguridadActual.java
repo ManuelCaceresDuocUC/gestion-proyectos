@@ -28,4 +28,20 @@ public class SeguridadActual {
             throw ApiException.prohibido("PROHIBIDO", mensaje);
         }
     }
+
+    /** Id del JWT (`sub`). En tests con {@code @WithMockUser} no hay id y queda nulo. */
+    public Long usuarioId() {
+        Authentication a = SecurityContextHolder.getContext().getAuthentication();
+        if (a == null || !a.isAuthenticated()) {
+            return null;
+        }
+        Object p = a.getPrincipal();
+        if (p instanceof Long id) {
+            return id;
+        }
+        if (p instanceof Number n) {
+            return n.longValue();
+        }
+        return null;
+    }
 }
