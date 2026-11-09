@@ -16,17 +16,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** API de solicitudes de cambio (C-03, C-08, C-09). Contrato en docs/api/cambios.md. */
+/** API de solicitudes de cambio (C-03, C-08, C-09, C-05). Contrato en docs/api/cambios.md. */
 @RestController
 @RequestMapping("/api")
 public class SolicitudCambioController {
 
     private final SolicitudCambioService servicio;
     private final CambioEtapaService etapas;
+    private final EvidenciaService evidencias;
 
-    public SolicitudCambioController(SolicitudCambioService servicio, CambioEtapaService etapas) {
+    public SolicitudCambioController(SolicitudCambioService servicio, CambioEtapaService etapas,
+                                     EvidenciaService evidencias) {
         this.servicio = servicio;
         this.etapas = etapas;
+        this.evidencias = evidencias;
     }
 
     @GetMapping("/proyectos/{proyectoId}/cambios")
@@ -81,6 +84,28 @@ public class SolicitudCambioController {
     @PostMapping("/cambios/{id}/aplicar")
     public SolicitudCambioResponse aplicar(@PathVariable Long id) {
         return conEtapas(servicio.aplicarAlPlan(id));
+    }
+
+    @GetMapping("/cambios/{id}/historial")
+    public List<CambioHistorialResponse> historial(@PathVariable Long id) {
+        return servicio.historial(id).stream().map(CambioHistorialResponse::de).toList();
+    }
+
+    @GetMapping("/cambios/{id}/evidencias")
+    public List<EvidenciaResponse> listarEvidencias(@PathVariable Long id) {
+        return evidencias.listar(id).stream().map(EvidenciaResponse::de).toList();
+    }
+
+    @PostMapping("/cambios/{id}/evidencias")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EvidenciaResponse crearEvidencia(@PathVariable Long id, @Valid @RequestBody EvidenciaRequest request) {
+        return EvidenciaResponse.de(evidencias.crear(id, request));
+    }
+
+    @DeleteMapping("/cambios/{id}/evidencias/{evidenciaId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarEvidencia(@PathVariable Long id, @PathVariable Long evidenciaId) {
+        evidencias.eliminar(id, evidenciaId);
     }
 
     private SolicitudCambioResponse conEtapas(SolicitudCambio s) {

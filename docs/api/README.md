@@ -22,7 +22,7 @@ servicios. Contrato: [recalculo.md](recalculo.md).
 | línea base | `/proyectos/{id}/linea-base`, `/lineas-base`, `/comparacion` | A | [linea-base.md](linea-base.md) |
 | recursos y asignaciones | `/tipos-recurso`, `/recursos`, `/asignaciones` | B | [recursos.md](recursos.md) |
 | sobreasignación | `/proyectos/{id}/sobreasignaciones` | B | [recursos.md](recursos.md) (B-09) |
-| solicitudes de cambio | `/proyectos/{id}/cambios`, `/cambios`, `/cambios/{id}/etapas` | C | [cambios.md](cambios.md) — en main |
+| solicitudes de cambio | `/proyectos/{id}/cambios`, `/cambios/{id}`, `/etapas`, `/historial`, `/evidencias` | C | [cambios.md](cambios.md) — C-05 en el mismo contrato |
 | recálculo (interno) | — | A (+ pasos B/C) | [recalculo.md](recalculo.md) — no hay `POST /proyectos/{id}/recalcular` |
 | hitos | `/proyectos/{id}/hitos`, `/hitos/{id}` | B | [hitos.md](hitos.md) — B-11 |
 | KPI | GET `/proyectos/{id}/kpi`; escrituras `/kpi/**` (ADMIN) | B | [kpi.md](kpi.md); [kpi-variables.md](kpi-variables.md) — **sin controlador** |

@@ -23,7 +23,7 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-CAM-01 Alta y ficha de solicitud | `cambio` (`SolicitudCambioService`); front C-06/C-10 | `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |
 | RF-CAM-02 Filtros de solicitudes | `cambio` (listado); `features/cambios` | `cambio/SolicitudCambioServiceTest` (filtro estado/tipo/fechas), `cambio/SolicitudCambioApiTest` |
 | RF-CAM-03 10 etapas y avance | `cambio` (`CambioEtapaService`, `EtapasCambio`) | `cambio/CambioEtapaServiceTest`, `cambio/CambioEtapaApiTest`, `cambio/AvanceEtapasTest`, `cambio/DiasAtrasoTest` |
-| RF-CAM-04 Evidencias e historial | `cambio_historial` (escritura en transiciones); GET y evidencias = C-05 | `cambio/SolicitudCambioServiceTest` (escribe historial). GET y adjuntos: pendiente C-05 |
+| RF-CAM-04 Evidencias e historial | `cambio` (`EvidenciaService`, `SolicitudCambioService.historial`); front `TrazasCambio` | `cambio/TrazabilidadCambioApiTest`, `cambio/EvidenciaServiceTest`, `cambio/SolicitudCambioServiceTest` (escribe historial) |
 | RF-CAM-05 Aprobar, rechazar y aplicar | `cambio` + `cronograma` al aplicar TIEMPO | `cambio/TransicionesSolicitudTest`, `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |
 | RF-TAB-01 Tablero de proyecto | `features/tableros`; API `/api/tablero/proyecto/{id}` | Pendiente B-21 |
 | RF-TAB-02 Tablero de cambio | `features/tableros`; API `/api/tablero/cambio/{id}` | Pendiente C-12 (pide B-17 para KPI de cambio) |
@@ -34,6 +34,6 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-INT-04 Tres recálculos de la demo | `RecalculoService` + cambio | Duración: `integracion/RecalculoDuracionE2ETest` y A-18. Recursos: pendiente B-18. Solicitud: pendiente C-14. Guion: `docs/pruebas/guion-demo.md`. Casos: `docs/pruebas/casos-de-prueba.md` (C-16) |
 
 Cobertura documentada: R2 (proyectos y EDT), R3 (tiempos, recursos y costos), R4 (Gantt, precedencias e hitos),
-R5 (KPI, pendiente de módulo), R6 (solicitudes, etapas, aprobación y aplicar; evidencias C-05 al final),
+R5 (KPI, pendiente de módulo), R6 (solicitudes, etapas, evidencias, historial, aprobación y aplicar),
 R7 (tableros, pendiente B-21/C-12/C-13) y R8 (JWT C-01, seed, recálculo 1). Las filas marcadas como
 pendientes no se presentan como cobertura automatizada.

@@ -1,5 +1,6 @@
 package cl.proyecto.gestion.cambio;
 
+import cl.proyecto.gestion.auth.SeguridadActual;
 import cl.proyecto.gestion.common.ApiException;
 import cl.proyecto.gestion.proyecto.ProyectoService;
 import java.util.ArrayList;
@@ -11,8 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * C-04: las 10 etapas, su estado y el avance. No expone el historial (C-05)
- * ni valida transiciones de la solicitud (C-08).
+ * C-04: las 10 etapas, su estado y el avance. El GET del historial es C-05.
  */
 @Service
 public class CambioEtapaService {
@@ -21,13 +21,16 @@ public class CambioEtapaService {
     private final CambioHistorialRepository historial;
     private final SolicitudCambioRepository solicitudes;
     private final ProyectoService proyectos;
+    private final SeguridadActual seguridad;
 
     public CambioEtapaService(CambioEtapaRepository etapas, CambioHistorialRepository historial,
-                              SolicitudCambioRepository solicitudes, ProyectoService proyectos) {
+                              SolicitudCambioRepository solicitudes, ProyectoService proyectos,
+                              SeguridadActual seguridad) {
         this.etapas = etapas;
         this.historial = historial;
         this.solicitudes = solicitudes;
         this.proyectos = proyectos;
+        this.seguridad = seguridad;
     }
 
     @Transactional(readOnly = true)
@@ -81,6 +84,7 @@ public class CambioEtapaService {
         }
         EstadoEtapa anterior = e.estado;
         e.estado = estado;
+        e.actualizadoPor = seguridad.usuarioId();
         etapas.save(e);
         registrar(solicitudId, numero, anterior, estado);
         return e;
@@ -110,6 +114,7 @@ public class CambioEtapaService {
         h.campo = "etapa." + numero + ".estado";
         h.valorAnterior = anterior.name();
         h.valorNuevo = nuevo.name();
+        h.usuarioId = seguridad.usuarioId();
         historial.save(h);
     }
 }

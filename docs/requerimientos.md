@@ -129,7 +129,7 @@ Los nombres de la planilla del profesor se transcriben abajo. En el sistema rige
 | RF-CAM-01 | Alta | Registrar solicitud. Obligatorios: `nombre` y `tipo`. El alta queda `ABIERTO`, con código `SC-nn` y las 10 etapas en `PENDIENTE`. Responsable, prioridad, riesgo, impacto, presupuesto y costo son opcionales (el servidor pone prioridad/riesgo/impacto medios e impactos 0 si faltan). |
 | RF-CAM-02 | Alta | Filtrar el listado por `estado`, `tipo`, `prioridad`, `responsableId` y rango de `fechaSolicitud`. El riesgo se guarda en la ficha; no es query del listado (sí lo será del tablero, C-13). |
 | RF-CAM-03 | Alta | Las 10 etapas de la plantilla, cada una con estado de etapa; `avance` (0–100) = etapas `COMPLETADO` × 10. |
-| RF-CAM-04 | Media | Conservar evidencias e historial de trazabilidad por solicitud (C-05; se implementa al final). Cada cambio real de estado de solicitud o de etapa ya deja fila en `cambio_historial`. |
+| RF-CAM-04 | Media | Conservar evidencias (descripción y URL; sin archivos) e historial inmutable por solicitud (C-05). Cada cambio real de estado de solicitud o de etapa deja fila en `cambio_historial`; `usuarioId` / `creadoPor` salen del JWT. |
 | RF-CAM-05 | Alta | Aprobar y rechazar son un acto de **ADMIN** distinto de aplicar al plan. Ver más abajo. |
 
 ### Las 10 etapas (plantilla)

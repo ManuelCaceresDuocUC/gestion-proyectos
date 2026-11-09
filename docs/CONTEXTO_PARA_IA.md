@@ -108,7 +108,7 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 2. C-09: aplicar una solicitud aprobada (sección 4): cambia el plan por los servicios de A y dispara el recálculo; **es el recálculo 3 de la demo.**
 3. C-07/C-11: **seed** del caso mínimo. Recomendación: un `CommandLineRunner` activado por `APP_SEED_ENABLED` que cree los datos **usando los servicios** (`ProyectoService`, `TareaService`, `DependenciaService`, `LineaBaseService`), para que las fechas salgan del motor. `scripts/demo-gantt.ps1` muestra el orden: proyecto → EDT → dependencias → línea base.
 4. C-01: JWT y los roles `ADMIN` y `USUARIO_PROYECTO` (ADMIN administra usuarios, KPI y aprueba cambios). Hazlo en una rama aparte y actualiza las pruebas existentes.
-5. C-12: tablero de cambio. Después, C-05/C-06/C-10 (evidencias y pantallas) y la documentación (C-16, C-17).
+5. C-12: tablero de cambio (pide B-17). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están.
 
 ## 8. Flujo de trabajo (Git)
 - Una rama por issue o grupo corto: `feat/B-05-recursos`. PR pequeños y frecuentes; **el CI (backend y frontend) debe estar en verde**.
