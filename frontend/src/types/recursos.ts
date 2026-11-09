@@ -47,3 +47,21 @@ export interface AsignacionDatos {
   horasSemana?: number;
   semanas?: number;
 }
+
+export interface TareaAlerta {
+  id: number;
+  codigo: string;
+  nombre: string;
+}
+
+/** Una fila de GET /api/proyectos/{id}/sobreasignaciones. */
+export interface AlertaSobreasignacion {
+  id: number;
+  recursoId: number;
+  profesional: string;
+  fecha: string;
+  cargaHoras: number;
+  capacidadHorasDia: number;
+  excesoHoras: number;
+  tareas: TareaAlerta[];
+}

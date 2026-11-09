@@ -5,6 +5,7 @@ import { dependenciasApi } from "../../api/planificacion";
 import type { TipoDependencia } from "../../types";
 import type { CambioFecha, DependenciaDto } from "../../types/planificacion";
 import { fecha, mensajeDe } from "../proyectos/formato";
+import PanelAsignaciones from "../recursos/PanelAsignaciones";
 import type { FilaGantt } from "./modelo";
 
 const TIPOS: TipoDependencia[] = ["FS", "SS", "FF", "SF"];
@@ -13,14 +14,20 @@ interface Props {
   fila: FilaGantt;
   dependencias: DependenciaDto[];
   nombreDe: (id: number) => string;
-  /** A-17: solo ADMIN edita. */
+  /** A-17: solo ADMIN edita duración y dependencias. */
   editable: boolean;
+  /** Asignar recursos: quien trabaja el proyecto, no solo quien edita el cronograma. */
+  puedeAsignar: boolean;
+  moneda: string;
+  sobreasignada: boolean;
   /** Notifica los cambios de fechas devueltos por el recálculo y recarga el diagrama. */
   alRecalcular: (cambios: CambioFecha[]) => void;
+  /** Recarga el diagrama tras cambiar asignaciones, sin anunciar un cambio de fechas. */
+  alCambiarAsignacion: () => void;
 }
 
 /** Detalle de la tarea seleccionada con edición de duración y dependencias (A-17). */
-export default function PanelTarea({ fila, dependencias, nombreDe, editable, alRecalcular }: Props) {
+export default function PanelTarea({ fila, dependencias, nombreDe, editable, puedeAsignar, moneda, sobreasignada, alRecalcular, alCambiarAsignacion }: Props) {
   const { nodo, comp } = fila;
   const [duracion, setDuracion] = useState(String(nodo.duracionDias ?? 1));
   const [error, setError] = useState("");
@@ -49,7 +56,10 @@ export default function PanelTarea({ fila, dependencias, nombreDe, editable, alR
 
   return (
     <aside className="tarjeta g-panel">
-      <h3>{nodo.codigo} {nodo.nombre}</h3>
+      <h3>
+        {nodo.codigo} {nodo.nombre}
+        {sobreasignada && <span className="marca-sobreasignacion" style={{ marginLeft: 8 }}>Sobreasignada</span>}
+      </h3>
       <dl className="datos">
         <div><dt>Plan</dt><dd>{fecha(nodo.inicioPlan)} → {fecha(nodo.finPlan)}</dd></div>
         <div><dt>Línea base</dt><dd>{comp?.inicioBase ? `${fecha(comp.inicioBase)} → ${fecha(comp.finBase)}` : "Sin base"}</dd></div>
@@ -76,6 +86,20 @@ export default function PanelTarea({ fila, dependencias, nombreDe, editable, alR
           quitar={() => ejecutar(async () => (await dependenciasApi.eliminar(d.id)).cambios)} />
       ))}
       {error && <p className="error" role="alert">{error}</p>}
+
+      {!fila.esResumen && (
+        <PanelAsignaciones
+          tareaId={nodo.id}
+          codigo={nodo.codigo}
+          nombre={nodo.nombre}
+          moneda={moneda}
+          costoPlan={nodo.costoPlan}
+          costoReal={nodo.costoReal}
+          editable={puedeAsignar}
+          sobreasignada={sobreasignada}
+          alCambiar={alCambiarAsignacion}
+        />
+      )}
     </aside>
   );
 }

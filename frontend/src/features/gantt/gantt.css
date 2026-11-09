@@ -4,6 +4,7 @@
 .g-item:hover { background: var(--fondo); }
 .g-item-sel { background: #ddf4ff; }
 .g-item-atrasada { color: var(--peligro); }
+.g-item-sobreasignada { box-shadow: inset 3px 0 0 #cf222e; }
 .g-codigo { font-weight: 600; font-variant-numeric: tabular-nums; }
 .g-plegar { width: 16px; border: 0; background: none; cursor: pointer; padding: 0; display: inline-block; }
 .g-area { overflow-x: auto; flex: 1; }

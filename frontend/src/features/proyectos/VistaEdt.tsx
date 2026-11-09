@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { AlertaSobreasignacion } from "../../types/recursos";
 import type { NodoEdt } from "../../types/planificacion";
 import ArbolEdt from "./ArbolEdt";
 import EsquemaEdt from "./EsquemaEdt";
@@ -12,11 +13,13 @@ interface Props {
   nombreProyecto: string;
   nodos: NodoEdt[];
   editable: boolean;
+  moneda: string;
+  alertas: AlertaSobreasignacion[];
   alCambiar: () => void;
 }
 
 /** EDT en lista editable, esquema gráfico o ambos a la vez. */
-export default function VistaEdt({ proyectoId, nombreProyecto, nodos, editable, alCambiar }: Props) {
+export default function VistaEdt({ proyectoId, nombreProyecto, nodos, editable, moneda, alertas, alCambiar }: Props) {
   const [modo, setModo] = useState<Modo>("AMBOS");
   return (
     <div className="edt-vista">
@@ -29,7 +32,9 @@ export default function VistaEdt({ proyectoId, nombreProyecto, nodos, editable, 
         </div>
       </div>
       <div className={`edt-rejilla${modo === "AMBOS" ? " edt-doble" : ""}`}>
-        {modo !== "ESQUEMA" && <ArbolEdt proyectoId={proyectoId} nodos={nodos} editable={editable} alCambiar={alCambiar} />}
+        {modo !== "ESQUEMA" && (
+          <ArbolEdt proyectoId={proyectoId} nodos={nodos} editable={editable} moneda={moneda} alertas={alertas} alCambiar={alCambiar} />
+        )}
         {modo !== "LISTA" && <EsquemaEdt nombreProyecto={nombreProyecto} nodos={nodos} />}
       </div>
     </div>

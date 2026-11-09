@@ -17,6 +17,7 @@
 .edt-fila:hover { background: #ddf4ff80; }
 .edt-fila.edt-n0 { background: #eaf2ff; border-bottom: 1px solid #b6d3ff; border-top: 1px solid #b6d3ff; font-weight: 600; }
 .edt-fila.edt-n0:hover { background: #dbe9ff; }
+.edt-fila.edt-sobreasignada { box-shadow: inset 3px 0 0 #cf222e; }
 .edt-nombre { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .edt-sangria { flex: none; align-self: stretch; background-image: repeating-linear-gradient(to right, transparent 0 10px, #c3cbd3 10px 11px, transparent 11px 22px); }
 .edt-tipo { flex: none; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; text-transform: uppercase; letter-spacing: .03em; }

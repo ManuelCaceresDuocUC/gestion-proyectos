@@ -2,6 +2,9 @@ import { Fragment, useState } from "react";
 import { edtApi } from "../../api/planificacion";
 import type { TipoTarea } from "../../types";
 import type { NodoEdt } from "../../types/planificacion";
+import type { AlertaSobreasignacion } from "../../types/recursos";
+import PanelAsignaciones from "../recursos/PanelAsignaciones";
+import { idsSobreasignados, resumenSobreasignacion } from "../recursos/formato";
 import Confirmar from "./Confirmar";
 import FormularioTarea from "./FormularioTarea";
 import { fecha, mensajeDe, porcentaje } from "./formato";
@@ -11,6 +14,8 @@ interface Props {
   nodos: NodoEdt[];
   /** false = solo lectura (proyecto terminado o rol sin permiso). */
   editable: boolean;
+  moneda: string;
+  alertas: AlertaSobreasignacion[];
   alCambiar: () => void;
 }
 
@@ -33,10 +38,12 @@ function buscar(nodos: NodoEdt[], id: number): NodoEdt | undefined {
 }
 
 /** Lista de la EDT: etapa > actividad > subactividad, con filas separadas y alta, edición, borrado y reordenamiento (A-11). */
-export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Props) {
+export default function ArbolEdt({ proyectoId, nodos, editable, moneda, alertas, alCambiar }: Props) {
   const [formulario, setFormulario] = useState<Formulario>(null);
+  const [recursosDe, setRecursosDe] = useState<number | null>(null);
   const [aEliminar, setAEliminar] = useState<NodoEdt | null>(null);
   const [error, setError] = useState("");
+  const marcadas = idsSobreasignados(alertas);
 
   async function ejecutar(accion: () => Promise<unknown>) {
     setError("");
@@ -59,7 +66,7 @@ export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Pro
     <div>
       {editable && (
         <div className="acciones" style={{ marginTop: 0, marginBottom: 8 }}>
-          <button className="boton primario" onClick={() => setFormulario({})}>Nueva etapa</button>
+          <button className="boton primario" onClick={() => { setRecursosDe(null); setFormulario({}); }}>Nueva etapa</button>
         </div>
       )}
       {error && <p className="error" role="alert">{error}</p>}
@@ -77,14 +84,19 @@ export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Pro
           const hermanos = hermanosDe(nodo);
           const posicion = hermanos.findIndex((h) => h.id === nodo.id) + 1;
           const formularioAqui = formulario?.tarea?.id === nodo.id || formulario?.padre?.id === nodo.id;
+          const hoja = nodo.hijos.length === 0;
+          const sobreasignada = marcadas.has(nodo.id);
           return (
             <Fragment key={nodo.id}>
-              <div className={`edt-fila edt-n${profundidad === 0 ? 0 : 1}${i % 2 === 1 ? " edt-par" : ""}`}>
+              <div className={`edt-fila edt-n${profundidad === 0 ? 0 : 1}${i % 2 === 1 ? " edt-par" : ""}${sobreasignada ? " edt-sobreasignada" : ""}`}>
                 <div className="edt-nombre">
                   <span className="edt-sangria" style={{ width: profundidad * 22 }} />
                   <span className={`edt-tipo edt-tipo-${nodo.tipo}`}>{ETIQUETA_TIPO[nodo.tipo]}</span>
                   <span className="edt-codigo">{nodo.codigo}</span>
                   <span className="edt-texto" title={nodo.nombre}>{nodo.nombre}</span>
+                  {sobreasignada && (
+                    <span className="marca-sobreasignacion" title={resumenSobreasignacion(alertas, nodo.id)}>Sobreasignada</span>
+                  )}
                 </div>
                 <div className="edt-dur">{nodo.duracionDias ?? "—"}</div>
                 <div className="edt-fechas">{fecha(nodo.inicioPlan)} → {fecha(nodo.finPlan)}</div>
@@ -93,6 +105,11 @@ export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Pro
                   {porcentaje(nodo.avance)}
                 </div>
                 <div className="edt-acc">
+                  {hoja && (
+                    <button className="boton chico" onClick={() => { setFormulario(null); setRecursosDe(recursosDe === nodo.id ? null : nodo.id); }}>
+                      Recursos
+                    </button>
+                  )}
                   {editable && (
                     <>
                       <button className="boton chico" title="Subir" disabled={posicion <= 1}
@@ -100,9 +117,9 @@ export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Pro
                       <button className="boton chico" title="Bajar" disabled={posicion >= hermanos.length}
                         onClick={() => void ejecutar(() => edtApi.mover(nodo.id, posicion + 1))}>↓</button>
                       {nodo.tipo !== "SUBACTIVIDAD" && (
-                        <button className="boton chico" onClick={() => setFormulario({ padre: nodo })}>+ Agregar</button>
+                        <button className="boton chico" onClick={() => { setRecursosDe(null); setFormulario({ padre: nodo }); }}>+ Agregar</button>
                       )}
-                      <button className="boton chico" onClick={() => setFormulario({ tarea: nodo })}>Editar</button>
+                      <button className="boton chico" onClick={() => { setRecursosDe(null); setFormulario({ tarea: nodo }); }}>Editar</button>
                       <button className="boton chico peligro" onClick={() => setAEliminar(nodo)}>Eliminar</button>
                     </>
                   )}
@@ -117,6 +134,21 @@ export default function ArbolEdt({ proyectoId, nodos, editable, alCambiar }: Pro
                     padre={formulario?.padre}
                     alGuardar={() => { setFormulario(null); alCambiar(); }}
                     alCancelar={() => setFormulario(null)}
+                  />
+                </div>
+              )}
+              {recursosDe === nodo.id && hoja && (
+                <div className="edt-form">
+                  <PanelAsignaciones
+                    tareaId={nodo.id}
+                    codigo={nodo.codigo}
+                    nombre={nodo.nombre}
+                    moneda={moneda}
+                    costoPlan={nodo.costoPlan}
+                    costoReal={nodo.costoReal}
+                    editable={editable}
+                    sobreasignada={sobreasignada}
+                    alCambiar={alCambiar}
                   />
                 </div>
               )}
