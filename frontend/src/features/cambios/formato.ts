@@ -1,10 +1,12 @@
 import type {
+  EstadoEtapa,
   EstadoSolicitud,
   ImpactoSolicitud,
   PrioridadSolicitud,
   RiesgoSolicitud,
   TipoSolicitud,
 } from "../../types";
+import type { SolicitudCambio, SolicitudCambioDatos } from "../../types/cambios";
 
 export const ESTADOS_SOLICITUD: EstadoSolicitud[] = [
   "ABIERTO", "EN_EVALUACION", "APROBADO", "RECHAZADO", "EN_IMPLEMENTACION", "CERRADO",
@@ -15,6 +17,9 @@ export const TIPOS_SOLICITUD: TipoSolicitud[] = [
 export const PRIORIDADES: PrioridadSolicitud[] = ["BAJA", "MEDIA", "ALTA", "CRITICA"];
 export const RIESGOS: RiesgoSolicitud[] = ["BAJO", "MEDIO", "ALTO", "CRITICO"];
 export const IMPACTOS: ImpactoSolicitud[] = ["BAJO", "MEDIO", "ALTO"];
+export const ESTADOS_ETAPA: EstadoEtapa[] = [
+  "PENDIENTE", "EN_CURSO", "COMPLETADO", "BLOQUEADO", "NO_APLICA",
+];
 
 export const ETIQUETA_ESTADO: Record<EstadoSolicitud, string> = {
   ABIERTO: "Abierto",
@@ -54,6 +59,14 @@ export const ETIQUETA_IMPACTO: Record<ImpactoSolicitud, string> = {
   ALTO: "Alto",
 };
 
+export const ETIQUETA_ETAPA: Record<EstadoEtapa, string> = {
+  PENDIENTE: "Pendiente",
+  EN_CURSO: "En curso",
+  COMPLETADO: "Completado",
+  BLOQUEADO: "Bloqueado",
+  NO_APLICA: "No aplica",
+};
+
 /** "2026-11-02" -> "02-11-2026". */
 export function fecha(valor: string | null): string {
   if (!valor) return "—";
@@ -67,4 +80,42 @@ export function porcentaje(valor: number): string {
 
 export function mensajeDe(error: unknown): string {
   return error instanceof Error ? error.message : "Ocurrió un error inesperado.";
+}
+
+export function dinero(valor: number): string {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(valor);
+}
+
+/** Cuerpo de PUT con todos los campos. El PUT no es PATCH: lo omitido queda null. */
+export function datosDe(s: SolicitudCambio, extra: Partial<SolicitudCambioDatos> = {}): SolicitudCambioDatos {
+  return {
+    nombre: s.nombre,
+    tipo: s.tipo,
+    descripcion: s.descripcion,
+    solicitante: s.solicitante,
+    responsableId: s.responsableId,
+    fechaSolicitud: s.fechaSolicitud,
+    inicioPrevisto: s.inicioPrevisto,
+    finPrevisto: s.finPrevisto,
+    finReal: s.finReal,
+    prioridad: s.prioridad,
+    riesgo: s.riesgo,
+    impacto: s.impacto,
+    estado: s.estado,
+    tareaId: s.tareaId,
+    impactoDias: s.impactoDias,
+    impactoCosto: s.impactoCosto,
+    impactoAlcance: s.impactoAlcance,
+    impactoRecursos: s.impactoRecursos,
+    resultadoEvaluacion: s.resultadoEvaluacion,
+    presupuestoPrevisto: s.presupuestoPrevisto,
+    costoReal: s.costoReal,
+    accionCorrectiva: s.accionCorrectiva,
+    resultado: s.resultado,
+    ...extra,
+  };
 }

@@ -35,4 +35,12 @@ public class ApiException extends RuntimeException {
     public static ApiException conflicto(String codigo, String mensaje) {
         return new ApiException(HttpStatus.CONFLICT, codigo, mensaje);
     }
+
+    public static ApiException noAutenticado(String codigo, String mensaje) {
+        return new ApiException(HttpStatus.UNAUTHORIZED, codigo, mensaje);
+    }
+
+    public static ApiException prohibido(String codigo, String mensaje) {
+        return new ApiException(HttpStatus.FORBIDDEN, codigo, mensaje);
+    }
 }

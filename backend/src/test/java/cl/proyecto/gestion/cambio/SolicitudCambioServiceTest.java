@@ -18,11 +18,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.transaction.annotation.Transactional;
 
 /** C-03 / C-08 / C-09. Usa la base real; cada test se revierte al terminar. */
 @SpringBootTest
 @Transactional
+@WithMockUser(roles = "ADMIN")
 class SolicitudCambioServiceTest {
 
     @Autowired SolicitudCambioService servicio;
@@ -155,6 +157,43 @@ class SolicitudCambioServiceTest {
         assertThat(rechazada.estado).isEqualTo(EstadoSolicitud.RECHAZADO);
         assertThat(rechazada.aprobadaEn).isNull();
         assertThat(rechazada.aplicada).isFalse();
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioNoPuedeAprobar() {
+        SolicitudCambio s = enEvaluacion("Sin permiso");
+        assertThatThrownBy(() -> servicio.aprobar(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("PROHIBIDO");
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.EN_EVALUACION);
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioNoPuedeRechazar() {
+        SolicitudCambio s = enEvaluacion("Sin rechazo");
+        assertThatThrownBy(() -> servicio.rechazar(s.id))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("PROHIBIDO");
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.EN_EVALUACION);
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioNoPuedeAprobarPorPut() {
+        SolicitudCambio s = enEvaluacion("Put aprobado");
+        assertThatThrownBy(() -> servicio.actualizar(
+                s.id, req("Put aprobado", TipoSolicitud.TIEMPO, EstadoSolicitud.APROBADO)))
+            .isInstanceOf(ApiException.class).extracting("codigo").isEqualTo("PROHIBIDO");
+        assertThat(servicio.obtener(s.id).estado).isEqualTo(EstadoSolicitud.EN_EVALUACION);
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioPuedePasarAEvaluacion() {
+        SolicitudCambio s = servicio.crear(proyectoId, req("A evaluar", TipoSolicitud.TIEMPO));
+        SolicitudCambio editada = servicio.actualizar(
+            s.id, req("A evaluar", TipoSolicitud.TIEMPO, EstadoSolicitud.EN_EVALUACION));
+        assertThat(editada.estado).isEqualTo(EstadoSolicitud.EN_EVALUACION);
     }
 
     @Test

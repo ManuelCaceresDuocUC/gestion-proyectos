@@ -1,6 +1,13 @@
+import { useSearchParams } from "react-router-dom";
+import DetalleCambio from "./DetalleCambio";
 import ListadoCambios from "./ListadoCambios";
 
-/** /cambios: listado, filtros y formulario (C-06). Detalle/etapas es C-10. */
+/** /cambios: listado; /cambios?id=8: detalle (C-10). */
 export default function CambiosPagina() {
-  return <ListadoCambios />;
+  const [params, setParams] = useSearchParams();
+  const id = Number(params.get("id"));
+  if (Number.isInteger(id) && id > 0) {
+    return <DetalleCambio id={id} volver={() => setParams({})} />;
+  }
+  return <ListadoCambios abrir={(nuevo) => setParams({ id: String(nuevo) })} />;
 }

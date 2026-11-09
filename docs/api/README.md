@@ -5,13 +5,13 @@ La documentación generada está en `/swagger-ui.html` cuando el backend corre.
 
 | Módulo | Prefijo | Dueño | Estado |
 |---|---|---|---|
-| auth | `/api/auth` | C | por definir |
+| auth | `/api/auth` | C | [auth.md](auth.md) (C-01: login JWT, roles ADMIN / USUARIO_PROYECTO) |
 | proyectos y tareas | `/api/proyectos`, `/api/tareas` | A | por definir |
 | dependencias y recálculo | `/api/dependencias`, `/api/proyectos/{id}/recalcular` | A | por definir |
 | recursos y asignaciones | `/api/recursos`, `/api/asignaciones` | B | por definir |
 | hitos | `/api/hitos` | B | por definir |
 | KPI | `/api/kpi` | B | por definir |
-| solicitudes de cambio | `/api/proyectos/{id}/cambios`, `/api/cambios` | C | [cambios.md](cambios.md) (C-03, C-04, C-08, C-09) |
+| solicitudes de cambio | `/api/proyectos/{id}/cambios`, `/api/cambios` | C | [cambios.md](cambios.md) (C-03, C-04, C-08, C-09, C-10; C-01: aprobar solo ADMIN) |
 | tableros | `/api/tablero/proyecto/{id}`, `/api/tablero/cambio/{id}` | C | por definir |
 
 Convenciones: JSON en español (`nombre`, `fechaInicio`...), fechas ISO-8601, errores como

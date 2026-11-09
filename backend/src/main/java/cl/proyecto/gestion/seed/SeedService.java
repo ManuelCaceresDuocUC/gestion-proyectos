@@ -1,16 +1,27 @@
 package cl.proyecto.gestion.seed;
 
+import cl.proyecto.gestion.auth.RolUsuario;
+import cl.proyecto.gestion.auth.Usuario;
+import cl.proyecto.gestion.auth.UsuarioRepository;
+import cl.proyecto.gestion.cambio.SolicitudCambioRequest;
+import cl.proyecto.gestion.cambio.SolicitudCambioService;
+import cl.proyecto.gestion.planificacion.dependencia.DependenciaRequest;
+import cl.proyecto.gestion.planificacion.dependencia.DependenciaService;
+import cl.proyecto.gestion.planificacion.lineabase.LineaBaseService;
+import cl.proyecto.gestion.planificacion.motor.TipoDependencia;
 import cl.proyecto.gestion.proyecto.EstadoProyecto;
 import cl.proyecto.gestion.proyecto.ProyectoRepository;
 import cl.proyecto.gestion.proyecto.ProyectoRequest;
 import cl.proyecto.gestion.proyecto.ProyectoService;
+import cl.proyecto.gestion.proyecto.Tarea;
+import cl.proyecto.gestion.proyecto.TareaRepository;
 import cl.proyecto.gestion.proyecto.TareaRequest;
 import cl.proyecto.gestion.proyecto.TareaService;
+import cl.proyecto.gestion.recurso.AsignacionRequest;
+import cl.proyecto.gestion.recurso.AsignacionService;
 import cl.proyecto.gestion.recurso.Recurso;
 import cl.proyecto.gestion.recurso.RecursoRequest;
 import cl.proyecto.gestion.recurso.RecursoService;
-import cl.proyecto.gestion.recurso.AsignacionRequest;
-import cl.proyecto.gestion.recurso.AsignacionService;
 import cl.proyecto.gestion.recurso.TipoRecurso;
 import cl.proyecto.gestion.recurso.TipoRecursoRequest;
 import cl.proyecto.gestion.recurso.TipoRecursoService;
@@ -19,12 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * C-07: carga el recorte v1 del caso de prueba usando los servicios (fechas las calcula el motor).
- * Incluye asignaciones para la demo de B-09. Si ya existe el proyecto {@code EEC-2026}, no hace nada.
+ * C-07: recorte v1 (proyecto, recursos, EDT, asignaciones).
+ * C-11: dependencias, línea base y solicitudes.
+ * C-01: usuarios demo, idempotente por email. No duplica. Hitos y KPI quedan fuera.
  */
 @Service
 public class SeedService {
@@ -35,34 +48,182 @@ public class SeedService {
     private final ProyectoRepository proyectosRepo;
     private final ProyectoService proyectos;
     private final TareaService tareas;
+    private final TareaRepository tareasRepo;
     private final TipoRecursoService tipos;
     private final RecursoService recursos;
     private final AsignacionService asignaciones;
+    private final DependenciaService dependencias;
+    private final LineaBaseService lineasBase;
+    private final SolicitudCambioService cambios;
+    private final UsuarioRepository usuarios;
+    private final PasswordEncoder encoder;
 
     public SeedService(ProyectoRepository proyectosRepo, ProyectoService proyectos, TareaService tareas,
-                       TipoRecursoService tipos, RecursoService recursos, AsignacionService asignaciones) {
+                       TareaRepository tareasRepo, TipoRecursoService tipos, RecursoService recursos,
+                       AsignacionService asignaciones, DependenciaService dependencias,
+                       LineaBaseService lineasBase, SolicitudCambioService cambios,
+                       UsuarioRepository usuarios, PasswordEncoder encoder) {
         this.proyectosRepo = proyectosRepo;
         this.proyectos = proyectos;
         this.tareas = tareas;
+        this.tareasRepo = tareasRepo;
         this.tipos = tipos;
         this.recursos = recursos;
         this.asignaciones = asignaciones;
+        this.dependencias = dependencias;
+        this.lineasBase = lineasBase;
+        this.cambios = cambios;
+        this.usuarios = usuarios;
+        this.encoder = encoder;
     }
 
-    /** {@code true} si cargó el caso; {@code false} si {@code EEC-2026} ya estaba. */
+    /** {@code true} si cargó usuarios, v1 y/o v2; {@code false} si el caso ya estaba completo. */
     @Transactional
     public boolean cargar() {
         CasoPrueba c = CasoPruebaLector.leer();
+        boolean users = cargarUsuarios(c);
+        Long proyectoId;
+        boolean v1 = false;
         if (proyectosRepo.existsByCodigo(c.proyecto().codigo())) {
+            proyectoId = proyectosRepo.findByCodigo(c.proyecto().codigo()).orElseThrow().id;
             log.info("Seed C-07: el proyecto {} ya existe, no se repite.", c.proyecto().codigo());
+        } else {
+            Map<String, Long> tipoPorNombre = cargarTipos(c);
+            Map<String, Long> recursoPorClave = cargarRecursos(c, tipoPorNombre);
+            proyectoId = cargarProyecto(c.proyecto(), recursoPorClave);
+            cargarEdt(proyectoId, c, recursoPorClave);
+            log.info("Seed C-07: proyecto {} creado.", c.proyecto().codigo());
+            v1 = true;
+        }
+        boolean deps = cargarDependencias(proyectoId, c);
+        boolean base = fijarLineaBase(proyectoId, c);
+        boolean sols = cargarSolicitudes(proyectoId, c);
+        return v1 || deps || base || sols || users;
+    }
+
+    /** C-01: por email. Si ya está, no reescribe el hash. No registra contraseña ni hash. */
+    private boolean cargarUsuarios(CasoPrueba c) {
+        int creados = 0;
+        for (CasoUsuario dato : c.usuarios()) {
+            if (dato.email() == null || dato.email().isBlank()) {
+                throw new IllegalStateException("El seed trae un usuario sin email.");
+            }
+            String email = dato.email().trim().toLowerCase();
+            if (usuarios.existsByEmail(email)) {
+                log.info("Seed C-01: el usuario {} ya existe, no se repite.", email);
+                continue;
+            }
+            if (dato.password() == null || dato.password().isBlank()) {
+                throw new IllegalStateException("El seed no trae contraseña para " + email + ".");
+            }
+            Usuario u = new Usuario();
+            u.nombre = dato.nombre() == null || dato.nombre().isBlank() ? email : dato.nombre().trim();
+            u.email = email;
+            u.passwordHash = encoder.encode(dato.password());
+            u.rol = rolDe(dato.rol(), email);
+            u.activo = true;
+            usuarios.save(u);
+            creados++;
+            log.info("Seed C-01: usuario {} ({}) creado.", email, u.rol);
+        }
+        return creados > 0;
+    }
+
+    private static RolUsuario rolDe(String rol, String email) {
+        if (rol == null || rol.isBlank()) {
+            throw new IllegalStateException("El seed no trae rol para " + email + ".");
+        }
+        try {
+            return RolUsuario.valueOf(rol.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Rol de seed no válido para " + email + ": " + rol.trim() + ".");
+        }
+    }
+
+    private boolean cargarDependencias(Long proyectoId, CasoPrueba c) {
+        if (!dependencias.listar(proyectoId).isEmpty()) {
+            log.info("Seed C-11: el proyecto {} ya tiene dependencias, no se repiten.", c.proyecto().codigo());
             return false;
         }
-        Map<String, Long> tipoPorNombre = cargarTipos(c);
-        Map<String, Long> recursoPorClave = cargarRecursos(c, tipoPorNombre);
-        Long proyectoId = cargarProyecto(c.proyecto(), recursoPorClave);
-        cargarEdt(proyectoId, c, recursoPorClave);
-        log.info("Seed C-07: proyecto {} creado.", c.proyecto().codigo());
+        Map<String, Long> idPorCodigo = mapaTareas(proyectoId);
+        for (CasoDependencia d : c.dependencias()) {
+            Long pred = idPorCodigo.get(d.predecesora());
+            Long suc = idPorCodigo.get(d.sucesora());
+            if (pred == null || suc == null) {
+                throw new IllegalStateException(
+                    "El seed referencia una tarea inexistente: " + d.predecesora() + " → " + d.sucesora());
+            }
+            dependencias.crear(proyectoId, new DependenciaRequest(
+                pred, suc, TipoDependencia.valueOf(d.tipo()), d.desfaseDias()));
+        }
+        log.info("Seed C-11: {} dependencias creadas en {}.", c.dependencias().size(), c.proyecto().codigo());
         return true;
+    }
+
+    private boolean fijarLineaBase(Long proyectoId, CasoPrueba c) {
+        if (!lineasBase.listar(proyectoId).isEmpty()) {
+            log.info("Seed C-11: el proyecto {} ya tiene línea base, no se repite.", c.proyecto().codigo());
+            return false;
+        }
+        lineasBase.fijar(proyectoId, "Seed C-11 caso de prueba");
+        log.info("Seed C-11: línea base fijada en {}.", c.proyecto().codigo());
+        return true;
+    }
+
+    private boolean cargarSolicitudes(Long proyectoId, CasoPrueba c) {
+        if (!cambios.listar(proyectoId, null, null, null, null, null, null).isEmpty()) {
+            log.info("Seed C-11: el proyecto {} ya tiene solicitudes, no se repiten.", c.proyecto().codigo());
+            return false;
+        }
+        Map<String, Long> idPorCodigo = mapaTareas(proyectoId);
+        Map<String, Long> recursoPorClave = mapaRecursosPorClave(c);
+        for (CasoSolicitud s : c.solicitudesCambio()) {
+            Long tareaId = s.tareaAfectada() == null ? null : idPorCodigo.get(s.tareaAfectada());
+            if (s.tareaAfectada() != null && tareaId == null) {
+                throw new IllegalStateException(
+                    "El seed referencia una tarea inexistente: " + s.tareaAfectada());
+            }
+            Integer dias = s.impactoEstimado() == null ? null : s.impactoEstimado().dias();
+            BigDecimal costo = s.impactoEstimado() == null ? null : s.impactoEstimado().costo();
+            cambios.crear(proyectoId, new SolicitudCambioRequest(
+                s.nombre(), s.justificacion(), null,
+                s.responsable() == null ? null : recursoPorClave.get(s.responsable()),
+                c.proyecto().fechaInicio(), null, null, null,
+                SeedMapeo.prioridadDe(s.prioridad()), SeedMapeo.tipoDe(s.tipo()),
+                SeedMapeo.riesgoDe(s.riesgo()), SeedMapeo.impactoDe(s.impacto()),
+                null, tareaId, dias, costo, null, null, null, costo, null, null, null));
+        }
+        log.info("Seed C-11: {} solicitudes creadas en {}.", c.solicitudesCambio().size(), c.proyecto().codigo());
+        return true;
+    }
+
+    private Map<String, Long> mapaTareas(Long proyectoId) {
+        Map<String, Long> ids = new HashMap<>();
+        for (Tarea t : tareasRepo.findByProyectoId(proyectoId)) {
+            ids.put(t.codigo, t.id);
+        }
+        return ids;
+    }
+
+    private Map<String, Long> mapaRecursosPorClave(CasoPrueba c) {
+        Map<String, Long> ids = new HashMap<>();
+        Map<String, Long> porNombre = new HashMap<>();
+        for (Recurso r : recursos.listar(false)) {
+            porNombre.putIfAbsent(r.nombre, r.id);
+        }
+        for (CasoProfesional p : c.profesionales()) {
+            Long id = porNombre.get(p.nombre());
+            if (id != null) {
+                ids.put(p.clave(), id);
+            }
+        }
+        for (CasoRecurso rec : c.recursos()) {
+            Long id = porNombre.get(rec.nombre());
+            if (id != null) {
+                ids.put(rec.clave(), id);
+            }
+        }
+        return ids;
     }
 
     private Map<String, Long> cargarTipos(CasoPrueba c) {

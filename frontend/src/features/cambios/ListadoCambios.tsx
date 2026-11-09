@@ -17,8 +17,12 @@ import {
 } from "./formato";
 import { puedeEditar } from "./permisos";
 
-/** Listado de solicitudes de un proyecto, con filtros y formulario (C-06). */
-export default function ListadoCambios() {
+interface Props {
+  abrir: (id: number) => void;
+}
+
+/** Listado de solicitudes de un proyecto, con filtros y alta (C-06). El clic abre el detalle (C-10). */
+export default function ListadoCambios({ abrir }: Props) {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [proyectoId, setProyectoId] = useState("");
   const [lista, setLista] = useState<SolicitudCambio[]>([]);
@@ -79,7 +83,7 @@ export default function ListadoCambios() {
           key={formulario === "nueva" ? "nueva" : formulario.id}
           proyectoId={Number(proyectoId)}
           solicitud={formulario === "nueva" ? undefined : formulario}
-          alGuardar={() => { setFormulario(null); setTick((n) => n + 1); }}
+          alGuardar={(guardada) => { setFormulario(null); setTick((n) => n + 1); abrir(guardada.id); }}
           alCancelar={() => setFormulario(null)}
         />
       )}
@@ -147,11 +151,7 @@ export default function ListadoCambios() {
           </thead>
           <tbody>
             {lista.map((s) => (
-              <tr
-                key={s.id}
-                className={puedeEditar() ? "fila-click" : undefined}
-                onClick={puedeEditar() ? () => setFormulario(s) : undefined}
-              >
+              <tr key={s.id} className="fila-click" onClick={() => abrir(s.id)}>
                 <td>{s.codigo}</td>
                 <td>{s.nombre}</td>
                 <td>{ETIQUETA_TIPO[s.tipo]}</td>

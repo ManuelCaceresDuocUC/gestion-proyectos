@@ -4,19 +4,34 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
- * C-07: forma de {@code seed/caso-prueba.json}. Recorte v1 (proyecto, tipos, profesionales,
- * recursos, EDT y asignaciones). El resto (usuarios, dependencias, hitos, solicitudes) se ignora.
+ * Forma de {@code seed/caso-prueba.json}.
+ * C-07: proyecto, tipos, profesionales, recursos, EDT y asignaciones.
+ * C-11: dependencias y solicitudes. C-01: usuarios. Hitos y KPI se ignoran.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CasoPrueba(
     CasoProyecto proyecto,
+    List<CasoUsuario> usuarios,
     List<CasoTipoRecurso> tiposRecurso,
     List<CasoProfesional> profesionales,
     List<CasoRecurso> recursos,
-    List<CasoEtapa> estructura
+    List<CasoEtapa> estructura,
+    List<CasoDependencia> dependencias,
+    List<CasoSolicitud> solicitudesCambio
 ) {
+    public CasoPrueba {
+        usuarios = usuarios == null ? List.of() : usuarios;
+        tiposRecurso = tiposRecurso == null ? List.of() : tiposRecurso;
+        profesionales = profesionales == null ? List.of() : profesionales;
+        recursos = recursos == null ? List.of() : recursos;
+        estructura = estructura == null ? List.of() : estructura;
+        dependencias = dependencias == null ? List.of() : dependencias;
+        solicitudesCambio = solicitudesCambio == null ? List.of() : solicitudesCambio;
+    }
+
     public List<CasoActividad> actividades() {
         return estructura().stream().flatMap(e -> e.actividades().stream()).toList();
     }
@@ -25,26 +40,19 @@ public record CasoPrueba(
         return actividades().stream().flatMap(a -> a.subactividades().stream()).toList();
     }
 
-    @Override
-    public List<CasoTipoRecurso> tiposRecurso() {
-        return tiposRecurso == null ? List.of() : tiposRecurso;
-    }
-
-    @Override
-    public List<CasoProfesional> profesionales() {
-        return profesionales == null ? List.of() : profesionales;
-    }
-
-    @Override
-    public List<CasoRecurso> recursos() {
-        return recursos == null ? List.of() : recursos;
-    }
-
-    @Override
-    public List<CasoEtapa> estructura() {
-        return estructura == null ? List.of() : estructura;
+    /** Asignaciones de hojas (actividad 1.4 y subactividades). */
+    public List<CasoAsignacion> asignacionesDeHojas() {
+        Stream<CasoAsignacion> deActividades = actividades().stream()
+            .filter(CasoActividad::esHoja)
+            .flatMap(a -> a.asignaciones().stream());
+        Stream<CasoAsignacion> deSubs = subactividades().stream()
+            .flatMap(s -> s.asignaciones().stream());
+        return Stream.concat(deActividades, deSubs).toList();
     }
 }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoUsuario(String nombre, String email, String password, String rol) {}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record CasoProyecto(
@@ -121,3 +129,24 @@ record CasoSubactividad(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record CasoAsignacion(String recurso, BigDecimal cantidad) {}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoDependencia(String predecesora, String sucesora, String tipo, Integer desfaseDias) {}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoImpactoEstimado(Integer dias, BigDecimal costo) {}
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoSolicitud(
+    String codigo,
+    String nombre,
+    String tipo,
+    String prioridad,
+    String riesgo,
+    String impacto,
+    String estado,
+    String responsable,
+    String justificacion,
+    CasoImpactoEstimado impactoEstimado,
+    String tareaAfectada
+) {}

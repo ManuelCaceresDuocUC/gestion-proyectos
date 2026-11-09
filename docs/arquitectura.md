@@ -32,7 +32,7 @@ flowchart LR
 | cambio, auth, tableros | Solicitudes de cambio con 10 etapas, usuarios y roles, tablero de cambio | C |
 | `common` | `ApiException` y manejo uniforme de errores `{codigo, mensaje, detalles}` | A |
 
-Frontend (`frontend/src/features`): `proyectos` (listado, detalle, EDT en lista y esquema, dependencias), `gantt` (diagrama SVG), más las carpetas de los demás módulos. El cliente HTTP (`src/api/client.ts`) traduce los errores del backend a mensajes legibles.
+Frontend (`frontend/src/features`): `proyectos` (listado, detalle, EDT en lista y esquema, dependencias), `gantt` (diagrama SVG), más las carpetas de los demás módulos. El cliente HTTP (`src/api/client.ts`) adjunta el JWT (C-01) y traduce los errores del backend a mensajes legibles. El layout definitivo es B-04.
 
 ## Flujo de recálculo (el corazón del sistema)
 
@@ -65,7 +65,7 @@ Detalle en `docs/gestion/decisiones/ADR-002` (semántica) y `ADR-003` (consolida
 - La línea base copia el plan vigente (`*_base`); después solo cambia el plan, y la comparación mide desviaciones en días hábiles (positivo = más tarde).
 
 ## Contratos de la API
-`docs/api/proyectos-edt.md`, `docs/api/planificacion.md` y `docs/api/linea-base.md`. Todos los errores tienen la forma `{ "codigo", "mensaje", "detalles" }`.
+`docs/api/auth.md`, `docs/api/proyectos-edt.md`, `docs/api/planificacion.md`, `docs/api/linea-base.md` y `docs/api/cambios.md`. Todos los errores tienen la forma `{ "codigo", "mensaje", "detalles" }`. JWT en C-01 (`Authorization: Bearer`); el front no es frontera de seguridad.
 
 ## Reglas de dependencia entre módulos
 - `planificacion/motor` es dominio puro: no importa base de datos ni otros módulos.

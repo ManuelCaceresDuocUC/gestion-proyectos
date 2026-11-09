@@ -153,7 +153,7 @@ La columna "Depende de" indica qué debe estar listo antes (puedes empezar con u
 | B-01 | Requerimientos: recursos, tiempos, costos, hitos y KPI | S0 | 2 | R1 | - |
 | B-02 | Despliegue online inicial (BD + backend + frontend) | S0 | 3 | R8 | - |
 | B-03 | Verificar monorepo: CI del frontend, rama protegida y plantillas | S0 | 2 | R8 | - |
-| B-04 | Layout base del frontend, navegación y guardas por rol | S0 | 3 | R8 | C-01 (autenticación) |
+| B-04 | Layout base del frontend, navegación y guardas por rol. No rehacer el Bearer de `client.ts` (C-01) | S0 | 3 | R8 | C-01 (autenticación) |
 | B-05 | CRUD de tipos de recurso y profesionales (tarifas y capacidad) | S1 | 3 | R3 | - |
 | B-06 | Asignaciones recurso a tarea (cantidad y tarifa) | S1 | 3 | R3 | A-05, B-05 |
 | B-07 | Calendario laboral, fechas plan/real y duración | S1 | 4 | R3 | A-05 |
