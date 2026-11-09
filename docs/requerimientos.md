@@ -319,7 +319,9 @@ Notas para el recálculo 3:
   indicador/cálculo, unidad y criterio de aceptación, quién valida y qué hacer si no se cumple.
 - No se marca "logrado" sin datos reales; no puede ocurrir antes de que termine la actividad de la que depende.
 
-## Catálogo de variables para fórmulas de KPI (a acordar en T-02)
+## Catálogo de variables para fórmulas de KPI (acordado en T-02)
+
+Contrato: `docs/api/kpi-variables.md`. No usar nombres fuera de esa lista.
 
 | Variable | Significado |
 |---|---|
