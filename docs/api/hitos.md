@@ -57,6 +57,7 @@ Los campos del cuerpo más `id`, `proyectoId`, `fechaPlan`, `fechaBase`, `semana
 - Esas dos reglas responden `409 HITO_ANTES_DE_ACTIVIDADES`. El `mensaje` nombra la actividad y su término. La pantalla lo muestra como alerta y no guarda.
 - `CUMPLIDO` exige evidencia no vacía (`400 CUMPLIDO_SIN_EVIDENCIA`), `fechaReal` (`400 CUMPLIDO_SIN_FECHA_REAL`) y que cada actividad asociada tenga `finReal` (`409 HITO_ACTIVIDADES_PENDIENTES`).
 - Al menos una actividad del mismo proyecto. Si no tiene `finPlan`: `400 HITO_SIN_TERMINO`.
+- Una etapa (`ETAPA`) no se acepta como actividad asociada; solo se pueden asociar actividades o subactividades.
 - Código repetido en el proyecto: `409 CODIGO_DUPLICADO`.
 - El seed carga H1–H6 como `PENDIENTE`, sin fecha real. Si el término calculado de las actividades cae después del viernes de la semana del JSON, el hito queda en la semana de ese término.
 

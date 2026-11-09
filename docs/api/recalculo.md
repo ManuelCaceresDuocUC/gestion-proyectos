@@ -101,10 +101,11 @@ No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTO
 - **Debe escribir:** estado / fechas del hito según las reglas de B-11. No marcar cumplido antes del término de sus actividades.
 - B-11 no registra este paso: crear o editar un hito no recalcula. Hoy no hay bean.
 
-### 60 `KPI` (pendiente)
+### 60 `KPI`
 
-- **Debe leer:** catálogo de variables (T-02 / `docs/requerimientos.md`), definiciones de KPI, plan/costos/hitos/cambios ya persistidos.
-- **Debe escribir:** snapshot en `kpi_historico` (valor, cumplimiento, semáforo, fecha). Denominador 0 → «No calculable».
+- **Lee:** definiciones activas (globales y del proyecto), plan, costos, hitos, sobrecarga y solicitudes ya persistidos. Si faltan KP-01…KP-08, los inserta desde `db/seed/kpi-definiciones.json`. No inserta los KC.
+- **Escribe:** una fila nueva en `kpi_historico` por KPI activo (valor, cumplimiento, semáforo, motivo `RECALCULO`, fecha). Denominador 0 → «No calculable». Dos recálculos seguidos repiten los valores y suman otra tanda de filas.
+- **Lee (API):** `GET /api/proyectos/{id}/kpi` (último snapshot y alerta) y `GET /api/kpi/{id}/historico?proyectoId=`.
 - Tableros leen el histórico; no evalúan fórmulas.
 
 ## Línea base
