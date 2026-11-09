@@ -29,11 +29,11 @@ la completan y la cierran en el Sprint 0. Columna **Issue** = dónde se implemen
 | RF-KPI-03 | Históricos de cada KPI (snapshot en cada recálculo) y alertas | R5 | B-14 |
 | RF-KPI-04 | 8 KPI de proyecto e hitos | R5 | B-13 |
 | RF-KPI-05 | KPI de gestión del cambio: 10 de la plantilla + adicionales (mínimo 12 en total) | R5 | B-17 |
-| RF-CAM-01 | Registrar solicitudes de cambio con responsable, estado, prioridad, riesgo, impacto, presupuesto y costo | R6 | C-03 |
-| RF-CAM-02 | Filtrar solicitudes por estado, responsable, prioridad, riesgo y fechas | R6 | C-03, C-06 |
+| RF-CAM-01 | Registrar solicitudes de cambio (alta `ABIERTO`; obligatorios nombre y tipo; responsable, prioridad, riesgo, impacto, presupuesto y costo opcionales) | R6 | C-03 |
+| RF-CAM-02 | Filtrar solicitudes por estado, tipo, responsable, prioridad y rango de fechas | R6 | C-03, C-06 |
 | RF-CAM-03 | Gestionar las 10 etapas del cambio con sus estados y calcular el avance | R6 | C-04, C-10 |
 | RF-CAM-04 | Evidencias y trazabilidad (historial de cambios) | R6 | C-05 |
-| RF-CAM-05 | Aprobar o rechazar solicitudes; la aprobada se aplica al plan, costos y KPI y conserva la línea base | R6, R8 | C-08, C-09 |
+| RF-CAM-05 | Aprobar o rechazar (solo ADMIN). Aplicar es un paso posterior: si es TIEMPO dispara el recálculo; la línea base no se toca | R6, R8 | C-08, C-09 |
 | RF-TAB-01 | Tablero de proyecto: avances, hitos, costos, recursos y atrasos | R7 | B-21 |
 | RF-TAB-02 | Tablero de cambio: estados, riesgos, tiempos, adopción y alertas | R7 | C-12 |
 | RF-TAB-03 | Filtros y actualización dinámica en ambos tableros | R7 | C-13 |
@@ -115,6 +115,181 @@ asociadas, semana prevista, evidencia, indicador o cálculo, unidad, criterio de
 no se cumple. Las fechas planificada, de línea base y real, junto con el estado, permiten comprobar el cumplimiento
 sin confundir el hito con una tarea de duración positiva.
 
+## Especificación C-02
+
+Estos criterios detallan la gestión del cambio (R6). Son la referencia funcional para el contrato
+`docs/api/cambios.md` y para las pruebas del módulo. Los tableros, los filtros y el guion preliminar
+de los tres recálculos completan este issue (R7 y R8).
+
+Los nombres de la planilla del profesor se transcriben abajo. En el sistema rigen los catálogos de
+**V21 / ADR-004**. No hay estado Suspendido. Cancelado de la planilla se cubre con `RECHAZADO`.
+
+| ID | Prioridad | Criterio de aceptación |
+|---|---|---|
+| RF-CAM-01 | Alta | Registrar solicitud. Obligatorios: `nombre` y `tipo`. El alta queda `ABIERTO`, con código `SC-nn` y las 10 etapas en `PENDIENTE`. Responsable, prioridad, riesgo, impacto, presupuesto y costo son opcionales (el servidor pone prioridad/riesgo/impacto medios e impactos 0 si faltan). |
+| RF-CAM-02 | Alta | Filtrar el listado por `estado`, `tipo`, `prioridad`, `responsableId` y rango de `fechaSolicitud`. El riesgo se guarda en la ficha; no es query del listado (sí lo será del tablero, C-13). |
+| RF-CAM-03 | Alta | Las 10 etapas de la plantilla, cada una con estado de etapa; `avance` (0–100) = etapas `COMPLETADO` × 10. |
+| RF-CAM-04 | Media | Conservar evidencias e historial de trazabilidad por solicitud (C-05; se implementa al final). Cada cambio real de estado de solicitud o de etapa ya deja fila en `cambio_historial`. |
+| RF-CAM-05 | Alta | Aprobar y rechazar son un acto de **ADMIN** distinto de aplicar al plan. Ver más abajo. |
+
+### Las 10 etapas (plantilla)
+
+Al crear la solicitud se insertan siempre estas diez, en este orden, estado inicial `PENDIENTE`.
+El cliente no las envía. No hay secuencia obligatoria entre etapas: cualquiera puede pasar a
+cualquiera de los cinco estados de etapa.
+
+| Nº | Nombre (plantilla) |
+|---|---|
+| 1 | Necesidad |
+| 2 | Evaluación |
+| 3 | Riesgos |
+| 4 | Planificación |
+| 5 | Comunicación inicial |
+| 6 | Implementación |
+| 7 | Seguimiento |
+| 8 | Resultados corto plazo |
+| 9 | Correctivas |
+| 10 | Adopción cultural |
+
+**Adoptado** en la plantilla no es un estado de la solicitud: es la etapa 10 en `COMPLETADO`
+(consolidación cultural). **Cerrado** sí es estado de la solicitud (`CERRADO`): formalmente finalizado.
+
+### Estado de etapa (plantilla = sistema)
+
+| Plantilla | Sistema |
+|---|---|
+| Pendiente | `PENDIENTE` |
+| En curso | `EN_CURSO` |
+| Completado | `COMPLETADO` |
+| Bloqueado | `BLOQUEADO` |
+| No aplica | `NO_APLICA` |
+
+- `avance` = etapas `COMPLETADO` × 10 (es decir, completadas / 10 × 100). `NO_APLICA` no suma.
+- `etapasBloqueadas` = cuántas están `BLOQUEADO`.
+- Días de atraso (calculado, no persistido), en días corridos y mínimo 0: con `finReal` →
+  `finReal − finPrevisto`; sin `finReal` y estado `CERRADO` o `RECHAZADO` → 0; sin `finReal` en
+  cualquier otro estado → `hoy − finPrevisto`; sin `finPrevisto` → 0.
+
+### Estado de la solicitud: plantilla → V21
+
+La plantilla trae: Abierto, En curso, Cerrado, Suspendido, Cancelado.
+La guía del profesor (ADR-004) pide un flujo con evaluación, aprobación e implementación.
+
+| Plantilla | Sistema (V21) | Notas |
+|---|---|---|
+| Abierto | `ABIERTO` | Alta. Aún no se evalúa. |
+| En curso | `EN_EVALUACION`, `APROBADO`, `EN_IMPLEMENTACION` | La guía parte “En curso” en evaluación, decisión y ejecución. |
+| Cerrado | `CERRADO` | Formalmente finalizado. Terminal. |
+| Cancelado | `RECHAZADO` | No se aplica al plan. Terminal. |
+| Suspendido | — | No existe en V21; no se implementa. |
+
+Transiciones válidas (C-08):
+
+```
+ABIERTO            → EN_EVALUACION
+EN_EVALUACION      → ABIERTO | APROBADO | RECHAZADO
+APROBADO           → EN_IMPLEMENTACION
+EN_IMPLEMENTACION  → CERRADO
+RECHAZADO, CERRADO → (terminales)
+```
+
+Un salto fuera del grafo es error de negocio (`TRANSICION_INVALIDA`). El proyecto `TERMINADO`
+no admite altas ni cambios de solicitud.
+
+### Qué significa aprobar (y qué no)
+
+**Aprobar** (`POST /api/cambios/{id}/aprobar`, o PUT a `APROBADO` desde `EN_EVALUACION`):
+
+- Solo **ADMIN**. Un `USUARIO_PROYECTO` recibe 403.
+- Solo desde `EN_EVALUACION`.
+- Pasa a `APROBADO` y llena `aprobadaEn` la primera vez.
+- **No** marca `aplicada`. **No** mueve el plan, ni costos, ni KPI. **No** toca la línea base.
+
+**Rechazar** (mismo privilegio, desde `EN_EVALUACION`): pasa a `RECHAZADO`. No llena `aprobadaEn`.
+No mueve el plan.
+
+**Aplicar al plan** (`POST /api/cambios/{id}/aplicar`) es el paso que marca `aplicada` y, si el tipo
+es `TIEMPO`, dispara el recálculo. Lo puede un usuario autenticado (no hace falta ADMIN). Solo si
+está `APROBADO` y `aplicada = false`.
+
+| Tipo | Efecto en el plan | Costos | KPI | Línea base |
+|---|---|---|---|---|
+| `TIEMPO` | Suma `impactoDias` a la duración de la tarea hoja (`tareaId`) por `CronogramaService.parchear`. Ese servicio llama a `RecalculoService.recalcular`. No se escriben fechas a mano. | El recálculo vuelve a calcular costos plan/real (paso de B) y los consolida. | El recálculo toma snapshot y reevalúa si el paso de KPI está implementado (B-14, B-17). | No cambia. |
+| `ALCANCE`, `COSTO`, `RECURSO`, `TECNOLOGIA`, `ORGANIZACION` | No mueven el Gantt. No llaman a `RecalculoService`. Se marcan aplicadas y pasan a `EN_IMPLEMENTACION`. | Sin recálculo: costos del plan no cambian. | Sin recálculo: KPI no se reevalúan. | No cambia. |
+
+Tras aplicar con éxito: `aplicada = true`, `aplicadaEn` la primera vez, estado `EN_IMPLEMENTACION`.
+Un segundo aplicar responde conflicto (`YA_APLICADA`) y no vuelve a sumar días.
+Si el TIEMPO no se puede aplicar (sin tarea hoja, duración negativa), no se marca `aplicada`
+ni se cambia el estado.
+
+### Tableros de comando (R7)
+
+Los tableros **solo leen**. No recalculan: muestran lo que ya persistió `RecalculoService`.
+Son dos pantallas distintas (no un único dashboard). Datos: `GET /api/tablero/proyecto/{id}` (B-21)
+y `GET /api/tablero/cambio/{id}` (C-12). El layout compartido vive en `features/tableros`.
+
+| ID | Prioridad | Criterio de aceptación |
+|---|---|---|
+| RF-TAB-01 | Alta | Tablero de proyecto con ejecución, avances, hitos, presupuesto, recursos y atrasos, más KPI de proyecto/hitos con semáforo. |
+| RF-TAB-02 | Alta | Tablero de cambio con distribución por estado, riesgos, tiempos, costos, etapas, adopción, efectividad y alertas. |
+| RF-TAB-03 | Alta | Filtros abajo. Tras un recálculo o un cambio de solicitud, ambos se refrescan sin recargar la página (re-consulta al volver o polling corto). |
+
+**Tablero de proyecto** (B-21; guía §5: distinto del de cambio):
+
+- Avance real vs planificado.
+- Hitos: cumplidos, próximos y vencidos.
+- Costos: plan, real y presupuesto.
+- Uso de recursos y alertas de sobreasignación.
+- Actividades atrasadas.
+- KPI de proyecto e hitos con semáforo (Verde / Amarillo / Rojo / No calculable).
+- Justificación visible de por qué se eligieron esos KPI (cuando B-13/B-15 existan).
+
+**Tablero de cambio** (C-12; hoja «Tablero» de la plantilla + comentario ADR-004 en #102):
+
+- Conteos: registrados, en evaluación / implementación («en curso»), cerrados, rechazados, atrasados.
+- Avance promedio de las 10 etapas; cumplimiento de etapas; KPI de cambio en verde.
+- Distribución por estado (catálogo V21).
+- Riesgos (críticos y altos) y costos (presupuesto previsto vs costo real de las cerradas).
+- Tiempos de implementación y días de atraso.
+- Acciones correctivas (etapa 9 o campo `accionCorrectiva`).
+- Efectividad (`resultadoEvaluacion`: efectivo, parcial, no efectivo).
+- Adopción: solicitudes con etapa 10 `COMPLETADO`.
+- Alertas: atrasados, desviaciones, riesgos críticos, etapas bloqueadas, KPI en rojo / meta incumplida.
+
+Dependencias de implementación: el tablero de proyecto pide B-14 y B-16; el de cambio pide B-17
+para los KPI. C-02 fija el *qué*; B-21 y C-12 el *cómo*.
+
+### Filtros (C-13)
+
+| Tablero | Filtros (guía / #104) |
+|---|---|
+| Proyecto | Proyecto, etapa de la EDT, rango de fechas, responsable |
+| Cambio | Estado, prioridad, riesgo, responsable |
+
+Un cambio de filtro reconsulta el endpoint; no se calcula en el cliente lo que el servidor ya agregó.
+
+### Guion preliminar de los 3 recálculos (RF-INT-04)
+
+Guion corto para C-02. El guion cronometrado y quién habla minuto a minuto es **C-16**
+(`docs/pruebas/guion-demo.md`). Entrar como ADMIN. Caso: proyecto seed `EEC-2026`.
+Tras cada recálculo se muestran **Gantt, costos, KPI y los dos tableros**, y se explica por qué
+cambiaron (R8). La línea base no se mueve en ninguno de los tres.
+
+| # | Qué se hace | Efecto esperado | Issue de prueba |
+|---|---|---|---|
+| 1 | En el Gantt, cambiar la duración de una tarea hoja (p. ej. +2 días) y recalcular. | Sucesoras FS/FF se corren; consolidación de fechas; costos de esa rama si hay asignaciones; KPI de atraso/avance; tablero de proyecto refleja atrasos. | A-18 |
+| 2 | Modificar una asignación (cantidad o recurso) de un profesional. | Costo plan/real de la hoja y del proyecto; alerta de sobreasignación si carga diaria > capacidad (en el seed, P2 en 1.1.2 ya dispara una); KPI de recursos; tablero de proyecto. | B-18 |
+| 3 | En una solicitud **tipo `TIEMPO`** con `tareaId` e `impactoDias`: Enviar a evaluación → **Aprobar** (ADMIN) → **Aplicar al plan**. | Aprobar no mueve nada. Aplicar suma los días, pasa a `EN_IMPLEMENTACION`, `aplicada=true`. Gantt y costos del recálculo; KPI de cambio (B-17) y tablero de cambio (conteos, atraso, adopción). Línea base igual que antes. | C-14 |
+
+Notas para el recálculo 3:
+
+- Aprobar y aplicar son dos clics distintos (especificación de RF-CAM-05).
+- Las 5 solicitudes del seed C-11 nacen `ABIERTO` y hoy son `TECNOLOGIA` u `ORGANIZACION`:
+  aplicarlas **no mueve el Gantt**. Para la demo hace falta una `TIEMPO` (alta en caliente o
+  ajuste posterior del seed). Si se aplica un tipo que no es TIEMPO, se muestra el aviso
+  de C-10 y se explica que el plan no cambia.
+- Después, entrar como `USUARIO_PROYECTO`: puede editar y aplicar; no ve Aprobar/Rechazar.
+
 ## Requerimientos no funcionales
 
 - Un único punto de recálculo (`RecalculoService`); ningún módulo recalcula por su cuenta.
@@ -126,12 +301,11 @@ sin confundir el hito con una tarea de duración positiva.
 ## Reglas de negocio tomadas de las planillas del profesor
 
 **Gestión del cambio** (`Plantilla_Seguimiento_Gestion_del_Cambio_KPI.xlsx`)
-- 10 etapas: 1 Necesidad, 2 Evaluación, 3 Riesgos, 4 Planificación, 5 Comunicación inicial, 6 Implementación,
-  7 Seguimiento, 8 Resultados corto plazo, 9 Correctivas, 10 Adopción cultural.
-- Estado del cambio: Abierto, En curso, Cerrado, Suspendido, Cancelado. Estado de etapa: Pendiente, En curso,
-  Completado, Bloqueado, No aplica. "Cerrado" = formalmente finalizado; "Adoptado" = consolidación cultural.
-- Días de atraso: si hay fin real, max(0, fin real - fin previsto); si no y no está cerrado, max(0, hoy - fin previsto); si no, 0.
-- Avance de un cambio = etapas completadas / 10.
+- 10 etapas y estados de etapa: transcritos en la especificación C-02. El sistema usa esos nombres.
+- Estado del cambio en la planilla: Abierto, En curso, Cerrado, Suspendido, Cancelado.
+  "Cerrado" = formalmente finalizado; "Adoptado" = etapa 10 completada (consolidación cultural).
+  El flujo implementado es el de V21 (especificación C-02); no hay estado Suspendido.
+- Días de atraso y avance: reglas C-02 (atraso en días corridos; `RECHAZADO` cuenta como cerrado para el atraso).
 - Cumplimiento de KPI: mayor es mejor = valor/meta; menor es mejor = meta/valor (1 si valor = 0), con tope 1.
   Semáforo: Verde >= 100%, Amarillo 80-99%, Rojo < 80%. Las metas son editables.
 
