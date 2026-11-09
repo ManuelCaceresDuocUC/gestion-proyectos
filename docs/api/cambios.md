@@ -6,8 +6,10 @@ Fechas en ISO-8601 (`yyyy-MM-dd`); instantes en ISO-8601 UTC.
 Este contrato cubre **CRUD, filtros, las 10 etapas, transiciones de estado, aprobar/rechazar
 y aplicar una solicitud aprobada al plan vigente**. El detalle en el front (C-10) consume esas
 rutas. No guarda evidencias ni expone el GET del historial (C-05).
-Hoy las rutas están abiertas (`permitAll`); C-01 agregará JWT. El front hoy muestra aprobar a
-cualquiera (`puedeAprobar()`); en C-01 será solo ADMIN.
+C-01: todas las rutas de este módulo piden JWT salvo las públicas de [auth.md](auth.md).
+Aprobar y rechazar (POST y PUT a `APROBADO`/`RECHAZADO`) son solo **ADMIN** (403 `PROHIBIDO`).
+Aplicar al plan y el resto de escrituras las puede un `USUARIO_PROYECTO` autenticado.
+El front oculta Aprobar/Rechazar si `puedeAprobar()` es falso.
 
 ## Catálogos
 
@@ -133,7 +135,7 @@ responde 409 `TRANSICION_INVALIDA` y no cambia la fila.
 
 Cualquier cambio real de `estado` (PUT, aprobar, rechazar o aplicar) deja una fila en
 `cambio_historial` (`campo` = `estado`, `valorAnterior` / `valorNuevo` = el nombre del catálogo).
-El GET de esa bitácora es C-05. `usuarioId` queda nulo hasta C-01.
+El GET de esa bitácora es C-05. `usuarioId` sigue nulo (C-05).
 
 ## Aprobar y rechazar
 
@@ -144,11 +146,14 @@ El GET de esa bitácora es C-05. `usuarioId` queda nulo hasta C-01.
 
 `POST /api/cambios/{id}/rechazar` (sin body): pasa a `RECHAZADO`. No toca `aprobadaEn`.
 
+Solo **ADMIN**. Un `USUARIO_PROYECTO` recibe 403 `PROHIBIDO` (el POST lo corta Spring Security;
+el PUT lo corta el servicio, para que no se apruebe cambiando `estado` en el body).
+
 Si la solicitud no está en `EN_EVALUACION` → 409 `TRANSICION_INVALIDA`.
 Si el proyecto está `TERMINADO` → 409 `PROYECTO_CERRADO`.
 
 También se puede llegar a `APROBADO` con un PUT `estado=APROBADO` desde `EN_EVALUACION`; en ese
-caso también se llena `aprobadaEn`. Los `POST` son el camino pensado para C-10.
+caso también se llena `aprobadaEn` y también exige ADMIN. Los `POST` son el camino pensado para C-10.
 
 ## Aplicar al plan (C-09)
 
@@ -183,7 +188,7 @@ Al `POST` de la solicitud se crean siempre estas 10, en `PENDIENTE`:
 Cualquier etapa puede pasar a cualquiera de los 5 estados (no hay secuencia). El mismo estado
 no escribe historial. Un cambio de estado deja una fila en `cambio_historial`
 (`campo` = `etapa.{n}.estado`); el GET de esa bitácora es C-05. `actualizadoPor` / `usuarioId`
-quedan nulos hasta C-01.
+siguen nulos (C-05).
 
 `GET /cambios/{id}/etapas` responde:
 
@@ -212,6 +217,8 @@ Calculado; **no se persiste**. Porcentaje 0–100.
 
 | Código | HTTP | Cuándo |
 |---|---|---|
+| `NO_AUTENTICADO` | 401 | Falta JWT o el token no es válido. Ver [auth.md](auth.md) |
+| `PROHIBIDO` | 403 | No ADMIN al aprobar/rechazar (POST o PUT) |
 | `VALIDACION` | 400 | Falta `nombre`, `tipo` o `estado` de etapa, o un campo no cumple el tamaño |
 | `TAREA_DE_OTRO_PROYECTO` | 400 | `tareaId` existe pero es de otro proyecto |
 | `TAREA_REQUERIDA` | 400 | Se aplica un TIEMPO sin `tareaId` |

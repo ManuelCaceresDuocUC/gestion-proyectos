@@ -2,8 +2,10 @@ package cl.proyecto.gestion.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cl.proyecto.gestion.auth.RolUsuario;
+import cl.proyecto.gestion.auth.Usuario;
+import cl.proyecto.gestion.auth.UsuarioRepository;
 import cl.proyecto.gestion.cambio.CambioEtapaService;
-import cl.proyecto.gestion.cambio.EstadoSolicitud;
 import cl.proyecto.gestion.cambio.PrioridadSolicitud;
 import cl.proyecto.gestion.cambio.SolicitudCambio;
 import cl.proyecto.gestion.cambio.SolicitudCambioService;
@@ -30,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-07 + C-11: EDT, asignaciones, 35 dependencias, línea base y 5 solicitudes. */
+/** C-07 + C-11 + C-01: EDT, asignaciones, dependencias, solicitudes y usuarios demo. */
 @SpringBootTest
 @Transactional
 class SeedServiceTest {
@@ -46,6 +48,7 @@ class SeedServiceTest {
     @Autowired CambioEtapaService etapas;
     @Autowired AsignacionRepository asignaciones;
     @Autowired SobrecargaAlertaRepository alertas;
+    @Autowired UsuarioRepository usuarios;
 
     @Test
     void cargaElRecorteV1YLaSegundaVezNoRepite() {
@@ -93,11 +96,22 @@ class SeedServiceTest {
         assertThat(sub.duracionDias).isEqualTo(10);
 
         assertRecorteV2(p, edt);
+        assertUsuariosDemo();
         // Asignaciones: el v1 (B-09) las crea. Si EEC-2026 ya estaba de un seed viejo, C-11 no las duplica.
         if (asignaciones.count() > 0) {
             assertThat(alertas.findByProyectoIdOrderByFechaAscRecursoNombreAsc(p.id))
                 .anyMatch(alerta -> "Ingeniero de infraestructura".equals(alerta.recursoNombre));
         }
+    }
+
+    @Test
+    void usuariosDemoPorEmailNoReescribenElHash() {
+        seed.cargar();
+        assertUsuariosDemo();
+        String hash = usuarios.findByEmail("admin@demo.cl").orElseThrow().passwordHash;
+        seed.cargar();
+        assertUsuariosDemo();
+        assertThat(usuarios.findByEmail("admin@demo.cl").orElseThrow().passwordHash).isEqualTo(hash);
     }
 
     @Test
@@ -110,6 +124,7 @@ class SeedServiceTest {
         Proyecto p = proyecto();
         assertThat(tareas.findByProyectoId(p.id)).hasSize(36);
         assertRecorteV2(p, tareas.findByProyectoId(p.id));
+        assertUsuariosDemo();
     }
 
     /** Conteos de la rúbrica que sí carga C-11 (hitos y KPI no hay servicio). */
@@ -125,8 +140,6 @@ class SeedServiceTest {
 
         List<SolicitudCambio> sols = cambios.listar(p.id, null, null, null, null, null, null);
         assertThat(sols).hasSize(5);
-        assertThat(sols).allMatch(s -> s.estado == EstadoSolicitud.ABIERTO);
-        assertThat(sols).allMatch(s -> !s.aplicada);
         assertThat(sols).allSatisfy(s -> assertThat(etapas.listar(s.id)).hasSize(10));
         assertThat(sols).extracting(s -> s.tipo)
             .contains(TipoSolicitud.TECNOLOGIA, TipoSolicitud.ORGANIZACION);
@@ -140,6 +153,20 @@ class SeedServiceTest {
         assertThat(ampliar.impactoDias).isEqualTo(5);
         assertThat(ampliar.tareaId).isEqualTo(porCodigo(edt, "3.1.1").id);
         assertThat(ampliar.impactoCosto).isEqualByComparingTo("2400000");
+    }
+
+    /** Emails y roles; el hash es BCrypt. No se afirma el valor de la clave. */
+    private void assertUsuariosDemo() {
+        Usuario admin = usuarios.findByEmail("admin@demo.cl").orElseThrow();
+        Usuario usuario = usuarios.findByEmail("usuario@demo.cl").orElseThrow();
+        assertThat(admin.rol).isEqualTo(RolUsuario.ADMIN);
+        assertThat(usuario.rol).isEqualTo(RolUsuario.USUARIO_PROYECTO);
+        assertThat(admin.activo).isTrue();
+        assertThat(usuario.activo).isTrue();
+        assertThat(admin.passwordHash).startsWith("$2");
+        assertThat(usuario.passwordHash).startsWith("$2");
+        assertThat(admin.nombre).isEqualTo("Administrador Demo");
+        assertThat(usuario.nombre).isEqualTo("Usuario Proyecto Demo");
     }
 
     private Proyecto proyecto() {

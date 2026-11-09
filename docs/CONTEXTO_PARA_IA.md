@@ -81,10 +81,10 @@ Backend, por módulo en `backend/src/main/java/cl/proyecto/gestion/<modulo>/`:
   integración completa por HTTP: `integracion/RecalculoDuracionE2ETest` (plantilla para B-18 y C-14).
 
 Frontend, en `frontend/src/`:
-- `api/client.ts`: `api<T>(ruta, opciones)` con prefijo `/api`; lanza `ErrorApi` con el `mensaje` del backend. Un archivo por módulo (`api/planificacion.ts` es el ejemplo).
+- `api/client.ts`: `api<T>(ruta, opciones)` con prefijo `/api`; lanza `ErrorApi` con el `mensaje` del backend. **C-01 ya pone el JWT** (`Authorization: Bearer` desde `sessionStorage`) y, ante 401, va a `/login`. Un archivo por módulo (`api/planificacion.ts` es el ejemplo). **B-04:** no reimplementes el Bearer aquí; el layout, la navegación y las guardas de menú por rol siguen siendo tuyas.
 - `types/`: tipos TypeScript que reflejan los JSON de la API.
 - `features/<modulo>/`: página y componentes (`proyectos/` y `gantt/` son los ejemplos). Estilos globales en `estilos.css`; clases reutilizables: `.boton`, `.tarjeta`, `.tabla`, `.error`, `.aviso`, `.etiqueta`, `.progreso`.
-- Permisos por rol: hoy `features/proyectos/permisos.ts` y `features/gantt/permisos.ts` devuelven `true`. **Dev C**: al tener el login, haz que lean el rol real (ADMIN / USUARIO_PROYECTO).
+- Permisos: `features/proyectos/permisos.ts` y `features/gantt/permisos.ts` permiten editar a ambos roles autenticados; `features/cambios/permisos.ts` `puedeAprobar()` solo ADMIN. Contrato: `docs/api/auth.md`.
 - Las rutas ya existen en `App.tsx` (`/recursos`, `/hitos`, `/kpi`, `/cambios`, `/tableros`) con páginas vacías: reemplaza el contenido de la tuya.
 
 ## 6. Datos que ya existen en la base (V1–V22)

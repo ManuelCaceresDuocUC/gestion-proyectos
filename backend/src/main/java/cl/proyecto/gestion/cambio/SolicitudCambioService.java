@@ -1,5 +1,6 @@
 package cl.proyecto.gestion.cambio;
 
+import cl.proyecto.gestion.auth.SeguridadActual;
 import cl.proyecto.gestion.common.ApiException;
 import cl.proyecto.gestion.planificacion.cronograma.CronogramaService;
 import cl.proyecto.gestion.planificacion.cronograma.TareaPatch;
@@ -16,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * C-03: crear, consultar, editar y borrar solicitudes. Al crear, C-04 genera las 10 etapas.
- * El PUT valida el grafo de estado (C-08). Aprobar/rechazar son POST dedicados.
- * aplicarAlPlan (C-09) exige APROBADO, no aplicada y proyecto editable.
+ * El PUT valida el grafo de estado (C-08). Aprobar/rechazar (POST y PUT) son solo ADMIN.
+ * aplicarAlPlan (C-09) exige APROBADO, no aplicada y proyecto editable; lo puede un usuario de proyecto.
  * Tipo TIEMPO suma impactoDias a la duración de la hoja vía CronogramaService (él dispara el recálculo).
  * Al aplicar: aplicada, aplicadaEn, estado EN_IMPLEMENTACION e historial.
  */
@@ -30,16 +31,19 @@ public class SolicitudCambioService {
     private final CambioEtapaService etapas;
     private final CambioHistorialRepository historial;
     private final CronogramaService cronograma;
+    private final SeguridadActual seguridad;
 
     public SolicitudCambioService(SolicitudCambioRepository repo, ProyectoService proyectos,
                                   TareaRepository tareas, CambioEtapaService etapas,
-                                  CambioHistorialRepository historial, CronogramaService cronograma) {
+                                  CambioHistorialRepository historial, CronogramaService cronograma,
+                                  SeguridadActual seguridad) {
         this.repo = repo;
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.etapas = etapas;
         this.historial = historial;
         this.cronograma = cronograma;
+        this.seguridad = seguridad;
     }
 
     @Transactional(readOnly = true)
@@ -100,9 +104,10 @@ public class SolicitudCambioService {
         repo.delete(s);
     }
 
-    /** Solo desde EN_EVALUACION. Marca {@code aprobadaEn}; no pone {@code aplicada} (C-09). */
+    /** Solo ADMIN, y solo desde EN_EVALUACION. Marca {@code aprobadaEn}; no pone {@code aplicada} (C-09). */
     @Transactional
     public SolicitudCambio aprobar(Long id) {
+        exigirDecisionDeAdmin();
         SolicitudCambio s = obtener(id);
         proyectos.obtenerEditable(s.proyectoId);
         if (!TransicionesSolicitud.puedeAprobar(s.estado)) {
@@ -113,9 +118,10 @@ public class SolicitudCambioService {
         return repo.save(s);
     }
 
-    /** Solo desde EN_EVALUACION. */
+    /** Solo ADMIN, y solo desde EN_EVALUACION. */
     @Transactional
     public SolicitudCambio rechazar(Long id) {
+        exigirDecisionDeAdmin();
         SolicitudCambio s = obtener(id);
         proyectos.obtenerEditable(s.proyectoId);
         if (!TransicionesSolicitud.puedeRechazar(s.estado)) {
@@ -240,6 +246,9 @@ public class SolicitudCambioService {
             s.impacto = ImpactoSolicitud.MEDIO;
         }
         if (!alta && r.estado() != null) {
+            if (esDecision(r.estado()) && r.estado() != s.estado) {
+                exigirDecisionDeAdmin();
+            }
             pasarA(s, r.estado());
         }
         s.tareaId = r.tareaId();
@@ -273,6 +282,14 @@ public class SolicitudCambioService {
             s.aprobadaEn = Instant.now();
         }
         registrarEstado(s.id, anterior, nuevo);
+    }
+
+    private void exigirDecisionDeAdmin() {
+        seguridad.exigirAdmin("Solo un administrador puede aprobar o rechazar solicitudes.");
+    }
+
+    private static boolean esDecision(EstadoSolicitud estado) {
+        return estado == EstadoSolicitud.APROBADO || estado == EstadoSolicitud.RECHAZADO;
     }
 
     private void registrarEstado(Long solicitudId, EstadoSolicitud anterior, EstadoSolicitud nuevo) {
