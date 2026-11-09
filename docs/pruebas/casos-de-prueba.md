@@ -22,6 +22,6 @@
 |---|---|---|---|---|
 | CP-01 | Cambiar la duración de una subactividad (A-18) | | | A |
 | CP-02 | Modificar cantidad o recurso de una asignación (B-18) | | | B |
-| CP-03 | Aprobar la solicitud SC-001 (C-14) | | | C |
+| CP-03 | Aprobar y aplicar una solicitud **tipo TIEMPO** (C-14). Las 5 del seed no son TIEMPO; ver guion C-02. | | | C |
 
 Para cada caso: datos de entrada, valores antes/después, capturas y fecha de ejecución.

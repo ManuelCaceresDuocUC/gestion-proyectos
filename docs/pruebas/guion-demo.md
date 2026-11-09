@@ -1,6 +1,7 @@
 # Guion de demo
 
-Completar en el issue C-16. Duración objetivo: la que indique el profesor (ensayar con cronómetro).
+El contenido preliminar de los 3 recálculos está en `docs/requerimientos.md` (especificación C-02).
+Este archivo se completa en **C-16** (duración objetivo: la que indique el profesor; ensayar con cronómetro).
 
 1. Reiniciar: `scripts/reset-demo.sh` y entrar como ADMIN.
 2. Presentar el caso (proyecto, EDT, Gantt, recursos, hitos, KPI, solicitudes, tableros).
