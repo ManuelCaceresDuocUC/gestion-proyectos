@@ -6,12 +6,13 @@ Datos ficticios para la demo y las pruebas. Maven los empaqueta en el backend co
 
 - `caso-prueba.json`: proyecto **EEC-2026** «Habilitar un espacio de estudio colaborativo» (derivado de
   `Actividad_Gantt_Hitos.xlsx`). El JSON ya trae el caso mínimo de la rúbrica; el cargador va por recortes.
-- `kpi-definiciones.json`: 8 KPI de proyecto e hitos y 13 de gestión del cambio. **Aún no se cargan** (C-11).
+- `kpi-definiciones.json`: 8 KPI de proyecto e hitos y 13 de gestión del cambio. **No se cargan** (no hay
+  `KpiService` en este recorte).
 
-## Recorte v1 (C-07)
+## Recorte v1 (C-07 + B-09)
 
-Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos **con los servicios**
-(`TipoRecursoService`, `RecursoService`, `ProyectoService`, `TareaService`, `AsignacionService`). Las fechas las calcula el motor; no hay SQL a mano.
+Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos **con los servicios**.
+Las fechas las calcula el motor; no hay SQL a mano.
 
 | Qué | Cuenta | Destino |
 |---|---|---|
@@ -20,20 +21,42 @@ Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos
 | Profesionales | 5 | P1…P5 |
 | Recursos | 7 | E1–E3, M1–M2, S1–S2 |
 | EDT | 4 etapas, 12 actividades, 20 subactividades | `TareaService.crear` |
-| Asignaciones | las del JSON | `AsignacionService.crear` (B-09 adelanta este recorte de C-11) |
+| Asignaciones | las de las hojas del JSON (39) | `AsignacionService.crear` (B-09 adelantó este recorte) |
 
 Reglas:
 
-- Si `EEC-2026` ya existe, no se vuelve a cargar.
+- Si `EEC-2026` ya existe, **no se vuelve a crear** el proyecto, la EDT ni las asignaciones.
 - `duracion_semanas` → `duracionDias` = semanas × 5 (calendario LMXJV).
 - La actividad **1.4** es hoja (duración propia, sin hijos).
 - Los tipos se reutilizan por nombre (no falla si ya están).
 - `referencia_semana` es solo orientativa.
-- **Alerta de demo (B-09):** P2 en la subactividad 1.1.2 tiene `cantidad` 45 h en 5 días hábiles (9 h/día > capacidad 8). Es una sobreasignación de una sola tarea, así que sigue existiendo cuando C-11 agregue dependencias y deje de solapar todo el plan.
+- **Alerta de demo (B-09):** P2 en la subactividad 1.1.2 tiene `cantidad` 45 h en 5 días hábiles
+  (9 h/día > capacidad 8). Es una sobreasignación de una sola tarea; sigue existiendo con las
+  dependencias de C-11.
 
-## Todavía no (C-11 / C-01)
+## Recorte v2 (C-11)
 
-El JSON incluye usuarios, dependencias, hitos, solicitudes y KPI. **C-07 no los crea.** Las asignaciones sí se cargan (ver arriba); C-11 no debe duplicarlas.
+Si el proyecto ya está (seed C-07 viejo o v1 recién creado), C-11 completa **por capas**. No duplica
+asignaciones.
+
+| Qué | Cuenta | Destino |
+|---|---|---|
+| Dependencias | 35 | `DependenciaService.crear` (FS, SS, FF, SF; hay desfase negativo) |
+| Línea base | 1 | `LineaBaseService.fijar` **después** de las deps y **antes** de las solicitudes |
+| Solicitudes de cambio | 5 | `SolicitudCambioService.crear` → códigos `SC-01`…, estado **`ABIERTO`**, no aplicadas |
+
+Reglas:
+
+- Si ya hay dependencias / línea base / solicitudes, esa capa se salta.
+- Las solicitudes **no recorren el grafo**. C-04 genera las 10 etapas al crear.
+- El JSON trae códigos `SC-001` y estados/etapas viejos: se ignoran. El alta siempre es `ABIERTO`.
+- Tipos del JSON viejo: Tecnología → `TECNOLOGIA`; Personas y Proceso → `ORGANIZACION`.
+  Prioridad, riesgo e impacto (Alta, Crítica, Medio…) se normalizan a los enums V21.
+- Cada solicitud queda ligada a la tarea por código (`3.1.1`, etc.) y al responsable por clave (P1…).
+
+## Todavía no (C-01 / B-11 / B-17)
+
+El JSON incluye usuarios, hitos y KPI. **Este seed no los crea.**
 
 ## Cómo activarlo
 
@@ -50,5 +73,8 @@ docker compose down -v
 $env:APP_SEED_ENABLED = "true"
 docker compose up -d --build
 ```
+
+Si `EEC-2026` ya estaba de un seed C-07 (sin dependencias ni solicitudes), **no hace falta reset**:
+con `APP_SEED_ENABLED=true` el arranque aplica solo las capas que falten.
 
 Código: `backend/src/main/java/cl/proyecto/gestion/seed/`.
