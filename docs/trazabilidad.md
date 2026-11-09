@@ -14,9 +14,9 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-GAN-05 Línea base y comparación | `planificacion.lineabase` | `lineabase/LineaBaseServiceTest`, `ComparadorPlanesTest`, `LineaBaseApiTest` |
 | RF-GAN-01 Gantt jerárquico (avance, hitos, atrasos, plan/real) | frontend `features/gantt` | Prueba manual: `docs/pruebas/A-18-recalculo-duracion.md` y `scripts/demo-gantt.ps1` |
 | RF-TIE-01, RF-TIE-02 Calendario, fechas y duración hábil | `planificacion.calendario`, `planificacion.motor` | `calendario/CalendarioProyectosTest`, `calendario/NoLaborableApiTest`, `motor/CalendarioTest` |
-| RF-REC-01, RF-REC-02 Recursos y asignaciones | `recurso` (`RecursoService`, `AsignacionService`) | `recurso/RecursoServiceTest`, `recurso/RecursoApiTest`, `recurso/AsignacionServiceTest`, `recurso/AsignacionApiTest` |
+| RF-REC-01, RF-REC-02 Recursos y asignaciones | `recurso` (`RecursoService`, `AsignacionService`); pantallas B-10 en `frontend/src/features/recursos` | `recurso/RecursoServiceTest`, `recurso/RecursoApiTest`, `recurso/AsignacionServiceTest`, `recurso/AsignacionApiTest` |
 | RF-REC-03 Costos planificados y reales | `planificacion.recalculo` (`PasoCostos`, `ConsolidadorEdt`) | `planificacion/recalculo/PasoCostosTest`, `ConsolidadorEdtTest` |
-| RF-REC-04 Sobreasignación de profesionales | `planificacion.recalculo` (`PasoSobreasignacion`) | `planificacion/recalculo/PasoSobreasignacionTest`, `SobrecargaAlertaApiTest`, `seed/SeedServiceTest` |
+| RF-REC-04 Sobreasignación de profesionales | `planificacion.recalculo` (`PasoSobreasignacion`); lista y marca en la tarea (B-10) | `planificacion/recalculo/PasoSobreasignacionTest`, `SobrecargaAlertaApiTest`, `seed/SeedServiceTest` |
 | RF-HIT-01, RF-HIT-02 Hitos y restricciones de logro | `hito` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
 | RF-KPI-01, RF-KPI-02 Configuración y evaluación de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
 | RF-KPI-03, RF-KPI-04, RF-KPI-05 Históricos y catálogo de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |

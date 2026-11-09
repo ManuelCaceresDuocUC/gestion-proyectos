@@ -2,10 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ganttApi } from "../../api/gantt";
 import { dependenciasApi, edtApi, proyectosApi } from "../../api/planificacion";
+import { sobreasignacionesApi } from "../../api/recursos";
 import type { ComparacionPlan } from "../../types/gantt";
 import type { CambioFecha, DependenciaDto, NodoEdt, Proyecto } from "../../types/planificacion";
+import type { AlertaSobreasignacion } from "../../types/recursos";
 import { fecha, mensajeDe } from "../proyectos/formato";
 import { puedeEditar } from "../proyectos/permisos";
+import { idsSobreasignados, resumenSobreasignacion } from "../recursos/formato";
 import GanttGrafico, { ALTO_ENCABEZADO, ALTO_FILA } from "./GanttGrafico";
 import PanelTarea from "./PanelTarea";
 import { hoyIso } from "./escala";
@@ -22,6 +25,7 @@ export default function GanttVista() {
   const [arbol, setArbol] = useState<NodoEdt[]>([]);
   const [comparacion, setComparacion] = useState<ComparacionPlan | null>(null);
   const [dependencias, setDependencias] = useState<DependenciaDto[]>([]);
+  const [alertas, setAlertas] = useState<AlertaSobreasignacion[]>([]);
   const [escala, setEscala] = useState<Escala>("DIA");
   const [hoy, setHoy] = useState(hoyIso());
   const [plegados, setPlegados] = useState<Set<number>>(new Set());
@@ -37,11 +41,21 @@ export default function GanttVista() {
   const cargar = useCallback(async () => {
     if (!valido) return;
     try {
-      const [a, c, d] = await Promise.all([edtApi.arbol(id), ganttApi.comparacion(id, hoy), dependenciasApi.listar(id)]);
+      const [a, c, d] = await Promise.all([
+        edtApi.arbol(id),
+        ganttApi.comparacion(id, hoy),
+        dependenciasApi.listar(id),
+      ]);
       setArbol(a);
       setComparacion(c);
       setDependencias(d);
-      setError("");
+      try {
+        setAlertas(await sobreasignacionesApi.listar(id));
+        setError("");
+      } catch (alertaError) {
+        setAlertas([]);
+        setError(mensajeDe(alertaError));
+      }
     } catch (e) {
       setError(mensajeDe(e));
     }
@@ -50,6 +64,7 @@ export default function GanttVista() {
   useEffect(() => { void cargar(); }, [cargar]);
 
   const proyecto = proyectos.find((p) => p.id === id);
+  const marcadas = idsSobreasignados(alertas);
   const filas = useMemo(() => {
     const porTarea = new Map((comparacion?.tareas ?? []).map((t) => [t.tareaId, t]));
     return aplanar(arbol, porTarea, plegados);
@@ -125,13 +140,16 @@ export default function GanttVista() {
               <div className="g-lista" style={{ paddingTop: ALTO_ENCABEZADO }}>
                 {filas.map((f) => (
                   <div key={f.nodo.id} style={{ height: ALTO_FILA, paddingLeft: 6 + f.profundidad * 16 }}
-                    className={`g-item${f.nodo.id === seleccionada ? " g-item-sel" : ""}${f.comp?.atrasada ? " g-item-atrasada" : ""}`}
+                    className={`g-item${f.nodo.id === seleccionada ? " g-item-sel" : ""}${f.comp?.atrasada ? " g-item-atrasada" : ""}${marcadas.has(f.nodo.id) ? " g-item-sobreasignada" : ""}`}
                     onClick={() => setSeleccionada(f.nodo.id)}>
                     {f.esResumen ? (
                       <button className="g-plegar" aria-label={plegados.has(f.nodo.id) ? "Expandir" : "Plegar"}
                         onClick={(e) => { e.stopPropagation(); alternar(f.nodo.id); }}>{plegados.has(f.nodo.id) ? "▸" : "▾"}</button>
                     ) : <span className="g-plegar" />}
                     <span className="g-codigo">{f.nodo.codigo}</span> {f.nodo.nombre}
+                    {marcadas.has(f.nodo.id) && (
+                      <span className="marca-sobreasignacion" title={resumenSobreasignacion(alertas, f.nodo.id)}>SA</span>
+                    )}
                   </div>
                 ))}
               </div>
@@ -145,7 +163,11 @@ export default function GanttVista() {
           {filaSel && (
             <PanelTarea fila={filaSel} dependencias={dependencias} nombreDe={nombreDe}
               editable={puedeEditarCronograma() && proyecto?.estado !== "TERMINADO"}
-              alRecalcular={(c) => { setCambios(c); void cargar(); }} />
+              puedeAsignar={puedeEditar() && proyecto?.estado !== "TERMINADO"}
+              moneda={proyecto?.moneda ?? "CLP"}
+              sobreasignada={marcadas.has(filaSel.nodo.id)}
+              alRecalcular={(c) => { setCambios(c); void cargar(); }}
+              alCambiarAsignacion={() => { setCambios([]); void cargar(); }} />
           )}
 
           {cambios.length > 0 && (

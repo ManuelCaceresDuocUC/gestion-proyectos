@@ -25,6 +25,7 @@ input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid var
 .fila-click:hover { background: var(--fondo); }
 .etiqueta { padding: 2px 8px; border-radius: 12px; font-size: 12px; background: var(--fondo); border: 1px solid var(--borde); }
 .estado-EN_EJECUCION { background: #ddf4ff; } .estado-TERMINADO { background: #dafbe1; } .estado-SUSPENDIDO { background: #fff8c5; }
+.marca-sobreasignacion { flex: none; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; background: #ffebe9; color: #a40e26; border: 1px solid #ff818266; letter-spacing: .02em; }
 .progreso { width: 90px; height: 8px; background: var(--fondo); border: 1px solid var(--borde); border-radius: 4px; overflow: hidden; }
 .progreso > div { height: 100%; background: var(--ok); }
 .datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 16px; font-size: 14px; }

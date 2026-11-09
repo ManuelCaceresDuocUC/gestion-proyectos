@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { sobreasignacionesApi } from "../../api/recursos";
 import { edtApi, proyectosApi } from "../../api/planificacion";
 import type { NodoEdt, Proyecto } from "../../types/planificacion";
+import type { AlertaSobreasignacion } from "../../types/recursos";
+import ListaSobreasignaciones from "../recursos/ListaSobreasignaciones";
 import Confirmar from "./Confirmar";
 import FormularioProyecto from "./FormularioProyecto";
 import PanelDependencias from "./PanelDependencias";
@@ -17,6 +20,7 @@ interface Props {
 export default function ProyectoDetalle({ id, volver }: Props) {
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
   const [arbol, setArbol] = useState<NodoEdt[]>([]);
+  const [alertas, setAlertas] = useState<AlertaSobreasignacion[]>([]);
   const [error, setError] = useState("");
   const [editando, setEditando] = useState(false);
   const [cerrando, setCerrando] = useState(false);
@@ -27,7 +31,13 @@ export default function ProyectoDetalle({ id, volver }: Props) {
       const [p, a] = await Promise.all([proyectosApi.obtener(id), edtApi.arbol(id)]);
       setProyecto(p);
       setArbol(a);
-      setError("");
+      try {
+        setAlertas(await sobreasignacionesApi.listar(id));
+        setError("");
+      } catch (alertaError) {
+        setAlertas([]);
+        setError(mensajeDe(alertaError));
+      }
     } catch (e) {
       setError(mensajeDe(e));
     }
@@ -94,7 +104,13 @@ export default function ProyectoDetalle({ id, volver }: Props) {
         </dl>
       )}
 
-      <VistaEdt proyectoId={id} nombreProyecto={`${proyecto.codigo} ${proyecto.nombre}`} nodos={arbol} editable={editable} alCambiar={() => void cargar()} />
+      <section>
+        <h3>Alertas de sobreasignación{alertas.length > 0 ? ` (${alertas.length})` : ""}</h3>
+        <ListaSobreasignaciones alertas={alertas} />
+      </section>
+
+      <VistaEdt proyectoId={id} nombreProyecto={`${proyecto.codigo} ${proyecto.nombre}`} nodos={arbol}
+        editable={editable} moneda={proyecto.moneda} alertas={alertas} alCambiar={() => void cargar()} />
       <PanelDependencias proyectoId={id} arbol={arbol} editable={editable} alCambiar={() => void cargar()} />
 
       {cerrando && (

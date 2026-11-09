@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  AlertaSobreasignacion,
   Asignacion,
   AsignacionDatos,
   Recurso,
@@ -62,4 +63,9 @@ export const asignacionesApi = {
 
   eliminar: (id: number) =>
     api<void>(`/asignaciones/${id}`, conCuerpo("DELETE")),
+};
+
+export const sobreasignacionesApi = {
+  listar: (proyectoId: number) =>
+    api<AlertaSobreasignacion[]>(`/proyectos/${proyectoId}/sobreasignaciones`),
 };
