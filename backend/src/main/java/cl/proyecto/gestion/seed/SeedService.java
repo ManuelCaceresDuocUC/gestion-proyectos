@@ -5,11 +5,18 @@ import cl.proyecto.gestion.auth.Usuario;
 import cl.proyecto.gestion.auth.UsuarioRepository;
 import cl.proyecto.gestion.cambio.SolicitudCambioRequest;
 import cl.proyecto.gestion.cambio.SolicitudCambioService;
+import cl.proyecto.gestion.hito.EstadoHito;
+import cl.proyecto.gestion.hito.HitoRequest;
+import cl.proyecto.gestion.hito.HitoService;
+import cl.proyecto.gestion.hito.SemanaHito;
+import cl.proyecto.gestion.planificacion.calendario.CalendarioProyectos;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaRequest;
+import cl.proyecto.gestion.planificacion.motor.Calendario;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaService;
 import cl.proyecto.gestion.planificacion.lineabase.LineaBaseService;
 import cl.proyecto.gestion.planificacion.motor.TipoDependencia;
 import cl.proyecto.gestion.proyecto.EstadoProyecto;
+import cl.proyecto.gestion.proyecto.Proyecto;
 import cl.proyecto.gestion.proyecto.ProyectoRepository;
 import cl.proyecto.gestion.proyecto.ProyectoRequest;
 import cl.proyecto.gestion.proyecto.ProyectoService;
@@ -26,7 +33,10 @@ import cl.proyecto.gestion.recurso.TipoRecurso;
 import cl.proyecto.gestion.recurso.TipoRecursoRequest;
 import cl.proyecto.gestion.recurso.TipoRecursoService;
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * C-07: recorte v1 (proyecto, recursos, EDT, asignaciones).
  * C-11: dependencias, línea base y solicitudes.
- * C-01: usuarios demo, idempotente por email. No duplica. Hitos y KPI quedan fuera.
+ * B-11: hitos H1–H6 en PENDIENTE. C-01: usuarios demo, idempotente por email. No duplica. KPI queda fuera.
  */
 @Service
 public class SeedService {
@@ -55,14 +65,16 @@ public class SeedService {
     private final DependenciaService dependencias;
     private final LineaBaseService lineasBase;
     private final SolicitudCambioService cambios;
+    private final HitoService hitos;
+    private final CalendarioProyectos calendarios;
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
 
     public SeedService(ProyectoRepository proyectosRepo, ProyectoService proyectos, TareaService tareas,
                        TareaRepository tareasRepo, TipoRecursoService tipos, RecursoService recursos,
                        AsignacionService asignaciones, DependenciaService dependencias,
-                       LineaBaseService lineasBase, SolicitudCambioService cambios,
-                       UsuarioRepository usuarios, PasswordEncoder encoder) {
+                       LineaBaseService lineasBase, SolicitudCambioService cambios, HitoService hitos,
+                       CalendarioProyectos calendarios, UsuarioRepository usuarios, PasswordEncoder encoder) {
         this.proyectosRepo = proyectosRepo;
         this.proyectos = proyectos;
         this.tareas = tareas;
@@ -73,6 +85,8 @@ public class SeedService {
         this.dependencias = dependencias;
         this.lineasBase = lineasBase;
         this.cambios = cambios;
+        this.hitos = hitos;
+        this.calendarios = calendarios;
         this.usuarios = usuarios;
         this.encoder = encoder;
     }
@@ -98,7 +112,8 @@ public class SeedService {
         boolean deps = cargarDependencias(proyectoId, c);
         boolean base = fijarLineaBase(proyectoId, c);
         boolean sols = cargarSolicitudes(proyectoId, c);
-        return v1 || deps || base || sols || users;
+        boolean hitosCargados = cargarHitos(proyectoId, c);
+        return v1 || deps || base || sols || hitosCargados || users;
     }
 
     /** C-01: por email. Si ya está, no reescribe el hash. No registra contraseña ni hash. */
@@ -195,6 +210,58 @@ public class SeedService {
         }
         log.info("Seed C-11: {} solicitudes creadas en {}.", c.solicitudesCambio().size(), c.proyecto().codigo());
         return true;
+    }
+
+    /** B-11: H1–H6 quedan PENDIENTE, con la ficha del JSON y sin fecha real. */
+    private boolean cargarHitos(Long proyectoId, CasoPrueba c) {
+        if (hitos.hayEn(proyectoId)) {
+            log.info("Seed B-11: el proyecto {} ya tiene hitos, no se repiten.", c.proyecto().codigo());
+            return false;
+        }
+        Map<String, Long> idPorCodigo = mapaTareas(proyectoId);
+        Proyecto proyecto = proyectos.obtener(proyectoId);
+        for (CasoHito h : c.hitos()) {
+            List<Long> tareaIds = new ArrayList<>();
+            LocalDate finMasTarde = null;
+            for (String codigo : h.actividades()) {
+                Long tareaId = idPorCodigo.get(codigo);
+                if (tareaId == null) {
+                    throw new IllegalStateException("El seed referencia una tarea inexistente: " + codigo);
+                }
+                tareaIds.add(tareaId);
+                Tarea tarea = tareasRepo.findById(tareaId).orElseThrow();
+                if (tarea.finPlan != null && (finMasTarde == null || tarea.finPlan.isAfter(finMasTarde))) {
+                    finMasTarde = tarea.finPlan;
+                }
+            }
+            int semana = semanaQueRespetaElTermino(proyecto, h.semanaPrevista(), finMasTarde);
+            if (semana != h.semanaPrevista()) {
+                log.info("Seed B-11: {} queda en la semana {} (el JSON decía {}) porque sus actividades terminan el {}.",
+                    h.codigo(), semana, h.semanaPrevista(), finMasTarde);
+            }
+            hitos.crear(proyectoId, new HitoRequest(
+                h.codigo(), h.logro(), semana, h.evidencia(), h.indicador(), h.criterio(),
+                h.validador(), h.accionSiNoCumple(), EstadoHito.PENDIENTE, null, null, tareaIds));
+        }
+        log.info("Seed B-11: {} hitos creados en {}.", c.hitos().size(), c.proyecto().codigo());
+        return true;
+    }
+
+    /**
+     * La semana del JSON es la propuesta de la planilla. Si el motor dejó el término después
+     * del viernes de esa semana, el hito se ubica en la semana de ese término.
+     */
+    private int semanaQueRespetaElTermino(Proyecto proyecto, Integer semanaJson, LocalDate finMasTarde) {
+        int semana = semanaJson == null ? 1 : semanaJson;
+        if (finMasTarde == null || proyecto.fechaInicio == null) {
+            return semana;
+        }
+        Calendario calendario = calendarios.de(proyecto);
+        LocalDate fecha = SemanaHito.fechaDeSemana(proyecto.fechaInicio, calendario, semana);
+        if (!fecha.isBefore(finMasTarde)) {
+            return semana;
+        }
+        return SemanaHito.semanaDe(proyecto.fechaInicio, calendario, finMasTarde);
     }
 
     private Map<String, Long> mapaTareas(Long proyectoId) {

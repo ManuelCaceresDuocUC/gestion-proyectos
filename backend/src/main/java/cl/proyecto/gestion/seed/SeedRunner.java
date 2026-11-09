@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Al arrancar, carga el caso de prueba (usuarios, v1 y v2) si {@code APP_SEED_ENABLED=true}.
- * No duplica: cada capa (usuarios, proyecto, dependencias, línea base, solicitudes) se salta si ya está.
+ * No duplica: cada capa (usuarios, proyecto, dependencias, línea base, solicitudes, hitos) se salta si ya está.
  */
 @Component
 @ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")

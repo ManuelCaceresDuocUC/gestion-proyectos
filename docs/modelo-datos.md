@@ -84,6 +84,7 @@ erDiagram
 - Los totales del proyecto (avance, costo plan, costo real, fecha de fin) salen de las etapas, sin sumar dos veces los costos de padres e hijos.
 - Una solicitud tiene 10 etapas y `aplicada` solo puede ser verdadera si el estado es `APROBADO` o posterior (a cargo de Dev C al implementar la gestión del cambio).
 - Las asignaciones solo cuelgan de tareas sin hijos y la sobreasignación de un profesional genera alerta (a cargo de Dev B al implementar recursos).
+- Un hito no es una tarea. Su fecha prevista (último día hábil de `semanaPrevista`) y su fecha real no pueden ser anteriores al término de las actividades asociadas (`HITO_ANTES_DE_ACTIVIDADES`). `CUMPLIDO` exige evidencia, fecha real y que esas actividades tengan fin real.
 
 ## Cómo cambiar el modelo
 Una migración nueva por cambio, con el prefijo del dueño (A: V20+, B: V30+, C: V40+); nunca se edita una ya publicada en `main`.

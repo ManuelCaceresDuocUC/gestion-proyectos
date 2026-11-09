@@ -55,6 +55,12 @@ class CasoPruebaLectorTest {
             .containsExactly("SC-001", "SC-002", "SC-003", "SC-004", "SC-005");
         assertThat(c.solicitudesCambio().getFirst().tareaAfectada()).isEqualTo("3.1.1");
         assertThat(c.solicitudesCambio().getFirst().impactoEstimado().dias()).isEqualTo(5);
+
+        assertThat(c.hitos()).hasSize(6);
+        assertThat(c.hitos()).extracting(CasoHito::codigo)
+            .containsExactly("H1", "H2", "H3", "H4", "H5", "H6");
+        assertThat(c.hitos().getFirst().semanaPrevista()).isEqualTo(3);
+        assertThat(c.hitos().getFirst().actividades()).containsExactly("1.2.1");
     }
 
     @Test

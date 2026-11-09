@@ -17,7 +17,7 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-REC-01, RF-REC-02 Recursos y asignaciones | `recurso` (`RecursoService`, `AsignacionService`); pantallas B-10 en `frontend/src/features/recursos` | `recurso/RecursoServiceTest`, `recurso/RecursoApiTest`, `recurso/AsignacionServiceTest`, `recurso/AsignacionApiTest` |
 | RF-REC-03 Costos planificados y reales | `planificacion.recalculo` (`PasoCostos`, `ConsolidadorEdt`) | `planificacion/recalculo/PasoCostosTest`, `ConsolidadorEdtTest` |
 | RF-REC-04 Sobreasignación de profesionales | `planificacion.recalculo` (`PasoSobreasignacion`); lista y marca en la tarea (B-10) | `planificacion/recalculo/PasoSobreasignacionTest`, `SobrecargaAlertaApiTest`, `seed/SeedServiceTest` |
-| RF-HIT-01, RF-HIT-02 Hitos y restricciones de logro | `hito` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
+| RF-HIT-01, RF-HIT-02 Hitos y restricciones de logro | `hito` (`HitoService`); pantallas en `frontend/src/features/hitos` | `hito/HitoServiceTest`, `hito/HitoApiTest`, `hito/SemanaHitoTest`, `seed/SeedServiceTest` |
 | RF-KPI-01, RF-KPI-02 Configuración y evaluación de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
 | RF-KPI-03, RF-KPI-04, RF-KPI-05 Históricos y catálogo de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
 | RF-CAM-01 Alta y ficha de solicitud | `cambio` (`SolicitudCambioService`); front C-06/C-10 | `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |

@@ -5,7 +5,7 @@ Duración objetivo: la que indique el profesor. Esta versión cabe en **~15 min*
 - **Caso:** proyecto seed `EEC-2026` «Habilitar un espacio de estudio colaborativo».
 - **Quién habla:** A = planificación y Gantt · B = recursos, costos y sobreasignación · C = cambio, auth y cierre.
 - **Entrar como** `admin@demo.cl` (`ADMIN`). Contraseña: `db/seed/caso-prueba.json` (no se dicta en voz alta).
-- **Tras cada recálculo** se mira Gantt y costos. KPI y tableros: las rutas existen y dicen pendiente (B-15, B-21, C-12). No se inventan números.
+- **Tras cada recálculo** se mira Gantt y costos. Hitos: H1–H6 en Pendiente (`/hitos`). KPI y tableros: las rutas existen y dicen pendiente (B-15, B-21, C-12). No se inventan números.
 
 Especificación de los 3 recálculos: `docs/requerimientos.md` (C-02). Resultados: `docs/pruebas/casos-de-prueba.md` y A-18.
 
@@ -29,7 +29,7 @@ Esperar a que el API responda (`/api/health`). Front: el del compose o Vite. Si 
 | 0:45 | A | Proyectos → `EEC-2026` | Caso mínimo: 4 etapas, 12 actividades, 20 subactividades. EDT de 3 niveles; 1.4 es hoja. |
 | 2:00 | A | Gantt (`/gantt?id=…`) | Barras, dependencias FS/SS/FF/SF, línea base v1 (el seed la fija). Clic en una hoja: Plan vs Línea base. |
 | 3:30 | B | Recursos y costos | 4 tipos, 5 profesionales (P1…P5). En el proyecto: alerta de P2 en **1.1.2** (45 h / 5 días = 9 h/día > capacidad 8). Costo plan = cantidad × tarifa. |
-| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. En el detalle: evidencias (texto/URL, sin archivos) e historial. Hitos / KPI / Tableros: pantallas pendientes (B-11, B-15, B-21, C-12). |
+| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. En el detalle: evidencias (texto/URL, sin archivos) e historial. Hitos: H1–H6 en Pendiente. KPI / Tableros: pantallas pendientes (B-15, B-21, C-12). |
 | 6:00 | A | **Recálculo 1** | Ver bloque abajo. |
 | 9:00 | B | **Recálculo 2** | Ver bloque abajo. |
 | 11:30 | C | **Recálculo 3** | Ver bloque abajo. |
