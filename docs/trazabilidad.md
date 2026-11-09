@@ -31,7 +31,7 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-INT-01 Roles ADMIN y USUARIO_PROYECTO | `auth`, `config` (JWT); login en `features/auth` | `auth/AuthApiTest`, `auth/AuthServiceTest`, `auth/JwtServiceTest` |
 | RF-INT-02 Persistencia relacional | Flyway + JPA | Cubierto por A-01 y el arranque con `ddl-auto=validate` |
 | RF-INT-03 Seed del caso mínimo | `seed` (`SeedService`) | `seed/SeedServiceTest`, `seed/CasoPruebaLectorTest`, `seed/SeedMapeoTest` |
-| RF-INT-04 Tres recálculos de la demo | `RecalculoService` + cambio | Duración: `integracion/RecalculoDuracionE2ETest` y A-18. Recursos: pendiente B-18. Solicitud: pendiente C-14. Guion preliminar: `docs/requerimientos.md` (C-02); guion final: C-16 |
+| RF-INT-04 Tres recálculos de la demo | `RecalculoService` + cambio | Duración: `integracion/RecalculoDuracionE2ETest` y A-18. Recursos: pendiente B-18. Solicitud: pendiente C-14. Guion: `docs/pruebas/guion-demo.md`. Casos: `docs/pruebas/casos-de-prueba.md` (C-16) |
 
 Cobertura documentada: R2 (proyectos y EDT), R3 (tiempos, recursos y costos), R4 (Gantt, precedencias e hitos),
 R5 (KPI, pendiente de módulo), R6 (solicitudes, etapas, aprobación y aplicar; evidencias C-05 al final),
