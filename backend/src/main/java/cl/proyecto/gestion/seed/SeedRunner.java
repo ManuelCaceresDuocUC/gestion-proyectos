@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * Al arrancar, carga el caso de prueba (v1 + v2) si {@code APP_SEED_ENABLED=true}.
- * No duplica: cada capa (proyecto, dependencias, línea base, solicitudes) se salta si ya está.
+ * Al arrancar, carga el caso de prueba (usuarios, v1 y v2) si {@code APP_SEED_ENABLED=true}.
+ * No duplica: cada capa (usuarios, proyecto, dependencias, línea base, solicitudes) se salta si ya está.
  */
 @Component
 @ConditionalOnProperty(name = "app.seed.enabled", havingValue = "true")

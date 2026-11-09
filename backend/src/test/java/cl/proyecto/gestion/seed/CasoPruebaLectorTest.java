@@ -58,6 +58,17 @@ class CasoPruebaLectorTest {
     }
 
     @Test
+    void leeUsuariosDemoSinExigirLaClave() {
+        CasoPrueba c = CasoPruebaLector.leer();
+        assertThat(c.usuarios()).hasSize(2);
+        assertThat(c.usuarios()).extracting(CasoUsuario::email)
+            .containsExactly("admin@demo.cl", "usuario@demo.cl");
+        assertThat(c.usuarios()).extracting(CasoUsuario::rol)
+            .containsExactly("ADMIN", "USUARIO_PROYECTO");
+        assertThat(c.usuarios()).allMatch(u -> u.password() != null && !u.password().isBlank());
+    }
+
+    @Test
     void unaSemanaSonCincoDiasHabiles() {
         assertThat(CasoPruebaLector.diasDe(2)).isEqualTo(10);
         assertThat(CasoPruebaLector.diasDe(1)).isEqualTo(5);

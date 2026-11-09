@@ -9,6 +9,17 @@ Datos ficticios para la demo y las pruebas. Maven los empaqueta en el backend co
 - `kpi-definiciones.json`: 8 KPI de proyecto e hitos y 13 de gestión del cambio. **No se cargan** (no hay
   `KpiService` en este recorte).
 
+## Recorte C-01 (usuarios)
+
+Independiente del proyecto: si el email ya está, esa fila no se toca.
+
+| Qué | Cuenta | Destino |
+|---|---|---|
+| Usuarios demo | 2 | `admin@demo.cl` (`ADMIN`), `usuario@demo.cl` (`USUARIO_PROYECTO`) |
+
+- La contraseña del JSON se guarda con BCrypt. Los logs no imprimen contraseña ni hash.
+- No reescribe el hash si el usuario ya existe.
+
 ## Recorte v1 (C-07 + B-09)
 
 Con `APP_SEED_ENABLED=true`, `SeedRunner` llama a `SeedService` y crea los datos **con los servicios**.
@@ -54,9 +65,9 @@ Reglas:
   Prioridad, riesgo e impacto (Alta, Crítica, Medio…) se normalizan a los enums V21.
 - Cada solicitud queda ligada a la tarea por código (`3.1.1`, etc.) y al responsable por clave (P1…).
 
-## Todavía no (C-01 / B-11 / B-17)
+## Todavía no (B-11 / B-17)
 
-El JSON incluye usuarios, hitos y KPI. **Este seed no los crea.**
+El JSON incluye hitos y KPI. **Este seed no los crea.**
 
 ## Cómo activarlo
 

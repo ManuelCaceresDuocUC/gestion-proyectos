@@ -1,5 +1,8 @@
 package cl.proyecto.gestion.seed;
 
+import cl.proyecto.gestion.auth.RolUsuario;
+import cl.proyecto.gestion.auth.Usuario;
+import cl.proyecto.gestion.auth.UsuarioRepository;
 import cl.proyecto.gestion.cambio.SolicitudCambioRequest;
 import cl.proyecto.gestion.cambio.SolicitudCambioService;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaRequest;
@@ -27,12 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * C-07: recorte v1 (proyecto, recursos, EDT, asignaciones).
- * C-11: dependencias, línea base y solicitudes. No duplica. Hitos y KPI quedan fuera.
+ * C-11: dependencias, línea base y solicitudes.
+ * C-01: usuarios demo, idempotente por email. No duplica. Hitos y KPI quedan fuera.
  */
 @Service
 public class SeedService {
@@ -50,11 +55,14 @@ public class SeedService {
     private final DependenciaService dependencias;
     private final LineaBaseService lineasBase;
     private final SolicitudCambioService cambios;
+    private final UsuarioRepository usuarios;
+    private final PasswordEncoder encoder;
 
     public SeedService(ProyectoRepository proyectosRepo, ProyectoService proyectos, TareaService tareas,
                        TareaRepository tareasRepo, TipoRecursoService tipos, RecursoService recursos,
                        AsignacionService asignaciones, DependenciaService dependencias,
-                       LineaBaseService lineasBase, SolicitudCambioService cambios) {
+                       LineaBaseService lineasBase, SolicitudCambioService cambios,
+                       UsuarioRepository usuarios, PasswordEncoder encoder) {
         this.proyectosRepo = proyectosRepo;
         this.proyectos = proyectos;
         this.tareas = tareas;
@@ -65,12 +73,15 @@ public class SeedService {
         this.dependencias = dependencias;
         this.lineasBase = lineasBase;
         this.cambios = cambios;
+        this.usuarios = usuarios;
+        this.encoder = encoder;
     }
 
-    /** {@code true} si cargó v1 y/o v2; {@code false} si el caso ya estaba completo. */
+    /** {@code true} si cargó usuarios, v1 y/o v2; {@code false} si el caso ya estaba completo. */
     @Transactional
     public boolean cargar() {
         CasoPrueba c = CasoPruebaLector.leer();
+        boolean users = cargarUsuarios(c);
         Long proyectoId;
         boolean v1 = false;
         if (proyectosRepo.existsByCodigo(c.proyecto().codigo())) {
@@ -87,7 +98,46 @@ public class SeedService {
         boolean deps = cargarDependencias(proyectoId, c);
         boolean base = fijarLineaBase(proyectoId, c);
         boolean sols = cargarSolicitudes(proyectoId, c);
-        return v1 || deps || base || sols;
+        return v1 || deps || base || sols || users;
+    }
+
+    /** C-01: por email. Si ya está, no reescribe el hash. No registra contraseña ni hash. */
+    private boolean cargarUsuarios(CasoPrueba c) {
+        int creados = 0;
+        for (CasoUsuario dato : c.usuarios()) {
+            if (dato.email() == null || dato.email().isBlank()) {
+                throw new IllegalStateException("El seed trae un usuario sin email.");
+            }
+            String email = dato.email().trim().toLowerCase();
+            if (usuarios.existsByEmail(email)) {
+                log.info("Seed C-01: el usuario {} ya existe, no se repite.", email);
+                continue;
+            }
+            if (dato.password() == null || dato.password().isBlank()) {
+                throw new IllegalStateException("El seed no trae contraseña para " + email + ".");
+            }
+            Usuario u = new Usuario();
+            u.nombre = dato.nombre() == null || dato.nombre().isBlank() ? email : dato.nombre().trim();
+            u.email = email;
+            u.passwordHash = encoder.encode(dato.password());
+            u.rol = rolDe(dato.rol(), email);
+            u.activo = true;
+            usuarios.save(u);
+            creados++;
+            log.info("Seed C-01: usuario {} ({}) creado.", email, u.rol);
+        }
+        return creados > 0;
+    }
+
+    private static RolUsuario rolDe(String rol, String email) {
+        if (rol == null || rol.isBlank()) {
+            throw new IllegalStateException("El seed no trae rol para " + email + ".");
+        }
+        try {
+            return RolUsuario.valueOf(rol.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("Rol de seed no válido para " + email + ": " + rol.trim() + ".");
+        }
     }
 
     private boolean cargarDependencias(Long proyectoId, CasoPrueba c) {

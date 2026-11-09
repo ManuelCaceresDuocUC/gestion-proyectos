@@ -1,5 +1,5 @@
-// Cliente HTTP base. Cada módulo agrega su archivo en src/api/ (proyectos.ts, recursos.ts, ...).
-// TODO (issue C-02): adjuntar el JWT en Authorization y redirigir a /login ante un 401.
+// Cliente HTTP. C-01: Bearer desde sessionStorage; 401 limpia sesión y va a /login (sin bucle).
+import { cerrarSesion, tokenActual } from "../auth/sesion";
 
 /** Error de la API: conserva el código y el mensaje que devuelve el backend ({codigo, mensaje, detalles}). */
 export class ErrorApi extends Error {
@@ -15,11 +15,21 @@ export class ErrorApi extends Error {
 }
 
 const apiBaseUrl = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");
+const LOGIN = "/auth/login";
 
 export async function api<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
+  const esLogin = ruta === LOGIN;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...((opciones.headers as Record<string, string> | undefined) ?? {}),
+  };
+  const token = esLogin ? null : tokenActual();
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const respuesta = await fetch(`${apiBaseUrl}/api${ruta}`, {
     ...opciones,
-    headers: { "Content-Type": "application/json", ...((opciones.headers as Record<string, string> | undefined) ?? {}) },
+    headers,
   });
   if (!respuesta.ok) {
     let cuerpo: { codigo?: string; mensaje?: string; detalles?: string[] } = {};
@@ -27,6 +37,12 @@ export async function api<T>(ruta: string, opciones: RequestInit = {}): Promise<
       cuerpo = (await respuesta.json()) as typeof cuerpo;
     } catch {
       /* respuesta sin JSON */
+    }
+    if (respuesta.status === 401) {
+      cerrarSesion();
+      if (!esLogin && window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
     }
     throw new ErrorApi(
       respuesta.status,

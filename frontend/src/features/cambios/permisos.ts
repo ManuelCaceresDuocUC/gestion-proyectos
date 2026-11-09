@@ -1,9 +1,10 @@
-// TODO (C-01): leer el rol del usuario autenticado.
+import { esAdmin, estaAutenticado } from "../../auth/sesion";
+
 export function puedeEditar(): boolean {
-  return true;
+  return estaAutenticado();
 }
 
-/** Aprobar y rechazar: en C-01 solo ADMIN. Hoy las rutas están abiertas. */
+/** Aprobar y rechazar: solo ADMIN. El API también lo exige. */
 export function puedeAprobar(): boolean {
-  return true;
+  return esAdmin();
 }

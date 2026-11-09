@@ -9,11 +9,12 @@ import java.util.stream.Stream;
 /**
  * Forma de {@code seed/caso-prueba.json}.
  * C-07: proyecto, tipos, profesionales, recursos, EDT y asignaciones.
- * C-11: dependencias y solicitudes. Usuarios, hitos y KPI se ignoran.
+ * C-11: dependencias y solicitudes. C-01: usuarios. Hitos y KPI se ignoran.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record CasoPrueba(
     CasoProyecto proyecto,
+    List<CasoUsuario> usuarios,
     List<CasoTipoRecurso> tiposRecurso,
     List<CasoProfesional> profesionales,
     List<CasoRecurso> recursos,
@@ -21,6 +22,16 @@ public record CasoPrueba(
     List<CasoDependencia> dependencias,
     List<CasoSolicitud> solicitudesCambio
 ) {
+    public CasoPrueba {
+        usuarios = usuarios == null ? List.of() : usuarios;
+        tiposRecurso = tiposRecurso == null ? List.of() : tiposRecurso;
+        profesionales = profesionales == null ? List.of() : profesionales;
+        recursos = recursos == null ? List.of() : recursos;
+        estructura = estructura == null ? List.of() : estructura;
+        dependencias = dependencias == null ? List.of() : dependencias;
+        solicitudesCambio = solicitudesCambio == null ? List.of() : solicitudesCambio;
+    }
+
     public List<CasoActividad> actividades() {
         return estructura().stream().flatMap(e -> e.actividades().stream()).toList();
     }
@@ -38,37 +49,10 @@ public record CasoPrueba(
             .flatMap(s -> s.asignaciones().stream());
         return Stream.concat(deActividades, deSubs).toList();
     }
-
-    @Override
-    public List<CasoTipoRecurso> tiposRecurso() {
-        return tiposRecurso == null ? List.of() : tiposRecurso;
-    }
-
-    @Override
-    public List<CasoProfesional> profesionales() {
-        return profesionales == null ? List.of() : profesionales;
-    }
-
-    @Override
-    public List<CasoRecurso> recursos() {
-        return recursos == null ? List.of() : recursos;
-    }
-
-    @Override
-    public List<CasoEtapa> estructura() {
-        return estructura == null ? List.of() : estructura;
-    }
-
-    @Override
-    public List<CasoDependencia> dependencias() {
-        return dependencias == null ? List.of() : dependencias;
-    }
-
-    @Override
-    public List<CasoSolicitud> solicitudesCambio() {
-        return solicitudesCambio == null ? List.of() : solicitudesCambio;
-    }
 }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+record CasoUsuario(String nombre, String email, String password, String rol) {}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 record CasoProyecto(

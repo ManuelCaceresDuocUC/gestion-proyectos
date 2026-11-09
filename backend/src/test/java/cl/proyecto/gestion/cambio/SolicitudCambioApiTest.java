@@ -19,14 +19,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-03 / C-08 / C-09 por HTTP. Cuando C-01 active la seguridad, agregar @WithMockUser. */
+/** C-03 / C-08 / C-09 por HTTP. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@WithMockUser(roles = "ADMIN")
 class SolicitudCambioApiTest {
 
     @Autowired MockMvc mvc;
@@ -152,6 +154,25 @@ class SolicitudCambioApiTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.estado").value("RECHAZADO"))
             .andExpect(jsonPath("$.aprobadaEn").value((Object) null));
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioProyectoNoApruebaPorHttp() throws Exception {
+        String id = crearYPasarAEvaluacion("Sin aprobar");
+        mvc.perform(post("/api/cambios/" + id + "/aprobar"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.codigo").value("PROHIBIDO"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USUARIO_PROYECTO")
+    void usuarioProyectoNoApruebaPorPut() throws Exception {
+        String id = crearYPasarAEvaluacion("Put sin permiso");
+        mvc.perform(put("/api/cambios/" + id).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"nombre\":\"Put sin permiso\",\"tipo\":\"TIEMPO\",\"estado\":\"APROBADO\"}"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.codigo").value("PROHIBIDO"));
     }
 
     @Test
