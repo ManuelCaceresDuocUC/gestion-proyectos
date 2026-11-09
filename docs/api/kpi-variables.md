@@ -11,6 +11,11 @@ Semáforo (cumplimiento, tope 1): Verde ≥ 100 %, Amarillo 80–99 %, Rojo < 80
 MAYOR_MEJOR = valor/meta; MENOR_MEJOR = meta/valor (1 si valor = 0). Solo se redondea el
 resultado final a 2 decimales.
 
+Unidad `%`: la fórmula del seed es una razón (`numerador / denominador`, sin `* 100`).
+`EvaluadorKpi` la pasa a puntos porcentuales una sola vez, antes de redondear, y esa cifra
+se compara con la meta (80, 90, 15…). `días` e `índice` no se escalan. Un denominador 0
+sigue siendo «No calculable» y no se escala.
+
 ## Proyecto e hitos (KP-01 … KP-08)
 
 | Variable | Significado | Origen |
@@ -48,16 +53,26 @@ o `accionCorrectiva` informado.
 | `CAMBIOS_CERRADOS_CON_SOBRECOSTO` | cerrados con costo real > presupuesto previsto |
 | `CAMBIOS_CERRADOS_CON_PRESUPUESTO` | cerrados que tienen presupuesto previsto |
 | `ETAPAS_COMPLETADAS` | etapas `COMPLETADO` (todas las solicitudes) |
-| `ETAPAS_TOTALES` | 10 × solicitudes seguidas |
+| `ETAPAS_TOTALES` | 10 × solicitudes del proyecto (todas; B-17) |
 | `CAMBIOS_ADOPTADOS` | etapa 10 `COMPLETADO` |
 | `COSTO_REAL_CAMBIOS_CERRADOS` | suma `costoReal` de las cerradas |
 | `PRESUPUESTO_CAMBIOS_CERRADOS` | suma `presupuestoPrevisto` de las cerradas |
 | `DIAS_ATRASO_CAMBIOS` | suma de `diasAtraso` |
-| `CAMBIOS_APROBADOS` | llegaron a `APROBADO` (incluye las ya aplicadas / en implementación / cerradas si se cuenta el hecho) |
+| `CAMBIOS_APROBADOS` | estado `APROBADO`, `EN_IMPLEMENTACION` o `CERRADO` |
 | `CAMBIOS_APROBADOS_APLICADOS` | `aplicada = true` |
 
-`CAMBIOS_APROBADOS`: conteo de solicitudes con `aprobadaEn` no nulo (o estado ≥ `APROBADO`
-en el grafo, excluyendo `RECHAZADO`). B-17 lo precisa al implementar el paso.
+`CAMBIOS_APROBADOS` (B-17): cuenta el estado, no `aprobadaEn`. Entran `APROBADO`,
+`EN_IMPLEMENTACION` y `CERRADO`. Quedan fuera `ABIERTO`, `EN_EVALUACION` y `RECHAZADO`.
+`RECHAZADO` tampoco es `CAMBIOS_CERRADOS`; solo entra en el atraso (si no hay fin real, el atraso es 0,
+igual que un `CERRADO` sin fin real).
 
-Las fórmulas concretas están en el JSON del seed (KP-01…08 y KC-01…13). El seed **no las
-carga** hasta que exista `KpiService`.
+`ETAPAS_TOTALES` (B-17): 10 × `CAMBIOS_TOTAL`. «Seguidos» son todas las solicitudes del proyecto,
+hayan generado o no sus filas de etapa. Sin solicitudes el denominador es 0 y KC-06 queda
+«No calculable».
+
+`CAMBIOS_CON_CORRECTIVA`: etapa 9 en un estado distinto de `PENDIENTE` y `NO_APLICA`, o
+`accionCorrectiva` con texto (un blanco no cuenta). La solicitud suma una sola vez.
+
+KC-11…KC-13 siguen siendo los tres adicionales de `db/seed/kpi-definiciones.json`. El issue
+#88 no tiene respuesta del profesor; no hay ADR hasta consultarlo. El seed **no carga**
+estas definiciones hasta que exista `KpiService`.

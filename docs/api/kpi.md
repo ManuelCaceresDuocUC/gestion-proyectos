@@ -4,6 +4,16 @@ Pendiente de implementación. Tablas `kpi_definicion`, `kpi_variable` y `kpi_his
 Variables permitidas en la fórmula: [kpi-variables.md](kpi-variables.md).
 Evaluación: paso 60 del recálculo, no un `POST` de “calcular”.
 
+Unidad `%`: la fórmula guardada es una razón. `EvaluadorKpi` multiplica por 100 una vez
+antes de redondear a 2 decimales. `días` e `índice` no se escalan. Las fórmulas KC del seed
+no llevan `* 100`.
+
+B-17 deja el catálogo `CatalogoKpiCambio` (KC-01…KC-13, iguales al JSON) y
+`VariablesCambioService`, que arma las variables desde las solicitudes y etapas ya guardadas.
+No hay entidad, repositorio ni `KpiService`: el seed sigue sin cargar las definiciones.
+KC-11…KC-13 siguen propuestos; el issue #88 no tiene respuesta del profesor y aún no hay
+un ADR específico para esa decisión.
+
 C-01: **escribir** definiciones es solo `ADMIN` (`403 PROHIBIDO` para `USUARIO_PROYECTO`).
 Leer histórico y listado: cualquier autenticado.
 

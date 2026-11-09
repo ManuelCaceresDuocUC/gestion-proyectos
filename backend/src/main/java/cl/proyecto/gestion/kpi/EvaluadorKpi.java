@@ -8,11 +8,13 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 
 /**
  * Evalúa una fórmula de KPI con exp4j. Dominio puro: no usa Spring ni la base.
- * Las variables entran sin redondear. Solo el valor final queda a 2 decimales.
+ * Las variables entran sin redondear. Si la unidad es {@code %}, la razón se multiplica por 100
+ * una sola vez (la fórmula no debe traer ese factor). Solo el valor final queda a 2 decimales.
  * Un denominador cero (o un resultado no finito) devuelve «No calculable», nunca error ni infinito.
  */
 public final class EvaluadorKpi {
 
+    private static final BigDecimal CIEN = new BigDecimal("100");
     private static final int ESCALA_VALOR = 2;
     private static final int ESCALA_CUMPLIMIENTO = 4;
     private static final int ESCALA_DIVISION = 8;
@@ -30,6 +32,9 @@ public final class EvaluadorKpi {
             return ResultadoKpi.sinValor();
         }
         BigDecimal exacto = BigDecimal.valueOf(crudo);
+        if (definicion.esPorcentaje()) {
+            exacto = exacto.multiply(CIEN);
+        }
         BigDecimal valor = exacto.setScale(ESCALA_VALOR, REDONDEO);
         BigDecimal cumplimiento = cumplimiento(definicion, exacto);
         SemaforoKpi semaforo = cumplimiento == null ? null : semaforo(cumplimiento, definicion);

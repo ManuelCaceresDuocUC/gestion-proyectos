@@ -173,6 +173,61 @@ class EvaluadorKpiTest {
     }
 
     @Test
+    void unidadPorcentajeEscalaLaRazonUnaSolaVez() {
+        var resultado = evaluador.evaluar(
+                new DefinicionKpi(
+                        "CAMBIOS_CERRADOS / CAMBIOS_TOTAL",
+                        SentidoKpi.MAYOR_MEJOR,
+                        OperadorMeta.MAYOR_IGUAL,
+                        decimal("80"),
+                        null,
+                        null,
+                        null,
+                        "%"),
+                Map.of("CAMBIOS_CERRADOS", decimal("4"), "CAMBIOS_TOTAL", decimal("5")));
+
+        assertThat(resultado.valor()).isEqualByComparingTo("80.00");
+        assertThat(resultado.cumplimiento()).isEqualByComparingTo("1.0000");
+        assertThat(resultado.semaforo()).isEqualTo(SemaforoKpi.VERDE);
+        assertThat(resultado.cumpleMeta()).isTrue();
+    }
+
+    @Test
+    void unidadDistintaDePorcentajeNoEscala() {
+        var resultado = evaluador.evaluar(
+                new DefinicionKpi(
+                        "DIAS_ATRASO_CAMBIOS / CAMBIOS_TOTAL",
+                        SentidoKpi.MENOR_MEJOR,
+                        OperadorMeta.MENOR_IGUAL,
+                        decimal("3"),
+                        null,
+                        null,
+                        null,
+                        "días"),
+                Map.of("DIAS_ATRASO_CAMBIOS", decimal("9"), "CAMBIOS_TOTAL", decimal("3")));
+
+        assertThat(resultado.valor()).isEqualByComparingTo("3.00");
+        assertThat(resultado.cumpleMeta()).isTrue();
+    }
+
+    @Test
+    void porcentajeConDenominadorCeroSigueNoCalculable() {
+        var resultado = evaluador.evaluar(
+                new DefinicionKpi(
+                        "CAMBIOS_CERRADOS / CAMBIOS_TOTAL",
+                        SentidoKpi.MAYOR_MEJOR,
+                        OperadorMeta.MAYOR_IGUAL,
+                        decimal("80"),
+                        null,
+                        null,
+                        null,
+                        "%"),
+                Map.of("CAMBIOS_CERRADOS", decimal("4"), "CAMBIOS_TOTAL", BigDecimal.ZERO));
+
+        assertNoCalculable(resultado);
+    }
+
+    @Test
     void definicionInvalidaOVariableAusenteLanzaError() {
         assertThatThrownBy(() -> def("  ", SentidoKpi.MAYOR_MEJOR, OperadorMeta.MAYOR_IGUAL, "1"))
                 .isInstanceOf(IllegalArgumentException.class);

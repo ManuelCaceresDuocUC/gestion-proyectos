@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 /**
  * Qué hay que evaluar: fórmula en texto, sentido, operador de meta y umbrales.
  * No conoce proyecto ni base de datos. Los umbrales nulos usan 1 y 0.8.
+ * {@code unidad} nula no cambia la escala. {@code "%"} pide al evaluador pasar la razón a puntos porcentuales.
  */
 public record DefinicionKpi(
         String formula,
@@ -13,8 +14,20 @@ public record DefinicionKpi(
         BigDecimal meta,
         BigDecimal metaMax,
         BigDecimal umbralVerde,
-        BigDecimal umbralAmarillo
+        BigDecimal umbralAmarillo,
+        String unidad
 ) {
+    public DefinicionKpi(
+            String formula,
+            SentidoKpi sentido,
+            OperadorMeta operador,
+            BigDecimal meta,
+            BigDecimal metaMax,
+            BigDecimal umbralVerde,
+            BigDecimal umbralAmarillo) {
+        this(formula, sentido, operador, meta, metaMax, umbralVerde, umbralAmarillo, null);
+    }
+
     public DefinicionKpi {
         if (formula == null || formula.isBlank()) {
             throw new IllegalArgumentException("La fórmula del KPI es obligatoria.");
@@ -40,5 +53,13 @@ public record DefinicionKpi(
         if (umbralAmarillo.compareTo(umbralVerde) > 0) {
             throw new IllegalArgumentException("El umbral amarillo no puede superar al verde.");
         }
+        if (unidad != null && unidad.isBlank()) {
+            unidad = null;
+        }
+    }
+
+    /** La fórmula es una razón y el resultado se expresa en puntos porcentuales. */
+    public boolean esPorcentaje() {
+        return "%".equals(unidad);
     }
 }
