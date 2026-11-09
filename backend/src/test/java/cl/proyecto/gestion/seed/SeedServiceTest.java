@@ -2,8 +2,14 @@ package cl.proyecto.gestion.seed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import cl.proyecto.gestion.cambio.CambioEtapaService;
+import cl.proyecto.gestion.cambio.EstadoSolicitud;
+import cl.proyecto.gestion.cambio.PrioridadSolicitud;
+import cl.proyecto.gestion.cambio.SolicitudCambio;
 import cl.proyecto.gestion.cambio.SolicitudCambioService;
+import cl.proyecto.gestion.cambio.TipoSolicitud;
 import cl.proyecto.gestion.planificacion.dependencia.DependenciaService;
+import cl.proyecto.gestion.planificacion.lineabase.LineaBaseService;
 import cl.proyecto.gestion.proyecto.EstadoProyecto;
 import cl.proyecto.gestion.proyecto.Proyecto;
 import cl.proyecto.gestion.proyecto.ProyectoService;
@@ -24,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
-/** C-07: recorte v1 — 4/12/20, recursos, asignaciones y alerta B-09; no duplica EEC-2026 ni carga C-11. */
+/** C-07 + C-11: EDT, asignaciones, 35 dependencias, línea base y 5 solicitudes. */
 @SpringBootTest
 @Transactional
 class SeedServiceTest {
@@ -35,7 +41,9 @@ class SeedServiceTest {
     @Autowired TipoRecursoService tipos;
     @Autowired RecursoService recursos;
     @Autowired DependenciaService dependencias;
+    @Autowired LineaBaseService lineasBase;
     @Autowired SolicitudCambioService cambios;
+    @Autowired CambioEtapaService etapas;
     @Autowired AsignacionRepository asignaciones;
     @Autowired SobrecargaAlertaRepository alertas;
 
@@ -84,11 +92,12 @@ class SeedServiceTest {
         assertThat(sub.tipo).isEqualTo(TipoTarea.SUBACTIVIDAD);
         assertThat(sub.duracionDias).isEqualTo(10);
 
-        assertThat(dependencias.listar(p.id)).isEmpty();
-        assertThat(cambios.listar(p.id, null, null, null, null, null, null)).isEmpty();
-        assertThat(asignaciones.count()).isGreaterThan(0);
-        assertThat(alertas.findByProyectoIdOrderByFechaAscRecursoNombreAsc(p.id))
-            .anyMatch(alerta -> "Ingeniero de infraestructura".equals(alerta.recursoNombre));
+        assertRecorteV2(p, edt);
+        // Asignaciones: el v1 (B-09) las crea. Si EEC-2026 ya estaba de un seed viejo, C-11 no las duplica.
+        if (asignaciones.count() > 0) {
+            assertThat(alertas.findByProyectoIdOrderByFechaAscRecursoNombreAsc(p.id))
+                .anyMatch(alerta -> "Ingeniero de infraestructura".equals(alerta.recursoNombre));
+        }
     }
 
     @Test
@@ -98,7 +107,39 @@ class SeedServiceTest {
         asegurarTipo("Material", "unidad");
         asegurarTipo("Servicio externo", "global");
         assertThat(seed.cargar()).isTrue();
-        assertThat(tareas.findByProyectoId(proyecto().id)).hasSize(36);
+        Proyecto p = proyecto();
+        assertThat(tareas.findByProyectoId(p.id)).hasSize(36);
+        assertRecorteV2(p, tareas.findByProyectoId(p.id));
+    }
+
+    /** Conteos de la rúbrica que sí carga C-11 (hitos y KPI no hay servicio). */
+    private void assertRecorteV2(Proyecto p, List<Tarea> edt) {
+        assertThat(dependencias.listar(p.id)).hasSize(35);
+        assertThat(dependencias.listar(p.id)).extracting(d -> d.tipo().name())
+            .contains("FS", "SS", "FF", "SF");
+        assertThat(dependencias.listar(p.id)).anyMatch(d -> d.desfaseDias() < 0);
+
+        assertThat(lineasBase.listar(p.id)).isNotEmpty();
+        assertThat(lineasBase.listar(p.id).getFirst().version).isEqualTo(1);
+        assertThat(p.fechaFinBase).isNotNull();
+
+        List<SolicitudCambio> sols = cambios.listar(p.id, null, null, null, null, null, null);
+        assertThat(sols).hasSize(5);
+        assertThat(sols).allMatch(s -> s.estado == EstadoSolicitud.ABIERTO);
+        assertThat(sols).allMatch(s -> !s.aplicada);
+        assertThat(sols).allSatisfy(s -> assertThat(etapas.listar(s.id)).hasSize(10));
+        assertThat(sols).extracting(s -> s.tipo)
+            .contains(TipoSolicitud.TECNOLOGIA, TipoSolicitud.ORGANIZACION);
+        assertThat(sols).extracting(s -> s.prioridad)
+            .contains(PrioridadSolicitud.CRITICA, PrioridadSolicitud.BAJA);
+
+        SolicitudCambio ampliar = sols.stream()
+            .filter(s -> s.nombre.contains("30 puestos"))
+            .findFirst()
+            .orElseThrow();
+        assertThat(ampliar.impactoDias).isEqualTo(5);
+        assertThat(ampliar.tareaId).isEqualTo(porCodigo(edt, "3.1.1").id);
+        assertThat(ampliar.impactoCosto).isEqualByComparingTo("2400000");
     }
 
     private Proyecto proyecto() {
