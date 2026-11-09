@@ -1,5 +1,6 @@
 // Tipos de la API de solicitudes (docs/api/cambios.md).
 import type {
+  EstadoEtapa,
   EstadoSolicitud,
   ImpactoSolicitud,
   PrioridadSolicitud,
@@ -84,4 +85,23 @@ export interface FiltrosSolicitud {
   responsableId?: string;
   desde?: string;
   hasta?: string;
+}
+
+/** Una de las 10 etapas (GET/PATCH /cambios/{id}/etapas). */
+export interface CambioEtapa {
+  id: number;
+  solicitudId: number;
+  numero: number;
+  nombre: string;
+  estado: EstadoEtapa;
+  actualizadoEn: string | null;
+  actualizadoPor: number | null;
+}
+
+/** GET /cambios/{id}/etapas. avance y conteos los calcula el servidor. */
+export interface EtapasCambio {
+  etapas: CambioEtapa[];
+  etapasCompletas: number;
+  avance: number;
+  etapasBloqueadas: number;
 }
