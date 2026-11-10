@@ -50,6 +50,18 @@ public final class VariablesProyecto {
                 HITOS_VENCIDOS, HITOS_CUMPLIDOS_A_TIEMPO, PROFESIONALES_TOTAL, PROFESIONALES_SOBREASIGNADOS);
     }
 
+    /**
+     * La misma regla que {@code ACTIVIDADES_ATRASADAS}: sin hijos, fin plan anterior a hoy
+     * y avance menor que 100. Un avance nulo cuenta como 0.
+     */
+    public static boolean hojaAtrasada(
+            boolean tieneHijos, LocalDate finPlan, BigDecimal avancePuntos, LocalDate hoy) {
+        if (tieneHijos || finPlan == null || hoy == null || !finPlan.isBefore(hoy)) {
+            return false;
+        }
+        return puntos(avancePuntos).compareTo(CIEN) < 0;
+    }
+
     public static Medicion calcular(Datos datos) {
         if (datos == null) {
             throw new IllegalArgumentException("Los datos del proyecto son obligatorios.");
@@ -97,9 +109,7 @@ public final class VariablesProyecto {
             BigDecimal costo = nodo.costoPlan() == null ? BigDecimal.ZERO : nodo.costoPlan();
             valorPlanificado = valorPlanificado.add(costo.multiply(razon(puntosHoja)));
             valorGanado = valorGanado.add(costo.multiply(razon(nodo.avancePuntos())));
-            if (nodo.finPlan() != null
-                    && nodo.finPlan().isBefore(datos.hoy())
-                    && puntos(nodo.avancePuntos()).compareTo(CIEN) < 0) {
+            if (hojaAtrasada(false, nodo.finPlan(), nodo.avancePuntos(), datos.hoy())) {
                 atrasadas++;
             }
         }
