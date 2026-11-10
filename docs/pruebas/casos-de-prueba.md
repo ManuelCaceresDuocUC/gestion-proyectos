@@ -32,7 +32,7 @@ También cargado, fuera de esa tabla: 7 recursos no profesionales, 39 asignacion
 | CP-02 | Modificar cantidad o recurso (B-18) | Costo plan/real; alerta de sobreasignación; KPI; tablero | E2E HTTP y UI del seed, 10 nov 2026. Hoja 1.440.000→1.280.000; proyecto 20.488.000→20.328.000; alerta se apaga; KP-08 = 0; KP-03 no calculable. Capturas en `docs/pruebas/capturas/` | B |
 | CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | **sí** E2E HTTP (`RecalculoSolicitudE2ETest`, 10 nov 2026). Seed: 0 TIEMPO. Capturas: T-07 | C |
 
-Capturas de CP-02: `docs/pruebas/capturas/cp-02-*.png`. El resto sigue para el ensayo T-07.
+Capturas de CP-02: `docs/pruebas/capturas/cp-02-*.png`. CP-01 y CP-03: pendientes (T-07, fecha y archivos por confirmar). Plan: `docs/pruebas/T-07-ensayo-demo.md`.
 
 ---
 
