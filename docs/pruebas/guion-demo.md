@@ -62,7 +62,7 @@ Si se sube la cantidad en vez de bajarla, la alerta se mantiene o empeora; decir
 
 ## Recálculo 3 — aprobar una solicitud (C)
 
-**Issue:** C-14 (E2E abierto). Aprobar y aplicar **sí están** (C-08, C-09, C-10).
+**Issue:** C-14. E2E: `RecalculoSolicitudE2ETest`. Aprobar y aplicar **sí están** (C-08, C-09, C-10).
 
 Las 5 del seed **no son TIEMPO**: aplicarlas no mueve el Gantt (aviso en el detalle). Para el recálculo de la rúbrica hace falta una de tipo Tiempo.
 

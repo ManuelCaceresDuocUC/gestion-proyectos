@@ -78,7 +78,7 @@ Backend, por módulo en `backend/src/main/java/cl/proyecto/gestion/<modulo>/`:
 - **Controlador** `@RestController` bajo `/api/...` con DTOs `record` y `@Valid`. Ejemplo: `proyecto/TareaController.java`. Documenta la API nueva en `docs/api/<modulo>.md`.
 - **Dominio puro** (cálculos sin base de datos) en clases sin Spring, probadas con JUnit simple: ver `planificacion/motor/`. Úsalo para el evaluador de KPI.
 - **Pruebas**: servicio con `@SpringBootTest @Transactional` (ver `proyecto/EdtServiceTest`); API con `@AutoConfigureMockMvc` (ver `planificacion/lineabase/LineaBaseApiTest`);
-  integración completa por HTTP: `integracion/RecalculoDuracionE2ETest` (plantilla para B-18 y C-14).
+  integración completa por HTTP: `integracion/RecalculoDuracionE2ETest` (A-18) y `integracion/RecalculoSolicitudE2ETest` (C-14; plantilla para B-18).
 
 Frontend, en `frontend/src/`:
 - `api/client.ts`: `api<T>(ruta, opciones)` con prefijo `/api`; lanza `ErrorApi` con el `mensaje` del backend. **C-01 ya pone el JWT** (`Authorization: Bearer` desde `sessionStorage`) y, ante 401, va a `/login`. Un archivo por módulo (`api/planificacion.ts` es el ejemplo). **B-04:** no reimplementes el Bearer aquí; el layout, la navegación y las guardas de menú por rol siguen siendo tuyas.
@@ -108,7 +108,7 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 2. C-09: aplicar una solicitud aprobada (sección 4): cambia el plan por los servicios de A y dispara el recálculo; **es el recálculo 3 de la demo.**
 3. C-07/C-11: **seed** del caso mínimo. Recomendación: un `CommandLineRunner` activado por `APP_SEED_ENABLED` que cree los datos **usando los servicios** (`ProyectoService`, `TareaService`, `DependenciaService`, `LineaBaseService`), para que las fechas salgan del motor. `scripts/demo-gantt.ps1` muestra el orden: proyecto → EDT → dependencias → línea base.
 4. C-01: JWT y los roles `ADMIN` y `USUARIO_PROYECTO` (ADMIN administra usuarios, KPI y aprueba cambios). Hazlo en una rama aparte y actualiza las pruebas existentes.
-5. C-12: tablero de cambio (en `main`; B-17 ya está). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están. C-13 (esta rama): filtros query y refresco al volver a `/tableros`. C-14 después del merge.
+5. C-12 y C-13: tableros y filtros (en `main`). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están. C-14 (esta rama): E2E de aplicar TIEMPO (`RecalculoSolicitudE2ETest`).
 
 ## 8. Flujo de trabajo (Git)
 - Una rama por issue o grupo corto: `feat/B-05-recursos`. PR pequeños y frecuentes; **el CI (backend y frontend) debe estar en verde**.
