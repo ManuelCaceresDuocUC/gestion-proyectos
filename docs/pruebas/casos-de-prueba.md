@@ -30,7 +30,7 @@ También cargado, fuera de esa tabla: 7 recursos no profesionales, 39 asignacion
 |---|---|---|---|---|
 | CP-01 | Cambiar duración de una hoja (A-18) | Sucesoras FS/FF se corren; SS/SF no; consolidación; línea base igual; costos si hay asignaciones; KPI y tablero de proyecto | Gantt y línea base: **sí** (E2E). Tableros: **sí** API (B-21, C-12, C-13). Costos/KPI en A-18: **no asertados** | A |
 | CP-02 | Modificar cantidad o recurso (B-18) | Costo plan/real; alerta de sobreasignación; KPI; tablero | E2E HTTP y UI del seed, 10 nov 2026. Hoja 1.440.000→1.280.000; proyecto 20.488.000→20.328.000; alerta se apaga; KP-08 = 0; KP-03 no calculable. Capturas en `docs/pruebas/capturas/` | B |
-| CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | Aplicar TIEMPO y línea base: **sí** (C-09). Tablero de cambio: **sí** (C-12). E2E C-14: **pendiente**. Seed: 0 TIEMPO | C |
+| CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | **sí** E2E HTTP (`RecalculoSolicitudE2ETest`, 10 nov 2026). Seed: 0 TIEMPO. Capturas: T-07 | C |
 
 Capturas de CP-02: `docs/pruebas/capturas/cp-02-*.png`. El resto sigue para el ensayo T-07.
 
@@ -117,7 +117,7 @@ Capturas del 10 nov 2026, con la imagen de Docker reconstruida (`GET /api/tabler
 
 ## CP-03 — Aprobar y aplicar TIEMPO
 
-**Issue:** C-14 (abierto). Código: C-08, C-09, C-10. Tests: `SolicitudCambioServiceTest` (`aplicarTiempoSumaImpactoALaHoja`, `aplicarTiempoMueveElPlanYConservaLaLineaBase`, `aplicarCostoNoMueveLaDuracion`).
+**Issue:** C-14 (#110). Detalle: `docs/pruebas/C-14-recalculo-solicitud.md`. Código: C-08, C-09, C-10. E2E: `integracion/RecalculoSolicitudE2ETest`. Servicio: `SolicitudCambioServiceTest` (`aplicarTiempoSumaImpactoALaHoja`, `aplicarTiempoMueveElPlanYConservaLaLineaBase`, `aplicarCostoNoMueveLaDuracion`).
 
 ### Datos de entrada
 
@@ -129,7 +129,7 @@ Test C-09: hoja 5 d, impacto +3, línea base fijada.
 
 ### Esperado
 
-Aprobar: estado `APROBADO`, plan igual. Aplicar TIEMPO (test): duración 5+3=8, `aplicada=true`, `EN_IMPLEMENTACION`, `finPlan` después, `finBase` igual. Aplicar no-TIEMPO: no llama a `CronogramaService`; solo marca aplicada. Tableros: C-12/B-21 (GET); C-13 refresca al volver a `/tableros`. KPI de cambio: snapshot del recálculo.
+Aprobar: estado `APROBADO`, plan igual, sin snapshot KPI nuevo. Aplicar TIEMPO: duración 5+3=8, `aplicada=true`, `EN_IMPLEMENTACION`, `finPlan` después, `finBase` igual, costo plan igual, KPI y ambos tableros leen el recálculo. Aplicar no-TIEMPO: no llama a `CronogramaService`; solo marca aplicada. C-13 refresca `/tableros` al volver a la pestaña.
 
 ### Obtenido
 
@@ -139,6 +139,6 @@ Aprobar: estado `APROBADO`, plan igual. Aplicar TIEMPO (test): duración 5+3=8, 
 | `aplicarTiempoMueveElPlanYConservaLaLineaBase` | idem | `finPlan` avanza; bases igual |
 | `aplicarCostoNoMueveLaDuracion` | idem | duración 5 |
 | Seed 5 solicitudes no TIEMPO | C-11 | `SeedServiceTest` |
-| E2E C-14 sobre Gantt+KPI+tableros | — | No (C-14). Tablero de cambio sí: `TableroCambioApiTest` |
+| `RecalculoSolicitudE2ETest` | 10 nov 2026 | Aprobar no mueve; aplicar TIEMPO mueve A/B, línea base y costo plan iguales, KPI + tableros |
 
 ADMIN aprueba; `USUARIO_PROYECTO` no (C-01).
