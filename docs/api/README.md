@@ -26,7 +26,7 @@ servicios. Contrato: [recalculo.md](recalculo.md).
 | recálculo (interno) | — | A (+ pasos B/C) | [recalculo.md](recalculo.md) — no hay `POST /proyectos/{id}/recalcular` |
 | hitos | `/proyectos/{id}/hitos`, `/hitos/{id}` | B | [hitos.md](hitos.md) — B-11 |
 | KPI | GET `/proyectos/{id}/kpi`; escrituras `/kpi/**` (ADMIN) | B | [kpi.md](kpi.md); [kpi-variables.md](kpi-variables.md) |
-| tablero de proyecto | `/tablero/proyecto/{id}` | B | [tableros.md](tableros.md) — **sin controlador** (B-21) |
+| tablero de proyecto | `/tablero/proyecto/{id}` | B | [tableros.md](tableros.md) — B-21 |
 | tablero de cambio | `/tablero/cambio/{id}` | C | [tableros.md](tableros.md) — C-12 |
 | usuarios (CRUD) | `/usuarios` | C | **sin controlador**; seed C-01. Matcher ADMIN ya está en SecurityConfig |
 

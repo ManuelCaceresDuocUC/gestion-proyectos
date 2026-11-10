@@ -5,8 +5,9 @@ import type { Proyecto } from "../../types/planificacion";
 import type { TableroCambio as DatosCambio } from "../../types/tableros";
 import { mensajeDe } from "../proyectos/formato";
 import TableroCambio from "./TableroCambio";
+import TableroProyecto from "./TableroProyecto";
 
-/** /tableros: comando de cambio (C-12). El de proyecto es B-21. */
+/** /tableros: proyecto (B-21) y cambio (C-12). Los filtros son C-13. */
 export default function TablerosPagina() {
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [proyectoId, setProyectoId] = useState("");
@@ -52,13 +53,9 @@ export default function TablerosPagina() {
         </label>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
+      {!proyectoId && <p className="vacio">Elija un proyecto para ver los dos tableros.</p>}
 
-      <div className="tarjeta">
-        <h3>Proyecto</h3>
-        <p className="vacio">Pendiente de implementar (B-21).</p>
-      </div>
-
-      {!proyectoId && <p className="vacio">Elija un proyecto para ver el tablero de gestión del cambio.</p>}
+      <TableroProyecto proyectoId={proyectoId} />
       {cargando && <p className="vacio">Cargando tablero de cambio…</p>}
       {tablero && proyecto && <TableroCambio datos={tablero} moneda={proyecto.moneda || "CLP"} />}
     </section>
