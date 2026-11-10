@@ -8,6 +8,12 @@ public interface KpiDefinicionRepository extends JpaRepository<KpiDefinicion, Lo
 
     Optional<KpiDefinicion> findByProyectoIdIsNullAndCodigo(String codigo);
 
+    Optional<KpiDefinicion> findByProyectoIdAndCodigo(Long proyectoId, String codigo);
+
+    List<KpiDefinicion> findByProyectoIdIsNullOrderByCodigoAsc();
+
+    List<KpiDefinicion> findByProyectoIdOrderByCodigoAsc(Long proyectoId);
+
     List<KpiDefinicion> findByProyectoIdIsNullAndActivoTrueOrderByCodigoAsc();
 
     List<KpiDefinicion> findByProyectoIdAndActivoTrueOrderByCodigoAsc(Long proyectoId);
