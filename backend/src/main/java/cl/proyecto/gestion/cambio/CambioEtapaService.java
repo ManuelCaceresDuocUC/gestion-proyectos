@@ -99,7 +99,7 @@ public class CambioEtapaService {
     }
 
     /** Porcentaje 0–100: (completas / 10) × 100. NO_APLICA no suma. */
-    static int avancePorcentaje(List<CambioEtapa> lista) {
+    public static int avancePorcentaje(List<CambioEtapa> lista) {
         return etapasCompletas(lista) * 10;
     }
 

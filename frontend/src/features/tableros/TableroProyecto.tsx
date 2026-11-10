@@ -48,21 +48,24 @@ function Grafico({ titulo, datos, color }: {
   );
 }
 
-/** Tablero de proyecto (B-21). No es el de cambio. */
-export default function TableroProyecto() {
+/** Tablero de proyecto (B-21). Si recibe `proyectoId`, el selector lo pone la página compartida. */
+export default function TableroProyecto({ proyectoId: proyectoFijo }: { proyectoId?: string }) {
+  const embebido = proyectoFijo !== undefined;
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [proyectoId, setProyectoId] = useState("");
+  const [proyectoPropio, setProyectoPropio] = useState("");
+  const proyectoId = embebido ? proyectoFijo : proyectoPropio;
   const [tablero, setTablero] = useState<TableroProyecto | null>(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
+    if (embebido) return;
     let vigente = true;
     proyectosApi.listar("", "")
       .then((lista) => { if (vigente) setProyectos(lista); })
       .catch((e) => { if (vigente) setError(mensajeDe(e)); });
     return () => { vigente = false; };
-  }, []);
+  }, [embebido]);
 
   useEffect(() => {
     if (!proyectoId) {
@@ -85,18 +88,20 @@ export default function TableroProyecto() {
   return (
     <section>
       <h3>Tablero de proyecto</h3>
-      <div className="filtros">
-        <label>Proyecto
-          <select value={proyectoId} onChange={(e) => setProyectoId(e.target.value)}>
-            <option value="">Elija un proyecto</option>
-            {proyectos.map((p) => (
-              <option key={p.id} value={p.id}>{p.codigo} — {p.nombre}</option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {!embebido && (
+        <div className="filtros">
+          <label>Proyecto
+            <select value={proyectoId} onChange={(e) => setProyectoPropio(e.target.value)}>
+              <option value="">Elija un proyecto</option>
+              {proyectos.map((p) => (
+                <option key={p.id} value={p.id}>{p.codigo} — {p.nombre}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
       {error && <p className="error" role="alert">{error}</p>}
-      {!proyectoId && <p className="vacio">Elija un proyecto para ver su tablero.</p>}
+      {!proyectoId && !embebido && <p className="vacio">Elija un proyecto para ver su tablero.</p>}
       {proyectoId && cargando && <p className="vacio">Cargando tablero…</p>}
       {tablero && (
         <>

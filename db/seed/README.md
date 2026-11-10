@@ -6,8 +6,8 @@ Datos ficticios para la demo y las pruebas. Maven los empaqueta en el backend co
 
 - `caso-prueba.json`: proyecto **EEC-2026** «Habilitar un espacio de estudio colaborativo» (derivado de
   `Actividad_Gantt_Hitos.xlsx`). El JSON ya trae el caso mínimo de la rúbrica; el cargador va por recortes.
-- `kpi-definiciones.json`: 8 KPI de proyecto e hitos y 13 de gestión del cambio. **No se cargan** (no hay
-  `KpiService` en este recorte).
+- `kpi-definiciones.json`: 8 KPI de proyecto e hitos y 13 de gestión del cambio. **Este seed no los inserta.**
+  Los crea `KpiService.asegurarCatalogo()` en el recálculo (C-12).
 
 ## Recorte C-01 (usuarios)
 
@@ -75,9 +75,10 @@ queda en la semana de ese término: la fecha prevista no puede ser anterior.
 
 Si el proyecto ya tiene algún hito, esta capa no se repite.
 
-## Todavía no (B-17)
+## Definiciones KPI
 
-El JSON incluye KPI. **Este seed no los crea.**
+El JSON incluye KPI. **Este seed no los crea.** El paso 60 del recálculo inserta KP-01…08 y KC-01…13.
+El tablero de cambio (C-12) solo lee el snapshot.
 
 ## Cómo activarlo
 

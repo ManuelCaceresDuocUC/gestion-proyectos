@@ -12,7 +12,8 @@ no llevan `* 100`.
 
 B-17 deja el catálogo `CatalogoKpiCambio` (KC-01…KC-13, iguales al JSON) y
 `VariablesCambioService`, que arma las variables desde las solicitudes y etapas ya guardadas.
-El paso KPI no inserta esos KC. Si una definición de cambio ya está guardada, el mismo paso la evalúa y le guarda snapshot.
+C-12: `asegurarCatalogo()` (solo en el recálculo, no en un GET) inserta también KC-01…KC-13
+globales, igual que KP-01…KP-08. El tablero de cambio lee esos snapshots (`categoria` `CAMBIO`).
 KC-11…KC-13 siguen propuestos; el issue #88 no tiene respuesta del profesor y aún no hay
 un ADR específico para esa decisión.
 
@@ -49,7 +50,8 @@ opcional `hitoId` / vínculo a tarea (V21).
 Histórico: `valor` nulo = No calculable; `cumplimiento`; `semaforo` (`VERDE`, `AMARILLO`, `ROJO`);
 `motivo`; `calculadoEn`.
 
-Caso mínimo: 8 KPI de proyecto/hitos (KP-01…08) y ≥ 12 de cambio (KC-01…13 en el seed).
-`KpiService` carga solo KP-01…08. El seed de C sigue sin insertar definiciones.
+Caso mínimo: 8 KPI de proyecto/hitos (KP-01…08) y ≥ 12 de cambio (KC-01…13 en el JSON).
+`KpiService` carga KP-01…08 y KC-01…13 en el recálculo (21 definiciones globales).
+`GET /proyectos/{id}/kpi` lista las 21. El seed de C **no** inserta definiciones.
 
 B publica el JSON concreto con B-12; no duplicar lógica de fórmulas en el front ni en los tableros.
