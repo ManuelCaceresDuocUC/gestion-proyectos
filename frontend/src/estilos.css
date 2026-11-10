@@ -60,3 +60,13 @@ input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid var
 .tipo-ETAPA > .nodo { font-weight: 600; }
 .modal-fondo { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; z-index: 10; }
 .modal { background: #fff; border-radius: 8px; padding: 16px 20px; max-width: 460px; width: calc(100% - 32px); }
+.app-marco { min-height: 100vh; background: var(--fondo); }
+.barra { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--borde); flex-wrap: wrap; }
+.marca { margin: 0 0 8px; font-weight: 700; }
+.nav-modulos { display: flex; gap: 20px; flex-wrap: wrap; }
+.grupo-nav { display: flex; flex-direction: column; gap: 4px; }
+.grupo-nav-titulo { color: #656d76; font-size: 12px; }
+.grupo-nav a { color: #1f2328; text-decoration: none; font-size: 14px; }
+.grupo-nav a.activo { color: var(--primario); font-weight: 600; }
+.sesion { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
+.contenido { padding: 16px; }
