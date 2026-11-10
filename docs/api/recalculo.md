@@ -55,7 +55,7 @@ Ciclo en el motor → `409 CICLO_EN_DEPENDENCIAS`.
 | 35 | `CONSOLIDACION_COSTOS` | `PasoConsolidacionCostos` | A | en main |
 | 40 | `SOBREASIGNACION` | `PasoSobreasignacion` | B | en main |
 | 50 | `HITOS` | `PasoHitos` | B | registrado (B-16) |
-| 60 | `KPI` | — | B | reservado (B-12 / B-14 / B-17) |
+| 60 | `KPI` | `PasoKpi` | B | en main (KC-01…13 los inserta el recálculo; C-12) |
 
 No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTOS después de COSTOS.
 
@@ -104,10 +104,10 @@ No reordenar. COSTOS va después de las fechas de las hojas; CONSOLIDACION_COSTO
 
 ### 60 `KPI`
 
-- **Lee:** definiciones activas (globales y del proyecto), plan, costos, hitos, sobrecarga y solicitudes ya persistidos. Si faltan KP-01…KP-08, los inserta desde `db/seed/kpi-definiciones.json`. No inserta los KC.
-- **Escribe:** una fila nueva en `kpi_historico` por KPI activo (valor, cumplimiento, semáforo, motivo `RECALCULO`, fecha). Denominador 0 → «No calculable». Dos recálculos seguidos repiten los valores y suman otra tanda de filas.
-- **Lee (API):** `GET /api/proyectos/{id}/kpi` (último snapshot y alerta) y `GET /api/kpi/{id}/historico?proyectoId=`.
-- Tableros leen el histórico; no evalúan fórmulas.
+- **Lee:** definiciones activas (globales y del proyecto), plan, costos, hitos, sobrecarga y solicitudes ya persistidos. Si faltan KP-01…KP-08 o KC-01…KC-13, los inserta desde los catálogos (mismo contenido que `db/seed/kpi-definiciones.json`).
+- **Escribe:** una fila nueva en `kpi_historico` por KPI activo (valor, cumplimiento, semáforo, motivo `RECALCULO`, fecha). 21 filas por recálculo si están los dos catálogos. Denominador 0 → «No calculable». Dos recálculos seguidos repiten los valores y suman otra tanda de filas.
+- **Lee (API):** `GET /api/proyectos/{id}/kpi` (último snapshot y alerta) y `GET /api/kpi/{id}/historico?proyectoId=`. El tablero de cambio (`GET /api/tablero/cambio/{id}`) filtra categoría `CAMBIO`.
+- Tableros leen el histórico; no evalúan fórmulas ni llaman a este paso.
 
 ## Línea base
 

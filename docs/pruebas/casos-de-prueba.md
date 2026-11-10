@@ -6,7 +6,7 @@ Maven local ese día no corrió (`Flyway` no conectó a Postgres). Lo de abajo e
 
 ## Verificación del caso mínimo (rúbrica)
 
-El JSON trae el caso completo. El cargador (C-07 + C-11 + B-11) crea los hitos. Los KPI siguen sin servicio.
+El JSON trae el caso completo. El cargador (C-07 + C-11 + B-11) crea los hitos. Los KPI **no** los inserta el seed: los crea `KpiService` en el recálculo (C-12).
 
 | Elemento | Requerido | En el JSON | Cargado | OK |
 |---|---|---|---|---|
@@ -17,10 +17,10 @@ El JSON trae el caso completo. El cargador (C-07 + C-11 + B-11) crea los hitos. 
 | Profesionales | 5 | P1…P5 | 5 | Sí |
 | Tipos de recurso | 4 | Profesional, Equipamiento, Material, Servicio externo | 4 | Sí |
 | Hitos | 6 | H1…H6 | 6, `PENDIENTE`, sin fecha real (B-11) | Sí |
-| KPI de proyecto e hitos | 8 | KP-01…KP-08 | 0 (B-12/B-13) | No |
+| KPI de proyecto e hitos | 8 | KP-01…KP-08 | 0 en seed; 8 tras recálculo | Parcial |
 | Solicitudes de cambio | 5 | SC-001… en JSON → `SC-01`…`SC-05` | 5, `ABIERTO`, 10 etapas cada una | Sí |
-| KPI de gestión del cambio | 12 | 13 (KC-01…KC-13) | 0 (B-17) | No |
-| Tableros | 2 | — | 0 (`/tableros` texto pendiente B-21/C-12) | No |
+| KPI de gestión del cambio | 12 | 13 (KC-01…KC-13) | 0 en seed; 13 tras recálculo (C-12) | Parcial |
+| Tableros | 2 | — | 1 (`/tableros` cambio C-12; proyecto pendiente B-21) | Parcial |
 
 También cargado, fuera de esa tabla: 7 recursos no profesionales, 39 asignaciones, línea base v1, alerta P2 en 1.1.2, usuarios `admin@demo.cl` / `usuario@demo.cl`.
 
@@ -28,9 +28,9 @@ También cargado, fuera de esa tabla: 7 recursos no profesionales, 39 asignacion
 
 | ID | Acción | Resultado esperado (Gantt, costos, KPI, tableros) | Obtenido | Responsable |
 |---|---|---|---|---|
-| CP-01 | Cambiar duración de una hoja (A-18) | Sucesoras FS/FF se corren; SS/SF no; consolidación; línea base igual; costos si hay asignaciones; KPI y tablero de proyecto | Gantt y línea base: **sí** (E2E). Costos/KPI/tableros: **no medidos** (no hay KPI ni tablero) | A |
+| CP-01 | Cambiar duración de una hoja (A-18) | Sucesoras FS/FF se corren; SS/SF no; consolidación; línea base igual; costos si hay asignaciones; KPI y tablero de proyecto | Gantt y línea base: **sí** (E2E). Costos/KPI/tablero de proyecto: **no medidos** (B-21). Tablero de cambio: C-12 | A |
 | CP-02 | Modificar cantidad o recurso (B-18) | Costo plan/real; alerta de sobreasignación; KPI; tablero | Costos y alerta: **sí en backend** (B-08/B-09). E2E B-18 y KPI/tablero: **pendiente** | B |
-| CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | Aplicar TIEMPO y línea base: **sí en servicio** (C-09). E2E C-14, KPI y tablero: **pendiente**. Seed: 0 TIEMPO | C |
+| CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | Aplicar TIEMPO y línea base: **sí** (C-09). Tablero de cambio: **sí** (C-12). E2E C-14: **pendiente**. Seed: 0 TIEMPO | C |
 
 Capturas: no hay (`docs/pruebas/capturas/`). Van con el ensayo T-07.
 
@@ -65,7 +65,7 @@ Línea base igual. Volver a 5 d deja desviación 0. Ciclo B→A = 409 `CICLO_EN_
 |---|---|---|
 | `RecalculoDuracionE2ETest` (HTTP, como el Gantt) | 31 oct 2026 (CI del PR) | A/B/D se mueven; C/E no; `finBase` igual; ciclo 409 |
 | Manual Gantt sobre `EEC-2026` | — | No ejecutada en C-16 |
-| Costos / KPI / tableros | — | No hay aserción. KPI y tableros no existen |
+| Costos / KPI / tableros | — | Sin aserción en A-18. Tablero de cambio: C-12. Tablero de proyecto: B-21 |
 
 ---
 
@@ -79,7 +79,7 @@ Hoja **1.1.2**, P2 (Ingeniero de infraestructura, tarifa 32.000, capacidad 8) ca
 
 ### Esperado
 
-Costo plan = cantidad × tarifa: 1.440.000 → 1.280.000 CLP. Alerta si carga **>** capacidad (`PasoSobreasignacion`); a 8 h/día desaparece. Costo real sigue 0 si no hay `cantidadReal`. Fechas del Gantt no tienen por qué moverse. KPI y tablero: cuando existan.
+Costo plan = cantidad × tarifa: 1.440.000 → 1.280.000 CLP. Alerta si carga **>** capacidad (`PasoSobreasignacion`); a 8 h/día desaparece. Costo real sigue 0 si no hay `cantidadReal`. Fechas del Gantt no tienen por qué moverse. KPI: snapshot del recálculo. Tablero de proyecto: B-21.
 
 ### Obtenido
 
@@ -105,7 +105,7 @@ Test C-09: hoja 5 d, impacto +3, línea base fijada.
 
 ### Esperado
 
-Aprobar: estado `APROBADO`, plan igual. Aplicar TIEMPO (test): duración 5+3=8, `aplicada=true`, `EN_IMPLEMENTACION`, `finPlan` después, `finBase` igual. Aplicar no-TIEMPO: no llama a `CronogramaService`; solo marca aplicada. KPI de cambio y tablero: cuando existan.
+Aprobar: estado `APROBADO`, plan igual. Aplicar TIEMPO (test): duración 5+3=8, `aplicada=true`, `EN_IMPLEMENTACION`, `finPlan` después, `finBase` igual. Aplicar no-TIEMPO: no llama a `CronogramaService`; solo marca aplicada. Tablero de cambio: C-12 (GET; recargar a mano). KPI de cambio: snapshot del recálculo.
 
 ### Obtenido
 
@@ -115,6 +115,6 @@ Aprobar: estado `APROBADO`, plan igual. Aplicar TIEMPO (test): duración 5+3=8, 
 | `aplicarTiempoMueveElPlanYConservaLaLineaBase` | idem | `finPlan` avanza; bases igual |
 | `aplicarCostoNoMueveLaDuracion` | idem | duración 5 |
 | Seed 5 solicitudes no TIEMPO | C-11 | `SeedServiceTest` |
-| E2E C-14 sobre Gantt+KPI+tableros | — | No. KPI y tableros no existen |
+| E2E C-14 sobre Gantt+KPI+tableros | — | No (C-14). Tablero de cambio sí: `TableroCambioApiTest` |
 
 ADMIN aprueba; `USUARIO_PROYECTO` no (C-01).

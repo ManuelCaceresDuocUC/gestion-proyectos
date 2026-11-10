@@ -85,7 +85,7 @@ Frontend, en `frontend/src/`:
 - `types/`: tipos TypeScript que reflejan los JSON de la API.
 - `features/<modulo>/`: página y componentes (`proyectos/` y `gantt/` son los ejemplos). Estilos globales en `estilos.css`; clases reutilizables: `.boton`, `.tarjeta`, `.tabla`, `.error`, `.aviso`, `.etiqueta`, `.progreso`.
 - Permisos: `features/proyectos/permisos.ts` y `features/gantt/permisos.ts` permiten editar a ambos roles autenticados; `features/cambios/permisos.ts` `puedeAprobar()` solo ADMIN. Contrato: `docs/api/auth.md`.
-- Las rutas ya existen en `App.tsx` (`/recursos`, `/hitos`, `/kpi`, `/cambios`, `/tableros`) con páginas vacías: reemplaza el contenido de la tuya.
+- Las rutas ya existen en `App.tsx` (`/recursos`, `/hitos`, `/kpi`, `/cambios`, `/tableros`). `/kpi` sigue stub (B-15). `/tableros` muestra el de cambio (C-12) y un stub B-21.
 
 ## 6. Datos que ya existen en la base (V1–V22)
 Las tablas de tus módulos ya están creadas: `tipo_recurso`, `recurso`, `asignacion`, `hito`, `hito_tarea`, `kpi_definicion`, `kpi_variable`, `kpi_historico`,
@@ -101,14 +101,14 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 3. B-11: hitos (duración 0, asociados a tareas; no pueden ir antes de que terminen sus actividades). `PasoHitos` (50) queda en B-16.
 4. B-12/B-13/B-14: evaluador de KPI (fórmula en texto, variables, meta, umbrales, "No calculable" si el denominador es 0), los 8 KPI y el histórico (`PasoKpi`, 60).
 5. B-21: tablero de proyecto (recharts), leyendo lo ya calculado.
-6. Después: B-07 (calendario; ya existe `no_laborable` y el calendario en `planificacion/calendario`), B-10/B-15 (pantallas), B-17 (KPI de cambio).
+6. Después: B-07 (calendario; ya existe `no_laborable` y el calendario en `planificacion/calendario`), B-10/B-15 (pantallas). B-17 (KPI de cambio) está en `main`.
 
 **Dev C** — autenticación, gestión del cambio, tablero de cambio, seed, documentación
 1. C-03/C-04/C-08: solicitudes de cambio (CRUD, filtros), las 10 etapas del cambio y transiciones de estado con aprobar/rechazar.
 2. C-09: aplicar una solicitud aprobada (sección 4): cambia el plan por los servicios de A y dispara el recálculo; **es el recálculo 3 de la demo.**
 3. C-07/C-11: **seed** del caso mínimo. Recomendación: un `CommandLineRunner` activado por `APP_SEED_ENABLED` que cree los datos **usando los servicios** (`ProyectoService`, `TareaService`, `DependenciaService`, `LineaBaseService`), para que las fechas salgan del motor. `scripts/demo-gantt.ps1` muestra el orden: proyecto → EDT → dependencias → línea base.
 4. C-01: JWT y los roles `ADMIN` y `USUARIO_PROYECTO` (ADMIN administra usuarios, KPI y aprueba cambios). Hazlo en una rama aparte y actualiza las pruebas existentes.
-5. C-12: tablero de cambio (pide B-17). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están.
+5. C-12: tablero de cambio (esta rama; B-17 ya está en `main`). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están. C-13 espera B-21.
 
 ## 8. Flujo de trabajo (Git)
 - Una rama por issue o grupo corto: `feat/B-05-recursos`. PR pequeños y frecuentes; **el CI (backend y frontend) debe estar en verde**.

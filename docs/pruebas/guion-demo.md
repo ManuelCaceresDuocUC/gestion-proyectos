@@ -5,7 +5,7 @@ Duración objetivo: la que indique el profesor. Esta versión cabe en **~15 min*
 - **Caso:** proyecto seed `EEC-2026` «Habilitar un espacio de estudio colaborativo».
 - **Quién habla:** A = planificación y Gantt · B = recursos, costos y sobreasignación · C = cambio, auth y cierre.
 - **Entrar como** `admin@demo.cl` (`ADMIN`). Contraseña: `db/seed/caso-prueba.json` (no se dicta en voz alta).
-- **Tras cada recálculo** se mira Gantt y costos. Hitos: H1–H6 en Pendiente (`/hitos`). KPI y tableros: las rutas existen y dicen pendiente (B-15, B-21, C-12). No se inventan números.
+- **Tras cada recálculo** se mira Gantt y costos. Hitos: H1–H6 en Pendiente (`/hitos`). Tablero de cambio: `/tableros` (C-12). Administrador de KPI y tablero de proyecto: pendiente (B-15, B-21). No se inventan números.
 
 Especificación de los 3 recálculos: `docs/requerimientos.md` (C-02). Resultados: `docs/pruebas/casos-de-prueba.md` y A-18.
 
@@ -29,7 +29,7 @@ Esperar a que el API responda (`/api/health`). Front: el del compose o Vite. Si 
 | 0:45 | A | Proyectos → `EEC-2026` | Caso mínimo: 4 etapas, 12 actividades, 20 subactividades. EDT de 3 niveles; 1.4 es hoja. |
 | 2:00 | A | Gantt (`/gantt?id=…`) | Barras, dependencias FS/SS/FF/SF, línea base v1 (el seed la fija). Clic en una hoja: Plan vs Línea base. |
 | 3:30 | B | Recursos y costos | 4 tipos, 5 profesionales (P1…P5). En el proyecto: alerta de P2 en **1.1.2** (45 h / 5 días = 9 h/día > capacidad 8). Costo plan = cantidad × tarifa. |
-| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. En el detalle: evidencias (texto/URL, sin archivos) e historial. Hitos: H1–H6 en Pendiente. KPI / Tableros: pantallas pendientes (B-15, B-21, C-12). |
+| 5:00 | C | Cambios (elegir `EEC-2026`) | 5 solicitudes `SC-01`…`SC-05`, estado `ABIERTO`, 10 etapas en Pendiente. Tipos del seed: Tecnología u Organización; **ninguna es Tiempo**. En el detalle: evidencias (texto/URL, sin archivos) e historial. Hitos: H1–H6 en Pendiente. `/tableros`: conteos de cambio (C-12); el de proyecto dice pendiente B-21. Los KC salen tras un recálculo. |
 | 6:00 | A | **Recálculo 1** | Ver bloque abajo. |
 | 9:00 | B | **Recálculo 2** | Ver bloque abajo. |
 | 11:30 | C | **Recálculo 3** | Ver bloque abajo. |
@@ -44,7 +44,7 @@ Esperar a que el API responda (`/api/health`). Front: el del compose o Vite. Si 
 3. Sucesora en el seed: **FS a 1.2.1** (Priorizar requisitos). 1.2.1 ya espera a 1.1.1 (10 d) y no a 1.1.2 (5 d), así que 1.2.1 y la cadena FS se corren. Esta hoja **no** tiene SS/FF/SF: esos cuatro tipos se ven en A-18, no aquí.
 4. Línea base **igual**. El panel lista las tareas que movieron fechas; 1.1 y el proyecto consolidan.
 5. Costos: P1 24 h y P4 8 h × tarifa; **cantidad igual ⇒ costo plan igual**. Carga diaria baja (horas / 12 d).
-6. KPI y tableros: no hay números (B-13, B-21). `/kpi` y `/tableros` solo para decir que faltan.
+6. `/tableros`: el de cambio ya tiene conteos; los KC aparecen si el recálculo guardó snapshot. Tablero de proyecto: pendiente B-21. `/kpi` sin pantalla de administración (B-15).
 
 No usar 1.1.2 aquí: esa hoja es del recálculo 2.
 
@@ -76,7 +76,7 @@ Luego, en el detalle:
 2. **Enviar a evaluación** → estado `EN_EVALUACION`. El plan no cambia.
 3. **Aprobar** (solo ADMIN) → `APROBADO`. El plan **sigue igual**.
 4. **Aplicar al plan** (confirma: la línea base no cambia) → `EN_IMPLEMENTACION`, `aplicada=true`. TIEMPO: 3.1.1 pasa de 5 a **10** d; FS a **3.1.2** y **3.2.1**. Costo plan igual (cantidades P2 32 h y P5 8 h). Línea base igual.
-5. KPI de cambio y tablero de cambio: pendiente B-17 / C-12.
+5. `/tableros` (C-12): conteos; tras aplicar, recargar. Los KC salen del snapshot del recálculo (pueden ser 0 o «No calculable» si nadie está cerrado).
 
 Opcional, 20 s: aplicar un seed sin cambiar el tipo y leer el aviso: «Este tipo no mueve el Gantt».
 
@@ -86,9 +86,9 @@ Un solo `RecalculoService`. Nadie recalcula por su cuenta. Alta de proyecto no r
 
 | # | Qué se tocó | Gantt | Costos | Línea base | KPI / tableros |
 |---|---|---|---|---|---|
-| 1 | 1.1.1 de 10 a 12 d | 1.1.1 y cadena FS (1.2.1…) | Costo plan igual; carga diaria baja | Intacta | No hay UI |
-| 2 | P2 en 1.1.2: 45→40 h | Fechas iguales | Costo 1.440.000 → 1.280.000; alerta se apaga | Intacta | No hay UI |
-| 3 | Aplicar TIEMPO a 3.1.1 (+5 d) | 3.1.1 a 10 d; FS 3.1.2 y 3.2.1 | Costo plan igual | Intacta | No hay UI |
+| 1 | 1.1.1 de 10 a 12 d | 1.1.1 y cadena FS (1.2.1…) | Costo plan igual; carga diaria baja | Intacta | Recalcular y recargar `/tableros` (C-12). Tablero de proyecto: B-21 |
+| 2 | P2 en 1.1.2: 45→40 h | Fechas iguales | Costo 1.440.000 → 1.280.000; alerta se apaga | Intacta | Igual |
+| 3 | Aplicar TIEMPO a 3.1.1 (+5 d) | 3.1.1 a 10 d; FS 3.1.2 y 3.2.1 | Costo plan igual | Intacta | Recargar `/tableros` (C-13 automatiza el refresco) |
 
 Aprobar ≠ aplicar. Aplicar un no-TIEMPO no llama al recálculo de fechas.
 

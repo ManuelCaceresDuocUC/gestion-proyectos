@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Carga KP-01…KP-08, evalúa las definiciones activas y guarda el snapshot.
- * No inserta los KPI de cambio: si ya están en la base, se evalúan con {@code VariablesCambioService}.
+ * Carga KP-01…KP-08 y KC-01…KC-13, evalúa las definiciones activas y guarda el snapshot.
+ * Las definiciones de cambio se insertan en el recálculo, no en un GET.
  */
 @Service
 public class KpiService {
@@ -110,39 +110,73 @@ public class KpiService {
     @Transactional
     public void asegurarCatalogo() {
         for (CatalogoKpiProyecto.Item item : CatalogoKpiProyecto.todos()) {
-            KpiDefinicion definicion = definiciones.findByProyectoIdIsNullAndCodigo(item.codigo())
-                    .orElseGet(() -> crearDefinicion(item));
-            asegurarVariables(definicion, item);
+            asegurarDefinicion(
+                    item.codigo(), item.nombre(), item.categoria(), item.descripcion(),
+                    item.formula(), item.unidad(), item.sentido(), item.operador(),
+                    item.meta(), item.responsable());
+        }
+        for (CatalogoKpiCambio.Item item : CatalogoKpiCambio.todos()) {
+            asegurarDefinicion(
+                    item.codigo(), item.nombre(), item.categoria(), item.descripcion(),
+                    item.formula(), item.unidad(), item.sentido(), item.operador(),
+                    item.meta(), item.responsable());
         }
     }
 
-    private KpiDefinicion crearDefinicion(CatalogoKpiProyecto.Item item) {
+    private void asegurarDefinicion(
+            String codigo,
+            String nombre,
+            CategoriaKpi categoria,
+            String descripcion,
+            String formula,
+            String unidad,
+            SentidoKpi sentido,
+            OperadorMeta operador,
+            BigDecimal meta,
+            String responsable) {
+        KpiDefinicion definicion = definiciones.findByProyectoIdIsNullAndCodigo(codigo)
+                .orElseGet(() -> crearDefinicion(
+                        codigo, nombre, categoria, descripcion, formula, unidad, sentido, operador, meta, responsable));
+        asegurarVariables(definicion, formula);
+    }
+
+    private KpiDefinicion crearDefinicion(
+            String codigo,
+            String nombre,
+            CategoriaKpi categoria,
+            String descripcion,
+            String formula,
+            String unidad,
+            SentidoKpi sentido,
+            OperadorMeta operador,
+            BigDecimal meta,
+            String responsable) {
         KpiDefinicion definicion = new KpiDefinicion();
         definicion.proyectoId = null;
-        definicion.codigo = item.codigo();
-        definicion.nombre = item.nombre();
-        definicion.categoria = item.categoria();
-        definicion.descripcion = item.descripcion();
-        definicion.formula = item.formula();
-        definicion.unidad = item.unidad();
-        definicion.sentido = item.sentido();
-        definicion.operadorMeta = item.operador();
-        definicion.meta = item.meta();
+        definicion.codigo = codigo;
+        definicion.nombre = nombre;
+        definicion.categoria = categoria;
+        definicion.descripcion = descripcion;
+        definicion.formula = formula;
+        definicion.unidad = unidad;
+        definicion.sentido = sentido;
+        definicion.operadorMeta = operador;
+        definicion.meta = meta;
         definicion.metaMax = null;
         definicion.umbralVerde = BigDecimal.ONE;
         definicion.umbralAmarillo = new BigDecimal("0.8000");
-        definicion.responsable = item.responsable();
+        definicion.responsable = responsable;
         definicion.activo = true;
         return definiciones.saveAndFlush(definicion);
     }
 
     /** Crea los nombres de la fórmula que falten. No borra ni reescribe los que ya están. */
-    private void asegurarVariables(KpiDefinicion definicion, CatalogoKpiProyecto.Item item) {
+    private void asegurarVariables(KpiDefinicion definicion, String formula) {
         Set<String> presentes = new HashSet<>();
         for (KpiVariable variable : variables.findByKpiIdOrderByNombreAsc(definicion.id)) {
             presentes.add(variable.nombre);
         }
-        for (String nombre : FormulaKpi.nombres(item.formula())) {
+        for (String nombre : FormulaKpi.nombres(formula)) {
             if (presentes.contains(nombre)) {
                 continue;
             }

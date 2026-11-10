@@ -257,7 +257,7 @@ y `GET /api/tablero/cambio/{id}` (C-12). El layout compartido vive en `features/
 - Alertas: atrasados, desviaciones, riesgos críticos, etapas bloqueadas, KPI en rojo / meta incumplida.
 
 Dependencias de implementación: el tablero de proyecto pide B-14 y B-16; el de cambio pide B-17
-para los KPI. C-02 fija el *qué*; B-21 y C-12 el *cómo*.
+para los KPI (B-17 está en `main`; C-12 lee el snapshot, no evalúa fórmulas). C-02 fija el *qué*; B-21 y C-12 el *cómo*.
 
 ### Filtros (C-13)
 
