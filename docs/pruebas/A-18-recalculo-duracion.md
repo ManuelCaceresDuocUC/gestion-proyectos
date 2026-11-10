@@ -1,7 +1,7 @@
 # A-18 · Recálculo 1: cambiar una duración
 
 Corresponde al primer recálculo de la demo. La parte de planificación está automatizada en
-`RecalculoDuracionE2ETest`; los efectos en costos, KPI y tableros los completan B-18 y C-14 con sus módulos.
+`RecalculoDuracionE2ETest`; los efectos en costos, KPI y tableros del recálculo 1 los cierra B-18. El recálculo 3 (solicitud TIEMPO) es C-14 (`RecalculoSolicitudE2ETest`).
 
 ## Datos de entrada
 Proyecto con inicio lunes 2-nov-2026, una etapa y cinco tareas (días hábiles):
