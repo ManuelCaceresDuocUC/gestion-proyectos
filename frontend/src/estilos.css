@@ -39,6 +39,17 @@ input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid var
 .progreso > div { height: 100%; background: var(--ok); }
 .datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 16px; font-size: 14px; }
 .datos dt { color: #656d76; font-size: 12px; } .datos dd { margin: 0 0 4px; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; }
+.cifras .tarjeta { margin: 0; }
+.cifras .tarjeta strong { display: block; font-size: 1.35rem; margin-top: 4px; }
+.barra-estados { display: flex; height: 10px; border-radius: 6px; overflow: hidden; border: 1px solid var(--borde); margin: 8px 0 12px; }
+.barra-estados span { min-width: 0; }
+.lista-alertas { padding-left: 1.2rem; }
+.lista-alertas li { margin: 6px 0; }
+.semaforo-VERDE { background: #dafbe1; }
+.semaforo-AMARILLO { background: #fff8c5; }
+.semaforo-ROJO, .alerta-ATRASO, .alerta-BLOQUEO, .alerta-RIESGO_CRITICO, .alerta-KPI_ROJO { background: #ffebe9; }
+.semaforo-NULO { background: var(--fondo); }
 .edt ul { list-style: none; margin: 0; padding-left: 22px; }
 .edt > ul { padding-left: 0; }
 .nodo { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 6px; flex-wrap: wrap; }

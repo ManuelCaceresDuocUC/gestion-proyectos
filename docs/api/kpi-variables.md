@@ -1,7 +1,7 @@
 # Catálogo de variables de KPI (T-02)
 
 Acordado entre A, B y C. Las fórmulas del seed (`db/seed/kpi-definiciones.json`) solo pueden
-usar estos nombres. El paso `KPI` (orden 60, pendiente B) resuelve cada variable **del mismo
+usar estos nombres. El paso `KPI` (orden 60) resuelve cada variable **del mismo
 proyecto y período**; si un denominador queda 0, el KPI es «No calculable» (valor nulo, sin semáforo).
 
 El administrador de KPI (B-12 / B-15) no inventa nombres fuera de esta lista sin actualizar
@@ -74,5 +74,6 @@ hayan generado o no sus filas de etapa. Sin solicitudes el denominador es 0 y KC
 `accionCorrectiva` con texto (un blanco no cuenta). La solicitud suma una sola vez.
 
 KC-11…KC-13 siguen siendo los tres adicionales de `db/seed/kpi-definiciones.json`. El issue
-#88 no tiene respuesta del profesor; no hay ADR hasta consultarlo. El seed **no carga**
-estas definiciones hasta que exista `KpiService`.
+#88 no tiene respuesta del profesor; no hay ADR hasta consultarlo. El seed **no** inserta
+definiciones: las carga `KpiService.asegurarCatalogo()` en el recálculo (C-12). El tablero
+de cambio solo lee el snapshot.

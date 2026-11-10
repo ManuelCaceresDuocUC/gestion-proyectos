@@ -168,7 +168,7 @@ public final class VariablesCambio {
      * fin real − fin previsto; sin fin real y estado cerrado o rechazado, 0;
      * sin fin real en otro estado, hoy − fin previsto. Sin fin previsto, 0. Mínimo 0.
      */
-    static int diasAtraso(SolicitudCambio solicitud, LocalDate hoy) {
+    public static int diasAtraso(SolicitudCambio solicitud, LocalDate hoy) {
         if (solicitud.finPrevisto == null) {
             return 0;
         }

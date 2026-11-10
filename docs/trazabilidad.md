@@ -18,15 +18,15 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-REC-03 Costos planificados y reales | `planificacion.recalculo` (`PasoCostos`, `ConsolidadorEdt`) | `planificacion/recalculo/PasoCostosTest`, `ConsolidadorEdtTest` |
 | RF-REC-04 Sobreasignación de profesionales | `planificacion.recalculo` (`PasoSobreasignacion`); lista y marca en la tarea (B-10) | `planificacion/recalculo/PasoSobreasignacionTest`, `SobrecargaAlertaApiTest`, `seed/SeedServiceTest` |
 | RF-HIT-01, RF-HIT-02 Hitos y restricciones de logro | `hito` (`HitoService`); pantallas en `frontend/src/features/hitos` | `hito/HitoServiceTest`, `hito/HitoApiTest`, `hito/SemanaHitoTest`, `seed/SeedServiceTest` |
-| RF-KPI-01, RF-KPI-02 Configuración y evaluación de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
-| RF-KPI-03, RF-KPI-04, RF-KPI-05 Históricos y catálogo de KPI | `kpi` | Caso mínimo de `docs/pruebas/casos-de-prueba.md`; pendiente de módulo y prueba automatizada |
+| RF-KPI-01, RF-KPI-02 Configuración y evaluación de KPI | `kpi` (`EvaluadorKpi`, `PasoKpi`) | `kpi/EvaluadorKpiTest`, `kpi/PasoKpiTest`, `kpi/CatalogoKpiProyectoTest`, `kpi/CatalogoKpiCambioTest` |
+| RF-KPI-03, RF-KPI-04, RF-KPI-05 Históricos y catálogo de KPI | `kpi` (`KpiService`, `VariablesCambio`) | `kpi/PasoKpiTest`, `kpi/VariablesCambioTest`, `kpi/VariablesCambioServiceTest` |
 | RF-CAM-01 Alta y ficha de solicitud | `cambio` (`SolicitudCambioService`); front C-06/C-10 | `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |
 | RF-CAM-02 Filtros de solicitudes | `cambio` (listado); `features/cambios` | `cambio/SolicitudCambioServiceTest` (filtro estado/tipo/fechas), `cambio/SolicitudCambioApiTest` |
 | RF-CAM-03 10 etapas y avance | `cambio` (`CambioEtapaService`, `EtapasCambio`) | `cambio/CambioEtapaServiceTest`, `cambio/CambioEtapaApiTest`, `cambio/AvanceEtapasTest`, `cambio/DiasAtrasoTest` |
 | RF-CAM-04 Evidencias e historial | `cambio` (`EvidenciaService`, `SolicitudCambioService.historial`); front `TrazasCambio` | `cambio/TrazabilidadCambioApiTest`, `cambio/EvidenciaServiceTest`, `cambio/SolicitudCambioServiceTest` (escribe historial) |
 | RF-CAM-05 Aprobar, rechazar y aplicar | `cambio` + `cronograma` al aplicar TIEMPO | `cambio/TransicionesSolicitudTest`, `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |
 | RF-TAB-01 Tablero de proyecto | `features/tableros`; API `/api/tablero/proyecto/{id}` | Pendiente B-21 |
-| RF-TAB-02 Tablero de cambio | `features/tableros`; API `/api/tablero/cambio/{id}` | Pendiente C-12 (pide B-17 para KPI de cambio) |
+| RF-TAB-02 Tablero de cambio | `tablero` (`TableroCambioService`); front `features/tableros` | `tablero/TableroCambioTest`, `tablero/TableroCambioApiTest` |
 | RF-TAB-03 Filtros y refresco de ambos tableros | mismos módulos | Pendiente C-13 |
 | RF-INT-01 Roles ADMIN y USUARIO_PROYECTO | `auth`, `config` (JWT); login en `features/auth` | `auth/AuthApiTest`, `auth/AuthServiceTest`, `auth/JwtServiceTest` |
 | RF-INT-02 Persistencia relacional | Flyway + JPA | Cubierto por A-01 y el arranque con `ddl-auto=validate` |
@@ -34,6 +34,6 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-INT-04 Tres recálculos de la demo | `RecalculoService` + cambio | Duración: `integracion/RecalculoDuracionE2ETest` y A-18. Recursos: pendiente B-18. Solicitud: pendiente C-14. Guion: `docs/pruebas/guion-demo.md`. Casos: `docs/pruebas/casos-de-prueba.md` (C-16) |
 
 Cobertura documentada: R2 (proyectos y EDT), R3 (tiempos, recursos y costos), R4 (Gantt, precedencias e hitos),
-R5 (KPI, pendiente de módulo), R6 (solicitudes, etapas, evidencias, historial, aprobación y aplicar),
-R7 (tableros, pendiente B-21/C-12/C-13) y R8 (JWT C-01, seed, recálculo 1). Las filas marcadas como
+R5 (KPI de proyecto/hitos y de cambio), R6 (solicitudes, etapas, evidencias, historial, aprobación y aplicar),
+R7 (tablero de cambio C-12; pendiente B-21/C-13) y R8 (JWT C-01, seed, recálculo 1). Las filas marcadas como
 pendientes no se presentan como cobertura automatizada.

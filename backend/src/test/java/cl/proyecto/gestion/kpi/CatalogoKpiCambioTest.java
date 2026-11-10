@@ -27,11 +27,14 @@ class CatalogoKpiCambioTest {
         for (JsonNode nodo : lista) {
             CatalogoKpiCambio.Item item = CatalogoKpiCambio.porCodigo(nodo.get("codigo").asText());
             assertThat(item.nombre()).isEqualTo(nodo.get("nombre").asText());
+            assertThat(item.categoria().name()).isEqualTo(nodo.get("categoria").asText());
             assertThat(item.formula()).isEqualTo(nodo.get("formula").asText());
             assertThat(item.unidad()).isEqualTo(nodo.get("unidad").asText());
             assertThat(item.sentido().name()).isEqualTo(nodo.get("sentido").asText());
             assertThat(item.operador().name()).isEqualTo(nodo.get("operador_meta").asText());
             assertThat(item.meta()).isEqualByComparingTo(nodo.get("meta").decimalValue());
+            assertThat(item.responsable()).isEqualTo(nodo.get("responsable").asText());
+            assertThat(item.descripcion()).isEqualTo(nodo.get("descripcion").asText());
             if ("%".equals(item.unidad())) {
                 assertThat(item.formula()).doesNotContain("* 100");
             }

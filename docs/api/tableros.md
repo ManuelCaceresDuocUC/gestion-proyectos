@@ -1,37 +1,64 @@
-# API de tableros (esqueleto T-02 / B-21, C-12, C-13)
+# API de tableros (B-21, C-12, C-13)
 
-Pendiente de implementación. Los tableros **solo leen**. No recalculan.
-Contenido funcional: especificación C-02 en `docs/requerimientos.md`.
-El JSON de respuesta lo fijan B-21 y C-12 en sus PR; aquí van rutas y filtros.
+Los tableros **solo leen**. No llaman a `RecalculoService` ni insertan definiciones KPI.
+Especificación: `docs/requerimientos.md` (C-02). JWT. `404 NO_ENCONTRADO` si el proyecto no existe.
 
-JWT. `404` si el proyecto no existe.
+| Método | Ruta | Dueño | Estado |
+|---|---|---|---|
+| GET | `/tablero/proyecto/{proyectoId}` | B-21 | sin controlador |
+| GET | `/tablero/cambio/{proyectoId}` | C-12 | en `tablero/TableroCambioController` |
 
-## Rutas previstas
-
-| Método | Ruta | Dueño |
-|---|---|---|
-| GET | `/tablero/proyecto/{proyectoId}` | B-21 |
-| GET | `/tablero/cambio/{proyectoId}` | C-12 |
-
-Query (C-13 / guía):
+Filtros query (C-13, **no** están en C-12):
 
 | Tablero | Filtros |
 |---|---|
-| Proyecto | `etapaId`, `desde`, `hasta`, `responsableId` (el proyecto ya va en la URL) |
+| Proyecto | `etapaId`, `desde`, `hasta`, `responsableId` |
 | Cambio | `estado`, `prioridad`, `riesgo`, `responsableId` |
 
-Un cambio de filtro reconsulta; el cliente no agrega totales que el servidor ya mandó.
-Tras un recálculo o un cambio de solicitud, el front vuelve a pedir estos GET (C-13).
+Layout: `frontend/src/features/tableros`. Dos pantallas. `/tableros` muestra el de cambio (C-12) y un stub «Pendiente de implementar (B-21).».
 
-## Qué debe traer (sin esquema cerrado)
+## GET `/tablero/cambio/{proyectoId}` (C-12)
 
-**Proyecto:** avance real vs plan; hitos cumplidos / próximos / vencidos; costos plan, real y
-presupuesto; uso de recursos y sobreasignación; actividades atrasadas; KPI de proyecto/hitos
-con semáforo. Los KPI salen del histórico (paso 60), no se evalúan aquí.
+Autenticado (`ADMIN` y `USUARIO_PROYECTO`). Sin query. `401` sin token.
 
-**Cambio:** conteos por estado V21; en evaluación / implementación; cerrados; rechazados;
-atrasados; avance promedio de etapas; riesgos altos/críticos; costos de cerradas; adopción
-(etapa 10); efectividad (`resultadoEvaluacion`); alertas (atraso, bloqueo, KPI en rojo).
-KPI de cambio: B-17.
+`enCurso` = `EN_EVALUACION` + `EN_IMPLEMENTACION`. `porEstado` trae las seis claves V21, aunque el conteo sea 0.
+Atraso, bloqueo, correctiva y adopción usan las mismas reglas que `VariablesCambio` / `diasAtraso`.
+`kpi` son los mismos objetos que `GET /proyectos/{id}/kpi` (`KpiEstadoResponse` en [kpi.md](kpi.md)), filtrados a categoría `CAMBIO`. Vacío si todavía no corrió el paso 60.
 
-Layout compartido: `frontend/src/features/tableros`. Dos pantallas distintas.
+```json
+{
+  "proyectoId": 1,
+  "conteos": {
+    "total": 5,
+    "porEstado": {
+      "ABIERTO": 3,
+      "EN_EVALUACION": 1,
+      "APROBADO": 0,
+      "RECHAZADO": 0,
+      "EN_IMPLEMENTACION": 1,
+      "CERRADO": 0
+    },
+    "enCurso": 2,
+    "atrasados": 0,
+    "riesgoAlto": 2,
+    "riesgoCritico": 0,
+    "conBloqueo": 0,
+    "conCorrectiva": 0,
+    "adoptados": 0
+  },
+  "etapas": { "avancePromedio": 0 },
+  "costos": { "presupuestoCerradas": 0, "costoRealCerradas": 0 },
+  "tiempos": { "diasAtrasoTotal": 0, "diasAtrasoPromedio": 0.00 },
+  "efectividad": { "efectivo": 0, "parcial": 0, "noEfectivo": 0, "sinDato": 5 },
+  "alertas": [
+    { "tipo": "ATRASO", "mensaje": "…", "solicitudCodigo": "SC-01" }
+  ],
+  "kpi": []
+}
+```
+
+Alertas (no persistidas): `ATRASO`, `BLOQUEO`, `RIESGO_CRITICO`, `KPI_ROJO`.
+`solicitudCodigo` es nulo en las de KPI.
+
+El GET **no** aumenta `kpi_historico` ni llama a `asegurarCatalogo`.
+El front no suma lo que el servidor ya mandó. Recargar tras un recálculo es C-13.

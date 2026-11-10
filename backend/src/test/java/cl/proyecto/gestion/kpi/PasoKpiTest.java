@@ -46,6 +46,9 @@ import org.springframework.transaction.annotation.Transactional;
 @WithMockUser(roles = "ADMIN")
 class PasoKpiTest {
 
+    private static final int CATALOGO =
+            CatalogoKpiProyecto.todos().size() + CatalogoKpiCambio.todos().size();
+
     @Autowired MockMvc mvc;
     @Autowired PasoKpi paso;
     @Autowired RecalculoService recalculo;
@@ -72,13 +75,17 @@ class PasoKpiTest {
 
         assertThat(definiciones.findByProyectoIdIsNullAndActivoTrueOrderByCodigoAsc())
                 .extracting(d -> d.codigo)
-                .containsExactly("KP-01", "KP-02", "KP-03", "KP-04", "KP-05", "KP-06", "KP-07", "KP-08");
+                .containsExactly(
+                        "KC-01", "KC-02", "KC-03", "KC-04", "KC-05", "KC-06", "KC-07",
+                        "KC-08", "KC-09", "KC-10", "KC-11", "KC-12", "KC-13",
+                        "KP-01", "KP-02", "KP-03", "KP-04", "KP-05", "KP-06", "KP-07", "KP-08");
         KpiDefinicion kp01 = definiciones.findByProyectoIdIsNullAndCodigo("KP-01").orElseThrow();
         assertThat(kp01.meta).isNull();
         assertThat(variablesKpi.findByKpiIdOrderByNombreAsc(kp01.id))
                 .extracting(v -> v.nombre)
                 .containsExactly("AVANCE_REAL");
-        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(8);
+        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(CATALOGO);
+        assertThat(estado(proyecto.id, "KC-01").noCalculable()).isTrue();
 
         assertValor("KP-01", proyecto.id, "50.00", "0.5000", SemaforoKpi.ROJO);
         assertValor("KP-02", proyecto.id, "0.50", "0.5000", SemaforoKpi.ROJO);
@@ -95,7 +102,7 @@ class PasoKpiTest {
         assertThat(estado(proyecto.id, "KP-01").alertaMotivo()).isEqualTo(AlertaKpi.ROJO);
 
         paso.ejecutar(proyecto.id);
-        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(16);
+        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(CATALOGO * 2);
         assertThat(estado(proyecto.id, "KP-07").alerta()).isFalse();
         assertThat(ultimo("KP-01", proyecto.id).valor).isEqualByComparingTo("50.00");
 
@@ -105,15 +112,14 @@ class PasoKpiTest {
 
         assertValor("KP-07", proyecto.id, "10.00", "0.5000", SemaforoKpi.ROJO);
         assertThat(estado(proyecto.id, "KP-07").alertaMotivo()).isEqualTo(AlertaKpi.ROJO);
-        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(24);
+        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(CATALOGO * 3);
 
         mvc.perform(get("/api/proyectos/{id}/kpi", proyecto.id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(8))
-                .andExpect(jsonPath("$[6].codigo").value("KP-07"))
-                .andExpect(jsonPath("$[6].alertaMotivo").value(AlertaKpi.ROJO))
-                .andExpect(jsonPath("$[3].codigo").value("KP-04"))
-                .andExpect(jsonPath("$[3].motivo").value(KpiService.MOTIVO_RECALCULO));
+                .andExpect(jsonPath("$.length()").value(CATALOGO))
+                .andExpect(jsonPath("$[?(@.codigo=='KP-07')].alertaMotivo").value(org.hamcrest.Matchers.hasItem(AlertaKpi.ROJO)))
+                .andExpect(jsonPath("$[?(@.codigo=='KP-04')].motivo").value(org.hamcrest.Matchers.hasItem(KpiService.MOTIVO_RECALCULO)))
+                .andExpect(jsonPath("$[?(@.codigo=='KC-01')].categoria").value(org.hamcrest.Matchers.hasItem("CAMBIO")));
 
         mvc.perform(get("/api/kpi/{id}/historico", definicion("KP-07").id)
                         .param("proyectoId", proyecto.id.toString()))
@@ -141,7 +147,7 @@ class PasoKpiTest {
         paso.ejecutar(proyecto.id);
         mvc.perform(get("/api/proyectos/{id}/kpi", proyecto.id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(8));
+                .andExpect(jsonPath("$.length()").value(CATALOGO));
     }
 
     @Test
@@ -153,13 +159,13 @@ class PasoKpiTest {
         tareaService.crear(proyecto.id, new TareaRequest(etapa.id, "Hoja", null, 2, null, null));
 
         int despues = historicos.findByProyectoId(proyecto.id).size();
-        assertThat(despues).isGreaterThanOrEqualTo(8);
-        assertThat(despues % 8).isZero();
+        assertThat(despues).isGreaterThanOrEqualTo(CATALOGO);
+        assertThat(despues % CATALOGO).isZero();
         assertThat(historicos.findByProyectoId(proyecto.id))
                 .allMatch(fila -> KpiService.MOTIVO_RECALCULO.equals(fila.motivo));
 
         recalculo.recalcular(proyecto.id);
-        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(despues + 8);
+        assertThat(historicos.findByProyectoId(proyecto.id)).hasSize(despues + CATALOGO);
     }
 
     @Test
