@@ -70,3 +70,18 @@ input, select, textarea { font: inherit; padding: 6px 8px; border: 1px solid var
 .grupo-nav a.activo { color: var(--primario); font-weight: 600; }
 .sesion { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; }
 .contenido { padding: 16px; }
+.login-pantalla {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: var(--fondo);
+}
+.login-tarjeta { width: 100%; max-width: 400px; margin: 0; padding: 28px; }
+.login-tarjeta h1 { margin: 0 0 8px; font-size: 1.5rem; }
+.login-ayuda { margin: 0 0 16px; color: #656d76; font-size: 14px; }
+.login-clave { display: flex; gap: 8px; align-items: stretch; }
+.login-clave input { flex: 1; min-width: 0; }
+.login-clave .boton { flex: none; }
+.login-enviar { width: 100%; margin-top: 8px; padding: 8px 12px; }
