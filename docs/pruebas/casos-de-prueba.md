@@ -29,10 +29,10 @@ También cargado, fuera de esa tabla: 7 recursos no profesionales, 39 asignacion
 | ID | Acción | Resultado esperado (Gantt, costos, KPI, tableros) | Obtenido | Responsable |
 |---|---|---|---|---|
 | CP-01 | Cambiar duración de una hoja (A-18) | Sucesoras FS/FF se corren; SS/SF no; consolidación; línea base igual; costos si hay asignaciones; KPI y tablero de proyecto | Gantt y línea base: **sí** (E2E). Tableros: **sí** API (B-21, C-12, C-13). Costos/KPI en A-18: **no asertados** | A |
-| CP-02 | Modificar cantidad o recurso (B-18) | Costo plan/real; alerta de sobreasignación; KPI; tablero | Costos y alerta: **sí en backend** (B-08/B-09). E2E B-18 y KPI/tablero: **pendiente** | B |
+| CP-02 | Modificar cantidad o recurso (B-18) | Costo plan/real; alerta de sobreasignación; KPI; tablero | E2E HTTP y UI del seed, 10 nov 2026. Hoja 1.440.000→1.280.000; proyecto 20.488.000→20.328.000; alerta se apaga; KP-08 = 0; KP-03 no calculable. Capturas en `docs/pruebas/capturas/` | B |
 | CP-03 | Aprobar y aplicar una solicitud **TIEMPO** (C-14). Las 5 del seed no son TIEMPO | Aprobar no mueve. Aplicar suma días, `EN_IMPLEMENTACION`, `aplicada=true`; Gantt; línea base igual; KPI de cambio; tablero de cambio | **sí** E2E HTTP (`RecalculoSolicitudE2ETest`, 10 nov 2026). Seed: 0 TIEMPO. Capturas: T-07 | C |
 
-Capturas: no hay (`docs/pruebas/capturas/`). Van con el ensayo T-07.
+Capturas de CP-02: `docs/pruebas/capturas/cp-02-*.png`. El resto sigue para el ensayo T-07.
 
 ---
 
@@ -87,7 +87,31 @@ Costo plan = cantidad × tarifa: 1.440.000 → 1.280.000 CLP. Alerta si carga **
 |---|---|---|
 | `PasoCostosTest`, `PasoSobreasignacionTest`, API de asignaciones | en `main` (B-08/B-09) | Costos y alertas en backend |
 | Seed: P2 en 1.1.2 dispara alerta | `SeedServiceTest` (si hay asignaciones) | Nombre «Ingeniero de infraestructura» |
-| E2E B-18, KPI, tableros, corrida 45→40 en UI | — | No |
+| `RecalculoRecursosE2ETest` | 10 nov 2026 | 1 prueba, 0 fallos. Ver comando abajo |
+| UI seed `EEC-2026`, P2 en 1.1.2, 45→40 h | 10 nov 2026 | Costo de la hoja $1.440.000→$1.280.000; tablero $20.488.000→$20.328.000, 1 de 5→0 de 5; KP-08 = 0 VERDE; KP-03 no calculable. Fechas 07-09-2026→11-09-2026. Capturas abajo. Seed devuelto a 45 h |
+
+Comando, desde `backend/`:
+
+```text
+mvn -q test -Dtest=RecalculoRecursosE2ETest
+```
+
+Surefire: `Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.28 s`.
+
+El test crea un proyecto aislado (hoja de 5 días, profesional tarifa 32.000 y capacidad 8), hace `POST /api/asignaciones` con 45 h y luego `PUT` a 40 h. Compara el snapshot anterior con el posterior, no solo contra constantes:
+
+- Costo plan de la asignación, de la hoja y del proyecto: 1.440.000,00 → 1.280.000,00. El tablero (`costos.plan`) coincide con el proyecto en cada momento. Costo real 0 en asignación, hoja, proyecto y tablero, igual antes y después.
+- Alertas: lista no vacía → vacía. `recursos.sobreasignados` del tablero: mayor que 0 → 0.
+- KP-08 calculable en ambos lados; el valor de después es menor que el de antes y compara igual a 0 (la escala del JSON no se fija en el test). El histórico de KP-08 suma una fila: la última es el valor nuevo y la anterior es el valor previo. El KPI del tablero coincide con `GET /api/proyectos/{id}/kpi`.
+- KP-03 (`VALOR_GANADO / COSTO_REAL`) queda `noCalculable: true` en los dos estados. El CPI no cambia porque `cantidadReal` sigue en 0: la API de asignaciones no recibe cantidad real y el costo real no sale de cero, así que el denominador es 0.
+- `inicioPlan` y `finPlan` de la hoja, y `fechaFinPlan` del proyecto, iguales antes y después del `PUT`.
+
+Capturas del 10 nov 2026, con la imagen de Docker reconstruida (`GET /api/tablero/cambio/1344` = 200). Seed `EEC-2026`, hoja 1.1.2, P2 de 45 h a 40 h por la pantalla de la EDT, y luego la cantidad se devolvió a 45 para dejar el caso como al inicio:
+
+- `docs/pruebas/capturas/cp-02-recursos-antes.png`: alerta, 9 h frente a 8 h, tarea 1.1.2.
+- `docs/pruebas/capturas/cp-02-recursos-despues.png`: «Ningún profesional supera su capacidad diaria.»
+- `docs/pruebas/capturas/cp-02-tablero-antes.png`: 1 de 5, plan $20.488.000, filas de 9 h.
+- `docs/pruebas/capturas/cp-02-tablero-despues.png`: 0 de 5, plan $20.328.000, sin filas. En la misma página, KP-03 «No calculable» y KP-08 = 0 VERDE.
 
 ---
 
