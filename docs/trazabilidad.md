@@ -25,9 +25,9 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 | RF-CAM-03 10 etapas y avance | `cambio` (`CambioEtapaService`, `EtapasCambio`) | `cambio/CambioEtapaServiceTest`, `cambio/CambioEtapaApiTest`, `cambio/AvanceEtapasTest`, `cambio/DiasAtrasoTest` |
 | RF-CAM-04 Evidencias e historial | `cambio` (`EvidenciaService`, `SolicitudCambioService.historial`); front `TrazasCambio` | `cambio/TrazabilidadCambioApiTest`, `cambio/EvidenciaServiceTest`, `cambio/SolicitudCambioServiceTest` (escribe historial) |
 | RF-CAM-05 Aprobar, rechazar y aplicar | `cambio` + `cronograma` al aplicar TIEMPO | `cambio/TransicionesSolicitudTest`, `cambio/SolicitudCambioServiceTest`, `cambio/SolicitudCambioApiTest` |
-| RF-TAB-01 Tablero de proyecto | `features/tableros`; API `/api/tablero/proyecto/{id}` | Pendiente B-21 |
+| RF-TAB-01 Tablero de proyecto | `tablero` (`TableroProyectoService`); front `features/tableros` | `tablero/TableroProyectoApiTest` |
 | RF-TAB-02 Tablero de cambio | `tablero` (`TableroCambioService`); front `features/tableros` | `tablero/TableroCambioTest`, `tablero/TableroCambioApiTest` |
-| RF-TAB-03 Filtros y refresco de ambos tableros | mismos módulos | Pendiente C-13 |
+| RF-TAB-03 Filtros y refresco de ambos tableros | `tablero` (`FiltroTablero`); front `TablerosPagina` | `tablero/FiltroTableroTest`, `tablero/TableroCambioApiTest`, `tablero/TableroProyectoApiTest` |
 | RF-INT-01 Roles ADMIN y USUARIO_PROYECTO | `auth`, `config` (JWT); login en `features/auth` | `auth/AuthApiTest`, `auth/AuthServiceTest`, `auth/JwtServiceTest` |
 | RF-INT-02 Persistencia relacional | Flyway + JPA | Cubierto por A-01 y el arranque con `ddl-auto=validate` |
 | RF-INT-03 Seed del caso mínimo | `seed` (`SeedService`) | `seed/SeedServiceTest`, `seed/CasoPruebaLectorTest`, `seed/SeedMapeoTest` |
@@ -35,5 +35,5 @@ Las pruebas automatizadas están en `backend/src/test/java/cl/proyecto/gestion/`
 
 Cobertura documentada: R2 (proyectos y EDT), R3 (tiempos, recursos y costos), R4 (Gantt, precedencias e hitos),
 R5 (KPI de proyecto/hitos y de cambio), R6 (solicitudes, etapas, evidencias, historial, aprobación y aplicar),
-R7 (tablero de cambio C-12; pendiente B-21/C-13) y R8 (JWT C-01, seed, recálculo 1). Las filas marcadas como
+R7 (tableros B-21/C-12 y filtros C-13) y R8 (JWT C-01, seed, recálculo 1). Las filas marcadas como
 pendientes no se presentan como cobertura automatizada.

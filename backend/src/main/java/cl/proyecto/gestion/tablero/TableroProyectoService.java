@@ -1,8 +1,11 @@
 package cl.proyecto.gestion.tablero;
 
+import cl.proyecto.gestion.common.ApiException;
 import cl.proyecto.gestion.hito.EstadoHito;
 import cl.proyecto.gestion.hito.Hito;
 import cl.proyecto.gestion.hito.HitoRepository;
+import cl.proyecto.gestion.hito.HitoTarea;
+import cl.proyecto.gestion.hito.HitoTareaRepository;
 import cl.proyecto.gestion.kpi.CategoriaKpi;
 import cl.proyecto.gestion.kpi.KpiEstadoResponse;
 import cl.proyecto.gestion.kpi.KpiService;
@@ -27,12 +30,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Lectura del tablero de proyecto (B-21). No recalcula ni evalúa fórmulas.
+ * Lectura del tablero de proyecto (B-21 / C-13). No recalcula ni evalúa fórmulas.
+ * Los query recortan hitos, atrasos y alertas; avance, costos y KPI siguen siendo del proyecto.
  */
 @Service
 public class TableroProyectoService {
@@ -42,6 +48,7 @@ public class TableroProyectoService {
     private final ProyectoService proyectos;
     private final TareaRepository tareas;
     private final HitoRepository hitos;
+    private final HitoTareaRepository vinculos;
     private final VariablesProyectoService mediciones;
     private final SobrecargaAlertaService sobrecargas;
     private final KpiService kpi;
@@ -50,12 +57,14 @@ public class TableroProyectoService {
             ProyectoService proyectos,
             TareaRepository tareas,
             HitoRepository hitos,
+            HitoTareaRepository vinculos,
             VariablesProyectoService mediciones,
             SobrecargaAlertaService sobrecargas,
             KpiService kpi) {
         this.proyectos = proyectos;
         this.tareas = tareas;
         this.hitos = hitos;
+        this.vinculos = vinculos;
         this.mediciones = mediciones;
         this.sobrecargas = sobrecargas;
         this.kpi = kpi;
@@ -63,29 +72,57 @@ public class TableroProyectoService {
 
     @Transactional(readOnly = true)
     public TableroProyectoResponse obtener(Long proyectoId) {
+        return obtener(proyectoId, null, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public TableroProyectoResponse obtener(
+            Long proyectoId, Long etapaId, LocalDate desde, LocalDate hasta, Long responsableId) {
         LocalDate hoy = LocalDate.now();
         Proyecto proyecto = proyectos.obtener(proyectoId);
+        List<Tarea> edt = tareas.findByProyectoId(proyectoId);
+        Set<Long> rama = ramaDe(etapaId, edt);
         VariablesProyecto.Medicion medicion = mediciones.deProyecto(proyectoId, hoy);
         return new TableroProyectoResponse(
                 proyecto.id,
                 proyecto.codigo,
                 proyecto.nombre,
                 new Avance(proyecto.avance, puntos(medicion.valores().get(VariablesProyecto.AVANCE_PLAN))),
-                clasificarHitos(proyectoId, hoy),
+                clasificarHitos(proyectoId, hoy, rama, desde, hasta, responsableId),
                 new Costos(proyecto.costoPlan, proyecto.costoReal, proyecto.presupuesto, proyecto.moneda),
                 new Recursos(
                         entero(medicion, VariablesProyecto.PROFESIONALES_TOTAL),
                         entero(medicion, VariablesProyecto.PROFESIONALES_SOBREASIGNADOS),
-                        sobrecargas.listar(proyectoId)),
-                actividadesAtrasadas(proyectoId, hoy),
+                        FiltroTablero.alertas(sobrecargas.listar(proyectoId), rama, desde, hasta, responsableId)),
+                actividadesAtrasadas(edt, hoy, rama, desde, hasta, responsableId),
                 kpiDeProyectoEHitos(proyectoId));
     }
 
-    private Hitos clasificarHitos(Long proyectoId, LocalDate hoy) {
+    private static Set<Long> ramaDe(Long etapaId, List<Tarea> edt) {
+        if (etapaId == null) {
+            return null;
+        }
+        Set<Long> rama = FiltroTablero.rama(etapaId, edt);
+        if (rama.isEmpty()) {
+            throw ApiException.noEncontrado("No existe la etapa " + etapaId + " en el proyecto.");
+        }
+        return rama;
+    }
+
+    private Hitos clasificarHitos(
+            Long proyectoId, LocalDate hoy, Set<Long> rama, LocalDate desde, LocalDate hasta, Long responsableId) {
+        List<Hito> lista = hitos.findByProyectoIdOrderByFechaPlanAscCodigoAsc(proyectoId);
+        List<Long> ids = lista.stream().map(h -> h.id).toList();
+        Map<Long, List<Long>> tareasPorHito = ids.isEmpty()
+                ? Map.of()
+                : vinculos.findByHitoIdIn(ids).stream()
+                        .collect(Collectors.groupingBy(
+                                v -> v.hitoId, Collectors.mapping(v -> v.tareaId, Collectors.toList())));
+        lista = FiltroTablero.hitos(lista, rama, desde, hasta, responsableId, tareasPorHito);
         List<HitoResumen> cumplidos = new ArrayList<>();
         List<HitoResumen> proximos = new ArrayList<>();
         List<HitoResumen> vencidos = new ArrayList<>();
-        for (Hito hito : hitos.findByProyectoIdOrderByFechaPlanAscCodigoAsc(proyectoId)) {
+        for (Hito hito : lista) {
             HitoResumen resumen = new HitoResumen(
                     hito.id, hito.codigo, hito.logro, hito.fechaPlan, hito.fechaReal, hito.estado.name());
             if (hito.estado == EstadoHito.CUMPLIDO) {
@@ -99,8 +136,8 @@ public class TableroProyectoService {
         return new Hitos(cumplidos, proximos, vencidos);
     }
 
-    private List<ActividadAtrasada> actividadesAtrasadas(Long proyectoId, LocalDate hoy) {
-        List<Tarea> edt = tareas.findByProyectoId(proyectoId);
+    private List<ActividadAtrasada> actividadesAtrasadas(
+            List<Tarea> edt, LocalDate hoy, Set<Long> rama, LocalDate desde, LocalDate hasta, Long responsableId) {
         Set<Long> conHijos = new HashSet<>();
         for (Tarea tarea : edt) {
             if (tarea.parentId != null) {
@@ -109,7 +146,8 @@ public class TableroProyectoService {
         }
         List<ActividadAtrasada> atrasadas = new ArrayList<>();
         for (Tarea tarea : edt) {
-            if (VariablesProyecto.hojaAtrasada(conHijos.contains(tarea.id), tarea.finPlan, tarea.avance, hoy)) {
+            if (VariablesProyecto.hojaAtrasada(conHijos.contains(tarea.id), tarea.finPlan, tarea.avance, hoy)
+                    && FiltroTablero.tareaPasa(tarea, rama, desde, hasta, responsableId)) {
                 atrasadas.add(new ActividadAtrasada(
                         tarea.id, tarea.codigo, tarea.nombre, tarea.finPlan, tarea.avance));
             }

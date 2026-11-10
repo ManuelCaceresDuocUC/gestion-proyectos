@@ -5,22 +5,33 @@ Especificación: `docs/requerimientos.md` (C-02). JWT. `404 NO_ENCONTRADO` si el
 
 | Método | Ruta | Dueño | Estado |
 |---|---|---|---|
-| GET | `/tablero/proyecto/{proyectoId}` | B-21 | en `tablero/TableroProyectoController` |
-| GET | `/tablero/cambio/{proyectoId}` | C-12 | en `tablero/TableroCambioController` |
+| GET | `/tablero/proyecto/{proyectoId}` | B-21, query C-13 | en `tablero/TableroProyectoController` |
+| GET | `/tablero/cambio/{proyectoId}` | C-12, query C-13 | en `tablero/TableroCambioController` |
 
-Filtros query (C-13). **Ni B-21 ni C-12 los leen**: si vienen en el GET, la respuesta no cambia.
+## Filtros query (C-13)
 
-| Tablero | Filtros |
-|---|---|
-| Proyecto | `etapaId`, `desde`, `hasta`, `responsableId` |
-| Cambio | `estado`, `prioridad`, `riesgo`, `responsableId` |
+Query opcional. Ausente o nulo = tablero entero. Varios a la vez: AND.
+La forma del JSON no cambia: mismas claves; listas y conteos salen del subconjunto.
 
-Un cambio de filtro reconsulta; el cliente no agrega totales que el servidor ya mandó.
-Tras un recálculo o un cambio de solicitud, el front vuelve a pedir estos GET (C-13).
+| Tablero | Query | Recorta | No recorta |
+|---|---|---|---|
+| Proyecto | `etapaId`, `desde`, `hasta`, `responsableId` | hitos, `actividadesAtrasadas`, `recursos.alertas` | `avance`, `costos`, `recursos.profesionales`, `recursos.sobreasignados`, `kpi` |
+| Cambio | `estado`, `prioridad`, `riesgo`, `responsableId` | solicitudes (y con ellas conteos, etapas, costos, tiempos, efectividad, alertas) | `kpi` (snapshot de categoría `CAMBIO`) |
 
-Layout: `frontend/src/features/tableros`. Dos pantallas. `/tableros` muestra las dos, con un solo selector de proyecto.
+`etapaId`: id de un nodo de la EDT de ese proyecto (el front manda etapas). Si no está en esa EDT: `404 NO_ENCONTRADO`.
+Con etapa, un hito entra si alguna fila de `hito_tarea` cae en esa rama; sin vínculo a la EDT queda fuera.
+`desde` / `hasta` (`yyyy-MM-dd`, inclusive): hitos por `fechaPlan`; atrasos por `finPlan`; alertas de sobrecarga por `fecha`. Fecha nula no pasa el rango.
+`responsableId` de proyecto: hitos y hojas por `responsable_id`; alertas por `recursoId`.
+Enum inválido (`estado`, `prioridad`, `riesgo`): `400 PARAMETRO_INVALIDO`.
 
-## GET `/tablero/proyecto/{proyectoId}`
+Un GET no escribe histórico. El front no suma. Un cambio de filtro reconsulta.
+Tras un recálculo o un cambio de solicitud, `/tableros` vuelve a pedir los GET al volver a la pestaña (`visibilitychange`). No hay polling.
+
+Layout: `frontend/src/features/tableros`. `/tableros` muestra las dos, un selector de proyecto y los filtros.
+
+## GET `/tablero/proyecto/{proyectoId}` (B-21)
+
+Query C-13 opcional: recorta hitos, atrasos y `recursos.alertas`. `avance`, `costos`, conteos de profesionales y `kpi` siguen siendo del proyecto entero.
 
 Una sola fecha `hoy` (el día del servidor) clasifica hitos y actividades atrasadas y entra
 en la medición de avance planificado. No se persiste nada.
@@ -121,7 +132,7 @@ Cada elemento de `alertas` es el mismo objeto que `GET /proyectos/{id}/sobreasig
 
 ## GET `/tablero/cambio/{proyectoId}` (C-12)
 
-Autenticado (`ADMIN` y `USUARIO_PROYECTO`). Sin query. `401` sin token.
+Autenticado (`ADMIN` y `USUARIO_PROYECTO`). Query C-13 opcional. `401` sin token.
 
 `enCurso` = `EN_EVALUACION` + `EN_IMPLEMENTACION`. `porEstado` trae las seis claves V21, aunque el conteo sea 0.
 Atraso, bloqueo, correctiva y adopción usan las mismas reglas que `VariablesCambio` / `diasAtraso`.
@@ -163,4 +174,4 @@ Alertas (no persistidas): `ATRASO`, `BLOQUEO`, `RIESGO_CRITICO`, `KPI_ROJO`.
 `solicitudCodigo` es nulo en las de KPI.
 
 El GET **no** aumenta `kpi_historico` ni llama a `asegurarCatalogo`.
-El front no suma lo que el servidor ya mandó. Recargar tras un recálculo es C-13.
+El front no suma lo que el servidor ya mandó. Tras un recálculo, volver a la pestaña (C-13).

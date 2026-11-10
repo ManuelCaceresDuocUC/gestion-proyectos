@@ -13,6 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import cl.proyecto.gestion.hito.EstadoHito;
 import cl.proyecto.gestion.hito.Hito;
 import cl.proyecto.gestion.hito.HitoRepository;
+import cl.proyecto.gestion.hito.HitoTarea;
+import cl.proyecto.gestion.hito.HitoTareaRepository;
 import cl.proyecto.gestion.kpi.CategoriaKpi;
 import cl.proyecto.gestion.kpi.KpiDefinicion;
 import cl.proyecto.gestion.kpi.KpiDefinicionRepository;
@@ -30,6 +32,11 @@ import cl.proyecto.gestion.proyecto.ProyectoService;
 import cl.proyecto.gestion.proyecto.Tarea;
 import cl.proyecto.gestion.proyecto.TareaRepository;
 import cl.proyecto.gestion.proyecto.TipoTarea;
+import cl.proyecto.gestion.recurso.Recurso;
+import cl.proyecto.gestion.recurso.RecursoRequest;
+import cl.proyecto.gestion.recurso.RecursoService;
+import cl.proyecto.gestion.recurso.TipoRecursoRequest;
+import cl.proyecto.gestion.recurso.TipoRecursoService;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -54,6 +61,9 @@ class TableroProyectoApiTest {
     @Autowired ProyectoRepository proyectoRepo;
     @Autowired TareaRepository tareas;
     @Autowired HitoRepository hitos;
+    @Autowired HitoTareaRepository vinculos;
+    @Autowired TipoRecursoService tipos;
+    @Autowired RecursoService recursos;
     @Autowired KpiDefinicionRepository definiciones;
     @Autowired KpiHistoricoRepository historicos;
     @MockitoSpyBean RecalculoService recalculo;
@@ -95,11 +105,7 @@ class TableroProyectoApiTest {
         long snapshots = historicos.count();
 
         clearInvocations(recalculo, kpi);
-        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id)
-                        .param("etapaId", "1")
-                        .param("desde", "2026-01-01")
-                        .param("hasta", "2026-12-31")
-                        .param("responsableId", "9"))
+        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.codigo").value("B21-TAB"))
                 .andExpect(jsonPath("$.avance.real").value(33.00))
@@ -127,6 +133,79 @@ class TableroProyectoApiTest {
         verify(kpi, never()).registrarSnapshot(anyLong());
     }
 
+    @Test
+    void filtrosRecortanListasYNoTocanAvanceNiKpi() throws Exception {
+        LocalDate hoy = LocalDate.now();
+        Proyecto proyecto = proyectos.crear(new ProyectoRequest(
+                "B21-FIL", "Filtros", null, null, null,
+                new BigDecimal("1500.00"), "CLP", "LMXJV", LocalDate.of(2026, 1, 5)));
+        proyecto.avance = new BigDecimal("33.00");
+        proyectoRepo.save(proyecto);
+
+        Recurso ana = profesional("Ana");
+        Recurso luis = profesional("Luis");
+
+        Tarea etapa1 = tarea(proyecto.id, null, TipoTarea.ETAPA, "1", "Etapa 1", hoy.minusDays(3), new BigDecimal("10.00"));
+        Tarea act1 = tarea(proyecto.id, etapa1.id, TipoTarea.ACTIVIDAD, "1.1", "Act 1",
+                hoy.minusDays(2), new BigDecimal("20.00"));
+        Tarea hoja1 = tarea(proyecto.id, act1.id, TipoTarea.SUBACTIVIDAD, "1.1.1", "Hoja 1",
+                hoy.minusDays(1), new BigDecimal("40.00"));
+        hoja1.responsableId = ana.id;
+        tareas.save(hoja1);
+
+        Tarea etapa2 = tarea(proyecto.id, null, TipoTarea.ETAPA, "2", "Etapa 2", hoy.minusDays(3), new BigDecimal("10.00"));
+        Tarea act2 = tarea(proyecto.id, etapa2.id, TipoTarea.ACTIVIDAD, "2.1", "Act 2",
+                hoy.minusDays(2), new BigDecimal("20.00"));
+        Tarea hoja2 = tarea(proyecto.id, act2.id, TipoTarea.SUBACTIVIDAD, "2.1.1", "Hoja 2",
+                hoy.minusDays(1), new BigDecimal("40.00"));
+        hoja2.responsableId = luis.id;
+        tareas.save(hoja2);
+
+        Hito hOk = hito(proyecto.id, "H-OK", EstadoHito.CUMPLIDO, hoy.minusDays(5), hoy.minusDays(4));
+        hOk.responsableId = ana.id;
+        hitos.save(hOk);
+        vincular(hOk.id, act1.id);
+        Hito hOtra = hito(proyecto.id, "H-2", EstadoHito.PENDIENTE, hoy.minusDays(1), null);
+        hOtra.responsableId = luis.id;
+        hitos.save(hOtra);
+        vincular(hOtra.id, act2.id);
+
+        definicion(proyecto.id, "KP-FIL", CategoriaKpi.PROYECTO, new BigDecimal("12.3400"), SemaforoKpi.VERDE);
+
+        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id).param("etapaId", String.valueOf(etapa1.id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.avance.real").value(33.00))
+                .andExpect(jsonPath("$.actividadesAtrasadas.length()").value(1))
+                .andExpect(jsonPath("$.actividadesAtrasadas[0].codigo").value("1.1.1"))
+                .andExpect(jsonPath("$.hitos.cumplidos[*].codigo", hasItem("H-OK")))
+                .andExpect(jsonPath("$.hitos.vencidos[*].codigo", not(hasItem("H-2"))))
+                .andExpect(jsonPath("$.kpi[*].codigo", hasItem("KP-FIL")));
+
+        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id).param("responsableId", String.valueOf(ana.id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.actividadesAtrasadas.length()").value(1))
+                .andExpect(jsonPath("$.actividadesAtrasadas[0].codigo").value("1.1.1"))
+                .andExpect(jsonPath("$.hitos.cumplidos[*].codigo", hasItem("H-OK")))
+                .andExpect(jsonPath("$.hitos.vencidos.length()").value(0));
+
+        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id)
+                        .param("desde", hoy.minusDays(2).toString())
+                        .param("hasta", hoy.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hitos.cumplidos.length()").value(0))
+                .andExpect(jsonPath("$.hitos.vencidos[*].codigo", hasItem("H-2")));
+    }
+
+    @Test
+    void etapaInexistenteEs404() throws Exception {
+        Proyecto proyecto = proyectos.crear(new ProyectoRequest(
+                "B21-404", "Sin etapa", null, null, null,
+                BigDecimal.ZERO, "CLP", "LMXJV", LocalDate.of(2026, 1, 5)));
+        mvc.perform(get("/api/tablero/proyecto/{id}", proyecto.id).param("etapaId", "999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.codigo").value("NO_ENCONTRADO"));
+    }
+
     private Tarea tarea(Long proyectoId, Long parentId, TipoTarea tipo, String codigo, String nombre,
                         LocalDate finPlan, BigDecimal avance) {
         Tarea tarea = new Tarea();
@@ -143,7 +222,7 @@ class TableroProyectoApiTest {
         return tareas.save(tarea);
     }
 
-    private void hito(Long proyectoId, String codigo, EstadoHito estado, LocalDate fechaPlan, LocalDate fechaReal) {
+    private Hito hito(Long proyectoId, String codigo, EstadoHito estado, LocalDate fechaPlan, LocalDate fechaReal) {
         Hito hito = new Hito();
         hito.proyectoId = proyectoId;
         hito.codigo = codigo;
@@ -151,7 +230,20 @@ class TableroProyectoApiTest {
         hito.estado = estado;
         hito.fechaPlan = fechaPlan;
         hito.fechaReal = fechaReal;
-        hitos.save(hito);
+        return hitos.save(hito);
+    }
+
+    private Recurso profesional(String nombre) {
+        var tipo = tipos.crear(new TipoRecursoRequest("Prof-" + System.nanoTime(), "hora"));
+        return recursos.crear(new RecursoRequest(
+                tipo.id, nombre, new BigDecimal("25000.00"), new BigDecimal("8.0"), true));
+    }
+
+    private void vincular(Long hitoId, Long tareaId) {
+        HitoTarea vinculo = new HitoTarea();
+        vinculo.hitoId = hitoId;
+        vinculo.tareaId = tareaId;
+        vinculos.save(vinculo);
     }
 
     private void definicion(Long proyectoId, String codigo, CategoriaKpi categoria,
