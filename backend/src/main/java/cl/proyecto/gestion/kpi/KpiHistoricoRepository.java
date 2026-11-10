@@ -10,4 +10,6 @@ public interface KpiHistoricoRepository extends JpaRepository<KpiHistorico, Long
     List<KpiHistorico> findTop2ByKpiIdAndProyectoIdOrderByCalculadoEnDescIdDesc(Long kpiId, Long proyectoId);
 
     List<KpiHistorico> findByProyectoId(Long proyectoId);
+
+    long countByKpiId(Long kpiId);
 }
