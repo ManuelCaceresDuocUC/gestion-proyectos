@@ -48,15 +48,26 @@ function Grafico({ titulo, datos, color }: {
   );
 }
 
-/** Tablero de proyecto (B-21). Si recibe `proyectoId`, el selector lo pone la página compartida. */
-export default function TableroProyecto({ proyectoId: proyectoFijo }: { proyectoId?: string }) {
+/** Tablero de proyecto (B-21). En `/tableros` la página manda `datos` (C-13). */
+export default function TableroProyecto({
+  proyectoId: proyectoFijo,
+  datos,
+  cargando: cargandoExterno = false,
+}: {
+  proyectoId?: string;
+  datos?: TableroProyecto | null;
+  cargando?: boolean;
+}) {
+  const controlado = datos !== undefined;
   const embebido = proyectoFijo !== undefined;
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [proyectoPropio, setProyectoPropio] = useState("");
   const proyectoId = embebido ? proyectoFijo : proyectoPropio;
-  const [tablero, setTablero] = useState<TableroProyecto | null>(null);
+  const [tableroInterno, setTableroInterno] = useState<TableroProyecto | null>(null);
   const [error, setError] = useState("");
-  const [cargando, setCargando] = useState(false);
+  const [cargandoInterno, setCargandoInterno] = useState(false);
+  const tablero = controlado ? datos ?? null : tableroInterno;
+  const cargando = controlado ? cargandoExterno : cargandoInterno;
 
   useEffect(() => {
     if (embebido) return;
@@ -68,22 +79,23 @@ export default function TableroProyecto({ proyectoId: proyectoFijo }: { proyecto
   }, [embebido]);
 
   useEffect(() => {
+    if (controlado) return;
     if (!proyectoId) {
-      setTablero(null);
+      setTableroInterno(null);
       return;
     }
     let vigente = true;
-    setCargando(true);
+    setCargandoInterno(true);
     tablerosApi.proyecto(Number(proyectoId))
-      .then((datos) => {
+      .then((respuesta) => {
         if (!vigente) return;
-        setTablero(datos);
+        setTableroInterno(respuesta);
         setError("");
       })
       .catch((e) => { if (vigente) setError(mensajeDe(e)); })
-      .finally(() => { if (vigente) setCargando(false); });
+      .finally(() => { if (vigente) setCargandoInterno(false); });
     return () => { vigente = false; };
-  }, [proyectoId]);
+  }, [proyectoId, controlado]);
 
   return (
     <section>
@@ -102,7 +114,7 @@ export default function TableroProyecto({ proyectoId: proyectoFijo }: { proyecto
       )}
       {error && <p className="error" role="alert">{error}</p>}
       {!proyectoId && !embebido && <p className="vacio">Elija un proyecto para ver su tablero.</p>}
-      {proyectoId && cargando && <p className="vacio">Cargando tablero…</p>}
+      {proyectoId && cargando && !controlado && <p className="vacio">Cargando tablero…</p>}
       {tablero && (
         <>
           <Grafico

@@ -10,6 +10,7 @@ import cl.proyecto.gestion.cambio.CambioEtapa;
 import cl.proyecto.gestion.cambio.CambioEtapaRepository;
 import cl.proyecto.gestion.cambio.EstadoEtapa;
 import cl.proyecto.gestion.cambio.EstadoSolicitud;
+import cl.proyecto.gestion.cambio.PrioridadSolicitud;
 import cl.proyecto.gestion.cambio.RiesgoSolicitud;
 import cl.proyecto.gestion.cambio.SolicitudCambio;
 import cl.proyecto.gestion.cambio.SolicitudCambioRepository;
@@ -21,6 +22,11 @@ import cl.proyecto.gestion.kpi.KpiHistoricoRepository;
 import cl.proyecto.gestion.kpi.PasoKpi;
 import cl.proyecto.gestion.proyecto.ProyectoRequest;
 import cl.proyecto.gestion.proyecto.ProyectoService;
+import cl.proyecto.gestion.recurso.Recurso;
+import cl.proyecto.gestion.recurso.RecursoRequest;
+import cl.proyecto.gestion.recurso.RecursoService;
+import cl.proyecto.gestion.recurso.TipoRecursoRequest;
+import cl.proyecto.gestion.recurso.TipoRecursoService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +53,8 @@ class TableroCambioApiTest {
     @Autowired KpiHistoricoRepository historicos;
     @Autowired KpiDefinicionRepository definiciones;
     @Autowired PasoKpi pasoKpi;
+    @Autowired TipoRecursoService tipos;
+    @Autowired RecursoService recursos;
 
     Long proyectoId;
 
@@ -145,10 +153,63 @@ class TableroCambioApiTest {
                 .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
     }
 
+    @Test
+    void filtrosRecortanConteosYDejanElSnapshotKpi() throws Exception {
+        Recurso r1 = profesional("Ana");
+        Recurso r2 = profesional("Luis");
+        SolicitudCambio abierta = cambios.crear(proyectoId, alta("Abierta", RiesgoSolicitud.CRITICO));
+        abierta.prioridad = PrioridadSolicitud.ALTA;
+        abierta.responsableId = r1.id;
+        solicitudes.save(abierta);
+
+        SolicitudCambio cerrada = cambios.crear(proyectoId, alta("Cerrada", RiesgoSolicitud.ALTO));
+        cerrada.estado = EstadoSolicitud.CERRADO;
+        cerrada.prioridad = PrioridadSolicitud.BAJA;
+        cerrada.responsableId = r2.id;
+        solicitudes.save(cerrada);
+
+        pasoKpi.ejecutar(proyectoId);
+
+        mvc.perform(get("/api/tablero/cambio/{id}", proyectoId).param("estado", "ABIERTO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteos.total").value(1))
+                .andExpect(jsonPath("$.conteos.porEstado.ABIERTO").value(1))
+                .andExpect(jsonPath("$.conteos.porEstado.CERRADO").value(0))
+                .andExpect(jsonPath("$.kpi.length()").value(13));
+
+        mvc.perform(get("/api/tablero/cambio/{id}", proyectoId).param("riesgo", "ALTO"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteos.total").value(1))
+                .andExpect(jsonPath("$.conteos.riesgoAlto").value(1))
+                .andExpect(jsonPath("$.conteos.riesgoCritico").value(0));
+
+        mvc.perform(get("/api/tablero/cambio/{id}", proyectoId).param("prioridad", "BAJA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteos.total").value(1));
+
+        mvc.perform(get("/api/tablero/cambio/{id}", proyectoId).param("responsableId", String.valueOf(r1.id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conteos.total").value(1))
+                .andExpect(jsonPath("$.conteos.porEstado.ABIERTO").value(1));
+    }
+
+    @Test
+    void filtroInvalidoEs400() throws Exception {
+        mvc.perform(get("/api/tablero/cambio/{id}", proyectoId).param("estado", "NO_EXISTE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("PARAMETRO_INVALIDO"));
+    }
+
     private void etapa(Long solicitudId, int numero, EstadoEtapa estado) {
         CambioEtapa e = etapas.findBySolicitudIdAndNumero(solicitudId, (short) numero).orElseThrow();
         e.estado = estado;
         etapas.save(e);
+    }
+
+    private Recurso profesional(String nombre) {
+        var tipo = tipos.crear(new TipoRecursoRequest("Prof-" + System.nanoTime(), "hora"));
+        return recursos.crear(new RecursoRequest(
+                tipo.id, nombre, new BigDecimal("25000.00"), new BigDecimal("8.0"), true));
     }
 
     private static SolicitudCambioRequest alta(String nombre, RiesgoSolicitud riesgo) {

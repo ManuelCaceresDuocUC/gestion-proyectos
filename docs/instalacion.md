@@ -94,7 +94,7 @@ Pantalla: **Ingreso** (`/login`) → Correo / Contraseña → **Ingresar**.
 3. **Cambios**: elige ese proyecto; 5 solicitudes `SC-01`…`SC-05`.
 4. **Recursos y costos**: alerta de P2 en la hoja 1.1.2.
 
-**Hitos**: elija `EEC-2026`; deben aparecer H1–H6 en Pendiente. `/tableros`: tablero de cambio (C-12); el de proyecto dice pendiente B-21. Los KC aparecen tras un recálculo. Admin de KPI: pendiente B-15. No es un fallo de instalación.
+**Hitos**: elija `EEC-2026`; deben aparecer H1–H6 en Pendiente. `/tableros`: los dos tableros (proyecto B-21 y cambio C-12); filtros C-13. Los KC aparecen tras un recálculo. Admin de KPI: pendiente B-15. No es un fallo de instalación.
 
 Detalle del seed: `db/seed/README.md`.
 

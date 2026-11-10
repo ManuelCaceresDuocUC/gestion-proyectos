@@ -85,7 +85,7 @@ Frontend, en `frontend/src/`:
 - `types/`: tipos TypeScript que reflejan los JSON de la API.
 - `features/<modulo>/`: página y componentes (`proyectos/` y `gantt/` son los ejemplos). Estilos globales en `estilos.css`; clases reutilizables: `.boton`, `.tarjeta`, `.tabla`, `.error`, `.aviso`, `.etiqueta`, `.progreso`.
 - Permisos: `features/proyectos/permisos.ts` y `features/gantt/permisos.ts` permiten editar a ambos roles autenticados; `features/cambios/permisos.ts` `puedeAprobar()` solo ADMIN. Contrato: `docs/api/auth.md`.
-- Las rutas ya existen en `App.tsx` (`/recursos`, `/hitos`, `/kpi`, `/cambios`, `/tableros`). `/kpi` sigue stub (B-15). `/tableros` muestra el de cambio (C-12) y un stub B-21.
+- Las rutas ya existen en `App.tsx` (`/recursos`, `/hitos`, `/kpi`, `/cambios`, `/tableros`). `/kpi` sigue stub (B-15). `/tableros` muestra proyecto (B-21) y cambio (C-12); filtros y refresco al volver a la pestaña (C-13).
 
 ## 6. Datos que ya existen en la base (V1–V22)
 Las tablas de tus módulos ya están creadas: `tipo_recurso`, `recurso`, `asignacion`, `hito`, `hito_tarea`, `kpi_definicion`, `kpi_variable`, `kpi_historico`,
@@ -108,7 +108,7 @@ Los issues completos están en el tablero de GitHub (pestaña Projects). Orden r
 2. C-09: aplicar una solicitud aprobada (sección 4): cambia el plan por los servicios de A y dispara el recálculo; **es el recálculo 3 de la demo.**
 3. C-07/C-11: **seed** del caso mínimo. Recomendación: un `CommandLineRunner` activado por `APP_SEED_ENABLED` que cree los datos **usando los servicios** (`ProyectoService`, `TareaService`, `DependenciaService`, `LineaBaseService`), para que las fechas salgan del motor. `scripts/demo-gantt.ps1` muestra el orden: proyecto → EDT → dependencias → línea base.
 4. C-01: JWT y los roles `ADMIN` y `USUARIO_PROYECTO` (ADMIN administra usuarios, KPI y aprueba cambios). Hazlo en una rama aparte y actualiza las pruebas existentes.
-5. C-12: tablero de cambio (esta rama; B-17 ya está en `main`). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están. C-13 espera B-21.
+5. C-12: tablero de cambio (en `main`; B-17 ya está). Evidencias e historial: C-05 (`docs/api/cambios.md`). C-16 y C-17 ya están. C-13 (esta rama): filtros query y refresco al volver a `/tableros`. C-14 después del merge.
 
 ## 8. Flujo de trabajo (Git)
 - Una rama por issue o grupo corto: `feat/B-05-recursos`. PR pequeños y frecuentes; **el CI (backend y frontend) debe estar en verde**.

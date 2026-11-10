@@ -2,6 +2,9 @@ package cl.proyecto.gestion.tablero;
 
 import cl.proyecto.gestion.cambio.CambioEtapa;
 import cl.proyecto.gestion.cambio.CambioEtapaRepository;
+import cl.proyecto.gestion.cambio.EstadoSolicitud;
+import cl.proyecto.gestion.cambio.PrioridadSolicitud;
+import cl.proyecto.gestion.cambio.RiesgoSolicitud;
 import cl.proyecto.gestion.cambio.SolicitudCambio;
 import cl.proyecto.gestion.cambio.SolicitudCambioRepository;
 import cl.proyecto.gestion.kpi.CategoriaKpi;
@@ -16,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * C-12: arma el tablero de cambio leyendo solicitudes, etapas e histórico KPI.
- * No llama al recálculo ni inserta definiciones.
+ * C-12 / C-13: arma el tablero de cambio leyendo solicitudes, etapas e histórico KPI.
+ * Los query recortan solicitudes; el snapshot KPI no se filtra. No recalcula.
  */
 @Service
 public class TableroCambioService {
@@ -40,13 +43,35 @@ public class TableroCambioService {
 
     @Transactional(readOnly = true)
     public TableroCambioResponse deProyecto(Long proyectoId) {
-        return deProyecto(proyectoId, LocalDate.now());
+        return deProyecto(proyectoId, null, null, null, null, LocalDate.now());
+    }
+
+    @Transactional(readOnly = true)
+    public TableroCambioResponse deProyecto(
+            Long proyectoId,
+            EstadoSolicitud estado,
+            PrioridadSolicitud prioridad,
+            RiesgoSolicitud riesgo,
+            Long responsableId) {
+        return deProyecto(proyectoId, estado, prioridad, riesgo, responsableId, LocalDate.now());
     }
 
     @Transactional(readOnly = true)
     public TableroCambioResponse deProyecto(Long proyectoId, LocalDate hoy) {
+        return deProyecto(proyectoId, null, null, null, null, hoy);
+    }
+
+    @Transactional(readOnly = true)
+    public TableroCambioResponse deProyecto(
+            Long proyectoId,
+            EstadoSolicitud estado,
+            PrioridadSolicitud prioridad,
+            RiesgoSolicitud riesgo,
+            Long responsableId,
+            LocalDate hoy) {
         proyectos.obtener(proyectoId);
-        List<SolicitudCambio> lista = solicitudes.findByProyectoId(proyectoId);
+        List<SolicitudCambio> lista = FiltroTablero.solicitudes(
+                solicitudes.findByProyectoId(proyectoId), estado, prioridad, riesgo, responsableId);
         List<Long> ids = lista.stream().map(s -> s.id).toList();
         Map<Long, List<CambioEtapa>> porSolicitud = ids.isEmpty()
                 ? Map.of()
