@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ganttApi } from "../../api/gantt";
+import { hitosApi } from "../../api/hitos";
 import { dependenciasApi, edtApi, proyectosApi } from "../../api/planificacion";
 import { sobreasignacionesApi } from "../../api/recursos";
 import type { ComparacionPlan } from "../../types/gantt";
+import type { Hito } from "../../types/hitos";
 import type { CambioFecha, DependenciaDto, NodoEdt, Proyecto } from "../../types/planificacion";
 import type { AlertaSobreasignacion } from "../../types/recursos";
 import { fecha, mensajeDe } from "../proyectos/formato";
@@ -26,6 +28,7 @@ export default function GanttVista() {
   const [comparacion, setComparacion] = useState<ComparacionPlan | null>(null);
   const [dependencias, setDependencias] = useState<DependenciaDto[]>([]);
   const [alertas, setAlertas] = useState<AlertaSobreasignacion[]>([]);
+  const [hitos, setHitos] = useState<Hito[]>([]);
   const [escala, setEscala] = useState<Escala>("DIA");
   const [hoy, setHoy] = useState(hoyIso());
   const [plegados, setPlegados] = useState<Set<number>>(new Set());
@@ -49,6 +52,8 @@ export default function GanttVista() {
       setArbol(a);
       setComparacion(c);
       setDependencias(d);
+      // Los hitos son registros propios (módulo Hitos), no tareas de la EDT: si fallan, el Gantt sigue.
+      setHitos(await hitosApi.listar(id).catch(() => []));
       try {
         setAlertas(await sobreasignacionesApi.listar(id));
         setError("");
@@ -126,7 +131,7 @@ export default function GanttVista() {
 
           <p className="g-leyenda">
             <span className="g-l g-l-barra" /> Plan <span className="g-l g-l-avance" /> Avance <span className="g-l g-l-base" /> Línea base{" "}
-            <span className="g-l g-l-atrasada" /> Atrasada <span className="g-l g-l-hito" /> Hito <span className="g-l g-l-hoy" /> Hoy
+            <span className="g-l g-l-atrasada" /> Atrasada <span className="g-l g-l-hito" /> Hito{hitos.length > 0 ? ` (${hitos.length} registrados)` : ""} <span className="g-l g-l-hoy" /> Hoy
             {comparacion?.versionLineaBase == null ? " · Aún no hay línea base." : ` · Línea base v${comparacion.versionLineaBase}`}
             {comparacion?.resumen.desviacionFinDias != null && comparacion.resumen.desviacionFinDias !== 0 &&
               ` · Fin del proyecto ${comparacion.resumen.desviacionFinDias > 0 ? "+" : ""}${comparacion.resumen.desviacionFinDias} d vs base (${fecha(comparacion.resumen.finPlan)})`}
@@ -152,10 +157,16 @@ export default function GanttVista() {
                     )}
                   </div>
                 ))}
+                {hitos.map((h) => (
+                  <div key={`h-${h.id}`} style={{ height: ALTO_FILA, paddingLeft: 6 }} className="g-item g-item-hito" title={h.logro}>
+                    <span className="g-plegar">◆</span>
+                    <span className="g-codigo">{h.codigo}</span> {h.logro}
+                  </div>
+                ))}
               </div>
               <div className="g-area">
                 <GanttGrafico filas={filas} dependencias={dependencias} escala={escala} hoy={hoy}
-                  seleccionada={seleccionada} alSeleccionar={setSeleccionada} />
+                  seleccionada={seleccionada} alSeleccionar={setSeleccionada} hitos={hitos} />
               </div>
             </div>
           )}

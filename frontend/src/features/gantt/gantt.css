@@ -32,3 +32,7 @@
 .g-l-atrasada { background: #ff8182; } .g-l-hito { background: #8250df; width: 8px; transform: rotate(45deg); } .g-l-hoy { background: #cf222e; width: 2px; height: 12px; }
 .g-panel { margin-top: 12px; }
 .g-dep { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--borde); font-size: 13px; flex-wrap: wrap; }
+.g-item-hito { cursor: default; color: #6639ba; }
+.g-fila-hito { fill: #f6f0ff80; cursor: default; }
+.g-hito-cumplido { fill: #1a7f37; }
+.g-hito-incumplido { fill: #cf222e; }

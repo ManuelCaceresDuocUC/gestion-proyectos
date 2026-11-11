@@ -1,3 +1,4 @@
+import type { Hito } from "../../types/hitos";
 import type { DependenciaDto } from "../../types/planificacion";
 import { PX_DIA, aDia, diaDelMes, diaSemana, etiquetaCorta, nombreMes } from "./escala";
 import type { Escala } from "./escala";
@@ -14,12 +15,14 @@ interface Props {
   hoy: string;
   seleccionada: number | null;
   alSeleccionar: (id: number) => void;
+  /** Hitos del módulo Hitos: se dibujan como filas propias bajo la EDT. */
+  hitos?: Hito[];
 }
 
 interface Tramo { x1: number; x2: number }
 
 /** Diagrama de Gantt en SVG: barras jerárquicas, avance, línea base, atrasos, hitos, dependencias y marcador de hoy. */
-export default function GanttGrafico({ filas, dependencias, escala, hoy, seleccionada, alSeleccionar }: Props) {
+export default function GanttGrafico({ filas, dependencias, escala, hoy, seleccionada, alSeleccionar, hitos = [] }: Props) {
   const px = PX_DIA[escala];
 
   const dias: number[] = [aDia(hoy)];
@@ -28,10 +31,15 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
       if (v) dias.push(aDia(v));
     }
   }
+  for (const h of hitos) {
+    for (const v of [h.fechaPlan, h.fechaBase, h.fechaReal]) {
+      if (v) dias.push(aDia(v));
+    }
+  }
   const primero = Math.min(...dias) - 3;
   const ultimo = Math.max(...dias) + 4;
   const ancho = (ultimo - primero + 1) * px;
-  const alto = ALTO_ENCABEZADO + filas.length * ALTO_FILA;
+  const alto = ALTO_ENCABEZADO + (filas.length + hitos.length) * ALTO_FILA;
   const xDe = (dia: number) => (dia - primero) * px;
   const xHoy = xDe(aDia(hoy)) + px / 2;
 
@@ -106,6 +114,10 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
           className={f.nodo.id === seleccionada ? "g-fila g-fila-sel" : "g-fila"} onClick={() => alSeleccionar(f.nodo.id)} />
       ))}
 
+      {hitos.map((h, i) => (
+        <rect key={`fh-${h.id}`} x={0} y={ALTO_ENCABEZADO + (filas.length + i) * ALTO_FILA} width={ancho} height={ALTO_FILA} className="g-fila g-fila-hito" />
+      ))}
+
       {/* barras */}
       {filas.map((f, i) => {
         const y = ALTO_ENCABEZADO + i * ALTO_FILA;
@@ -142,6 +154,28 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
             {c?.inicioReal && (
               <rect x={xDe(aDia(c.inicioReal))} y={y + 2} height={3} className="g-real"
                 width={Math.max(2, xDe(aDia(c.finReal ?? hoy) + 1) - xDe(aDia(c.inicioReal)))}><title>Ejecución real</title></rect>
+            )}
+          </g>
+        );
+      })}
+
+      {/* hitos del módulo Hitos: rombo en la fecha planificada, rombo gris en la línea base */}
+      {hitos.map((h, i) => {
+        const y = ALTO_ENCABEZADO + (filas.length + i) * ALTO_FILA;
+        const cy = y + ALTO_FILA / 2;
+        const estado = h.estado === "CUMPLIDO" ? "g-hito-cumplido" : h.estado === "NO_CUMPLIDO" ? "g-hito-incumplido" : "";
+        const detalle = `${h.codigo} ${h.logro} · plan ${h.fechaPlan ?? "sin fecha"}`
+          + (h.fechaBase ? ` · base ${h.fechaBase}` : "") + (h.fechaReal ? ` · real ${h.fechaReal}` : "") + ` · ${h.estado}`;
+        return (
+          <g key={`h-${h.id}`}>
+            {h.fechaBase && (
+              <rect x={xDe(aDia(h.fechaBase)) + px / 2 - 4} y={cy + 4} width={8} height={8} className="g-base"
+                transform={`rotate(45 ${xDe(aDia(h.fechaBase)) + px / 2} ${cy + 8})`}><title>Línea base</title></rect>
+            )}
+            {h.fechaPlan && (
+              <rect x={xDe(aDia(h.fechaPlan)) + px / 2 - 7} y={cy - 7} width={14} height={14}
+                transform={`rotate(45 ${xDe(aDia(h.fechaPlan)) + px / 2} ${cy})`}
+                className={`g-hito ${estado}`.trim()}><title>{detalle}</title></rect>
             )}
           </g>
         );
