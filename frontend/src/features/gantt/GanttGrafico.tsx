@@ -164,6 +164,26 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
         );
       })}
 
+      {/* enlaces punteados: del término de cada actividad asociada hasta el rombo de su hito */}
+      {renglones.map((r, p) => {
+        if (r.tipo !== "hito" || !r.hito.fechaPlan) return null;
+        const xh = xDe(aDia(r.hito.fechaPlan)) + px / 2;
+        const yh = ALTO_ENCABEZADO + p * ALTO_FILA + ALTO_FILA / 2;
+        return r.hito.actividades.map((a) => {
+          const tramo = tramos.get(a.id);
+          const pos = filaDe.get(a.id);
+          if (!tramo || pos === undefined) return null;
+          const ya = ALTO_ENCABEZADO + pos * ALTO_FILA + ALTO_FILA / 2;
+          const arriba = ya < yh;
+          const xa = Math.min(tramo.x2, xh);
+          return (
+            <path key={`e-${r.hito.id}-${a.id}`} d={`M${xa},${ya} H${xh} V${arriba ? yh - 10 : yh + 10}`} className="g-enlace-hito">
+              <title>{`${a.codigo} → ${r.hito.codigo}`}</title>
+            </path>
+          );
+        });
+      })}
+
       {/* hitos del módulo Hitos: rombo en la fecha planificada, rombo gris en la línea base */}
       {renglones.map((r, p) => {
         if (r.tipo !== "hito") return null;
