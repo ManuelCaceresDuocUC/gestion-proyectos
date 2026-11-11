@@ -1,0 +1,9 @@
+.imp-previa { max-height: 420px; overflow: auto; border: 1px solid var(--borde); border-radius: 6px; }
+.imp-previa .tabla th { position: sticky; top: 0; background: var(--fondo); z-index: 1; }
+.imp-nombre { white-space: nowrap; }
+.imp-tipo-1 { font-weight: 600; }
+.imp-aviso-celda { color: #9a6700; font-size: 12px; }
+.imp-barra { height: 10px; border: 1px solid var(--borde); border-radius: 6px; overflow: hidden; background: var(--fondo); margin: 8px 0; }
+.imp-barra > div { height: 100%; background: var(--primario); transition: width .15s; }
+.imp-lista { margin: 6px 0 0; padding-left: 1.2rem; font-size: 14px; }
+.imp-lista li { margin: 3px 0; }

@@ -18,6 +18,7 @@ const menu: GrupoMenu[] = [
     entradas: [
       { ruta: "/proyectos", texto: "Proyectos" },
       { ruta: "/gantt", texto: "Gantt" },
+      { ruta: "/importar", texto: "Importar Excel" },
     ],
   },
   {

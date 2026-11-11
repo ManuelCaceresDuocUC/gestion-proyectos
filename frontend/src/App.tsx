@@ -7,6 +7,7 @@ import KpiPagina from "./features/kpi/KpiPagina";
 import HitosPagina from "./features/hitos/HitosPagina";
 import CambiosPagina from "./features/cambios/CambiosPagina";
 import TablerosPagina from "./features/tableros/TablerosPagina";
+import ImportarPagina from "./features/importacion/ImportarPagina";
 import { LayoutApp, PaginaNoEncontrada } from "./layout/LayoutApp";
 import { SesionRequerida, SoloAdmin } from "./layout/guardas";
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/recursos" element={<RecursosPagina />} />
           <Route path="/hitos" element={<HitosPagina />} />
           <Route path="/cambios" element={<CambiosPagina />} />
+          <Route path="/importar" element={<ImportarPagina />} />
           <Route path="/tableros" element={<TablerosPagina />} />
           <Route path="/kpi" element={<SoloAdmin><KpiPagina /></SoloAdmin>} />
           <Route path="*" element={<PaginaNoEncontrada />} />
