@@ -15,7 +15,7 @@ import GanttGrafico, { ALTO_ENCABEZADO, ALTO_FILA } from "./GanttGrafico";
 import PanelTarea from "./PanelTarea";
 import { hoyIso } from "./escala";
 import type { Escala } from "./escala";
-import { aplanar } from "./modelo";
+import { aplanar, disponer } from "./modelo";
 import { puedeEditarCronograma } from "./permisos";
 import "./gantt.css";
 
@@ -74,6 +74,7 @@ export default function GanttVista() {
     const porTarea = new Map((comparacion?.tareas ?? []).map((t) => [t.tareaId, t]));
     return aplanar(arbol, porTarea, plegados);
   }, [arbol, comparacion, plegados]);
+  const renglones = useMemo(() => disponer(filas, hitos), [filas, hitos]);
   const sinFechas = filas.length > 0 && filas.every((f) => !f.nodo.inicioPlan);
   const filaSel = filas.find((f) => f.nodo.id === seleccionada);
   const nombreDe = (n: number) => {
@@ -143,26 +144,32 @@ export default function GanttVista() {
           {filas.length > 0 && (
             <div className="g-contenedor">
               <div className="g-lista" style={{ paddingTop: ALTO_ENCABEZADO }}>
-                {filas.map((f) => (
-                  <div key={f.nodo.id} style={{ height: ALTO_FILA, paddingLeft: 6 + f.profundidad * 16 }}
-                    className={`g-item${f.nodo.id === seleccionada ? " g-item-sel" : ""}${f.comp?.atrasada ? " g-item-atrasada" : ""}${marcadas.has(f.nodo.id) ? " g-item-sobreasignada" : ""}`}
-                    onClick={() => setSeleccionada(f.nodo.id)}>
-                    {f.esResumen ? (
-                      <button className="g-plegar" aria-label={plegados.has(f.nodo.id) ? "Expandir" : "Plegar"}
-                        onClick={(e) => { e.stopPropagation(); alternar(f.nodo.id); }}>{plegados.has(f.nodo.id) ? "▸" : "▾"}</button>
-                    ) : <span className="g-plegar" />}
-                    <span className="g-codigo">{f.nodo.codigo}</span> {f.nodo.nombre}
-                    {marcadas.has(f.nodo.id) && (
-                      <span className="marca-sobreasignacion" title={resumenSobreasignacion(alertas, f.nodo.id)}>SA</span>
-                    )}
-                  </div>
-                ))}
-                {hitos.map((h) => (
-                  <div key={`h-${h.id}`} style={{ height: ALTO_FILA, paddingLeft: 6 }} className="g-item g-item-hito" title={h.logro}>
-                    <span className="g-plegar">◆</span>
-                    <span className="g-codigo">{h.codigo}</span> {h.logro}
-                  </div>
-                ))}
+                {renglones.map((r) => {
+                  if (r.tipo === "hito") {
+                    const h = r.hito;
+                    return (
+                      <div key={`h-${h.id}`} style={{ height: ALTO_FILA, paddingLeft: 6 }} className="g-item g-item-hito" title={h.logro}>
+                        <span className="g-plegar">◆</span>
+                        <span className="g-codigo">{h.codigo}</span> {h.logro}
+                      </div>
+                    );
+                  }
+                  const f = r.fila;
+                  return (
+                    <div key={f.nodo.id} style={{ height: ALTO_FILA, paddingLeft: 6 + f.profundidad * 16 }}
+                      className={`g-item${f.nodo.id === seleccionada ? " g-item-sel" : ""}${f.comp?.atrasada ? " g-item-atrasada" : ""}${marcadas.has(f.nodo.id) ? " g-item-sobreasignada" : ""}`}
+                      onClick={() => setSeleccionada(f.nodo.id)}>
+                      {f.esResumen ? (
+                        <button className="g-plegar" aria-label={plegados.has(f.nodo.id) ? "Expandir" : "Plegar"}
+                          onClick={(e) => { e.stopPropagation(); alternar(f.nodo.id); }}>{plegados.has(f.nodo.id) ? "▸" : "▾"}</button>
+                      ) : <span className="g-plegar" />}
+                      <span className="g-codigo">{f.nodo.codigo}</span> {f.nodo.nombre}
+                      {marcadas.has(f.nodo.id) && (
+                        <span className="marca-sobreasignacion" title={resumenSobreasignacion(alertas, f.nodo.id)}>SA</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
               <div className="g-area">
                 <GanttGrafico filas={filas} dependencias={dependencias} escala={escala} hoy={hoy}
