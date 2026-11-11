@@ -36,3 +36,4 @@
 .g-fila-hito { fill: #f6f0ff80; cursor: default; }
 .g-hito-cumplido { fill: #1a7f37; }
 .g-hito-incumplido { fill: #cf222e; }
+.g-enlace-hito { fill: none; stroke: #8250df; stroke-width: 1.2; stroke-dasharray: 3 3; opacity: .8; pointer-events: none; }
