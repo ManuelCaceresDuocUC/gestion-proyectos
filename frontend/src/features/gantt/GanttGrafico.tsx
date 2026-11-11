@@ -2,6 +2,7 @@ import type { Hito } from "../../types/hitos";
 import type { DependenciaDto } from "../../types/planificacion";
 import { PX_DIA, aDia, diaDelMes, diaSemana, etiquetaCorta, nombreMes } from "./escala";
 import type { Escala } from "./escala";
+import { disponer } from "./modelo";
 import type { FilaGantt } from "./modelo";
 
 export const ALTO_FILA = 30;
@@ -39,7 +40,11 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
   const primero = Math.min(...dias) - 3;
   const ultimo = Math.max(...dias) + 4;
   const ancho = (ultimo - primero + 1) * px;
-  const alto = ALTO_ENCABEZADO + (filas.length + hitos.length) * ALTO_FILA;
+  const renglones = disponer(filas, hitos);
+  const alto = ALTO_ENCABEZADO + renglones.length * ALTO_FILA;
+  // Posición (renglón) de cada fila de la EDT: los hitos intercalados la desplazan.
+  const posDe: number[] = [];
+  renglones.forEach((r, p) => { if (r.tipo === "tarea") posDe[r.indice] = p; });
   const xDe = (dia: number) => (dia - primero) * px;
   const xHoy = xDe(aDia(hoy)) + px / 2;
 
@@ -47,7 +52,7 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
   const tramos = new Map<number, Tramo>();
   const filaDe = new Map<number, number>();
   filas.forEach((f, i) => {
-    filaDe.set(f.nodo.id, i);
+    filaDe.set(f.nodo.id, posDe[i]);
     if (f.nodo.inicioPlan && f.nodo.finPlan) {
       const x1 = xDe(aDia(f.nodo.inicioPlan));
       tramos.set(f.nodo.id, { x1, x2: f.esHito ? x1 : xDe(aDia(f.nodo.finPlan) + 1) });
@@ -110,17 +115,17 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
         <text key={m.x} x={m.x + 4} y={14} className="g-mes">{m.texto}</text>
       ))}
       {filas.map((f, i) => (
-        <rect key={f.nodo.id} x={0} y={ALTO_ENCABEZADO + i * ALTO_FILA} width={ancho} height={ALTO_FILA}
+        <rect key={f.nodo.id} x={0} y={ALTO_ENCABEZADO + posDe[i] * ALTO_FILA} width={ancho} height={ALTO_FILA}
           className={f.nodo.id === seleccionada ? "g-fila g-fila-sel" : "g-fila"} onClick={() => alSeleccionar(f.nodo.id)} />
       ))}
 
-      {hitos.map((h, i) => (
-        <rect key={`fh-${h.id}`} x={0} y={ALTO_ENCABEZADO + (filas.length + i) * ALTO_FILA} width={ancho} height={ALTO_FILA} className="g-fila g-fila-hito" />
+      {renglones.map((r, p) => r.tipo === "hito" && (
+        <rect key={`fh-${r.hito.id}`} x={0} y={ALTO_ENCABEZADO + p * ALTO_FILA} width={ancho} height={ALTO_FILA} className="g-fila g-fila-hito" />
       ))}
 
       {/* barras */}
       {filas.map((f, i) => {
-        const y = ALTO_ENCABEZADO + i * ALTO_FILA;
+        const y = ALTO_ENCABEZADO + posDe[i] * ALTO_FILA;
         const t = tramos.get(f.nodo.id);
         const c = f.comp;
         const base = c?.inicioBase && c.finBase
@@ -160,8 +165,10 @@ export default function GanttGrafico({ filas, dependencias, escala, hoy, selecci
       })}
 
       {/* hitos del módulo Hitos: rombo en la fecha planificada, rombo gris en la línea base */}
-      {hitos.map((h, i) => {
-        const y = ALTO_ENCABEZADO + (filas.length + i) * ALTO_FILA;
+      {renglones.map((r, p) => {
+        if (r.tipo !== "hito") return null;
+        const h = r.hito;
+        const y = ALTO_ENCABEZADO + p * ALTO_FILA;
         const cy = y + ALTO_FILA / 2;
         const estado = h.estado === "CUMPLIDO" ? "g-hito-cumplido" : h.estado === "NO_CUMPLIDO" ? "g-hito-incumplido" : "";
         const detalle = `${h.codigo} ${h.logro} · plan ${h.fechaPlan ?? "sin fecha"}`
